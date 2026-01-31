@@ -1,0 +1,203 @@
+/* Joker Exchange Dialog */
+.joker-exchange-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.joker-exchange-dialog {
+  background: var(--bg-card);
+  border-radius: 16px;
+  padding: 24px;
+  min-width: 360px;
+  max-width: 450px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  border: 2px solid var(--accent-turquoise);
+  animation: slideUp 0.3s ease-out;
+}
+
+.joker-exchange-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.joker-exchange-header h3 {
+  color: var(--accent-turquoise);
+  font-size: 20px;
+  margin: 0;
+}
+
+.joker-exchange-content {
+  text-align: center;
+}
+
+.joker-exchange-content p {
+  color: var(--text-light);
+  margin-bottom: 16px;
+}
+
+.exchange-tiles {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
+.exchange-tile-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.tile-label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+}
+
+.exchange-arrow {
+  font-size: 24px;
+  color: var(--accent-pink);
+  font-weight: bold;
+}
+
+.exchange-question {
+  font-size: 16px;
+  margin-top: 20px;
+  color: var(--text-light);
+}
+
+.joker-exchange-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.joker-exchange-actions .btn {
+  min-width: 100px;
+}
+
+/* Pending indicator */
+.joker-exchange-pending {
+  position: fixed;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 900;
+}
+
+.pending-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg-card);
+  padding: 12px 20px;
+  border-radius: 30px;
+  border: 2px solid var(--accent-turquoise);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.pending-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: var(--accent-turquoise);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Result notification */
+.joker-exchange-result {
+  position: fixed;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease-out;
+}
+
+.joker-exchange-result.success {
+  background: rgba(76, 175, 80, 0.9);
+  border: 2px solid #4caf50;
+}
+
+.joker-exchange-result.failed {
+  background: rgba(244, 67, 54, 0.9);
+  border: 2px solid #f44336;
+}
+
+.joker-exchange-result span {
+  color: white;
+  font-weight: 500;
+}
+
+.joker-exchange-result .btn-close {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.2s;
+}
+
+.joker-exchange-result .btn-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .joker-exchange-dialog {
+    min-width: 300px;
+    padding: 16px;
+    margin: 0 16px;
+  }
+
+  .exchange-tiles {
+    flex-direction: column;
+  }
+
+  .exchange-arrow {
+    transform: rotate(90deg);
+  }
+}

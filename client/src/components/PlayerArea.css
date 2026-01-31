@@ -1,0 +1,210 @@
+/* Player Area */
+.player-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  position: relative;
+  min-width: 120px;
+}
+
+.player-area.current-turn {
+  background: rgba(32, 178, 170, 0.3);
+  border: 2px solid var(--accent-turquoise);
+}
+
+/* Player info bar */
+.player-info-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  width: 100%;
+  justify-content: center;
+}
+
+.player-area .player-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-light);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 80px;
+}
+
+.player-area .player-wind {
+  font-size: 10px;
+  background: var(--primary-green);
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.bot-badge {
+  font-size: 9px;
+  background: var(--accent-pink);
+  color: var(--text-light);
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+/* Player hand */
+.player-hand {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  justify-content: center;
+  max-width: 200px;
+}
+
+.player-hand.horizontal {
+  flex-direction: column;
+  max-width: none;
+  max-height: 200px;
+}
+
+/* Player exposures */
+.player-exposures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+}
+
+.player-exposures.horizontal {
+  flex-direction: column;
+}
+
+.player-exposures .exposure-group {
+  display: flex;
+  gap: 1px;
+  padding: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+}
+
+/* Joker exchange styles */
+.exposure-tile-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.exposure-tile-wrapper.has-joker {
+  cursor: pointer;
+}
+
+.exposure-tile-wrapper.has-joker:hover {
+  transform: translateY(-3px);
+  transition: transform 0.15s ease;
+}
+
+.exposure-tile-wrapper.has-joker:hover .joker-exchange-hint {
+  opacity: 1;
+  visibility: visible;
+}
+
+.joker-exchange-hint {
+  position: absolute;
+  bottom: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--accent-pink);
+  color: white;
+  font-size: 9px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s, visibility 0.2s;
+  z-index: 10;
+}
+
+/* Turn indicator dot */
+.turn-indicator-dot {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 12px;
+  height: 12px;
+  background: var(--accent-gold);
+  border-radius: 50%;
+  animation: pulse-dot 1s infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+}
+
+/* Position-specific styles */
+.player-top {
+  transform: rotate(180deg);
+}
+
+.player-top .player-info-bar,
+.player-top .player-hand,
+.player-top .player-exposures {
+  transform: rotate(180deg);
+}
+
+.player-left {
+  transform: rotate(90deg);
+}
+
+.player-left .player-info-bar,
+.player-left .player-hand,
+.player-left .player-exposures {
+  transform: rotate(-90deg);
+}
+
+.player-right {
+  transform: rotate(-90deg);
+}
+
+.player-right .player-info-bar,
+.player-right .player-hand,
+.player-right .player-exposures {
+  transform: rotate(90deg);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .player-area {
+    min-width: 100px;
+    padding: 8px;
+  }
+
+  .player-left,
+  .player-right {
+    transform: none;
+  }
+
+  .player-left .player-info-bar,
+  .player-left .player-hand,
+  .player-left .player-exposures,
+  .player-right .player-info-bar,
+  .player-right .player-hand,
+  .player-right .player-exposures {
+    transform: none;
+  }
+
+  .player-hand.horizontal {
+    flex-direction: row;
+    max-height: none;
+  }
+}

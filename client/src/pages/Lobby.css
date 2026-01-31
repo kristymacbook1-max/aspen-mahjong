@@ -1,0 +1,342 @@
+/* Lobby Page */
+.lobby-page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.lobby-page h1 {
+  text-align: center;
+  font-size: 36px;
+  margin-bottom: 20px;
+}
+
+/* Connection status */
+.connection-status {
+  text-align: center;
+  padding: 8px 16px;
+  border-radius: 20px;
+  display: inline-block;
+  margin: 0 auto 30px;
+  font-size: 14px;
+  width: fit-content;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.connection-status.connected {
+  background: rgba(32, 178, 170, 0.2);
+  color: #20b2aa;
+}
+
+.connection-status.disconnected {
+  background: rgba(199, 75, 122, 0.2);
+  color: #c74b7a;
+}
+
+/* Guest name input */
+.guest-name-input {
+  max-width: 300px;
+  margin: 0 auto 40px;
+}
+
+.guest-name-input input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-light);
+  font-size: 16px;
+  text-align: center;
+}
+
+.guest-name-input input:focus {
+  outline: none;
+  border-color: var(--primary-green);
+}
+
+/* Lobby options grid */
+.lobby-options {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+}
+
+.lobby-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 32px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.lobby-card.main-card {
+  max-width: 450px;
+  width: 100%;
+}
+
+.lobby-card:hover:not(.disabled) {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.lobby-card.disabled {
+  opacity: 0.6;
+}
+
+.card-icon {
+  font-size: 48px;
+}
+
+.lobby-card h3 {
+  font-size: 24px;
+  color: var(--accent-turquoise);
+}
+
+.lobby-card p {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+}
+
+/* Game settings section */
+.game-settings {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.player-count-section {
+  width: 100%;
+}
+
+.player-count-section > label {
+  display: block;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 8px;
+  text-align: left;
+}
+
+/* Game buttons */
+.game-buttons {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.game-buttons .btn {
+  width: 100%;
+}
+
+/* Join section */
+.join-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  width: 100%;
+}
+
+.join-text {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 8px;
+}
+
+.btn-link {
+  background: transparent;
+  border: none;
+  color: var(--accent-turquoise);
+  cursor: pointer;
+  font-size: 14px;
+  text-decoration: underline;
+  padding: 4px;
+}
+
+.btn-link:hover {
+  color: var(--accent-pink);
+}
+
+.btn-link:disabled {
+  color: rgba(255, 255, 255, 0.3);
+  cursor: not-allowed;
+}
+
+/* Difficulty select */
+.difficulty-select {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.difficulty-select label {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.difficulty-select select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-light);
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.difficulty-select select:focus {
+  outline: none;
+  border-color: var(--primary-green);
+}
+
+/* Blanks toggle */
+.blanks-toggle {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.2s ease;
+}
+
+.toggle-label:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--primary-green);
+}
+
+.toggle-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--primary-green);
+}
+
+.toggle-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-light);
+}
+
+.toggle-hint {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-left: auto;
+}
+
+/* Practice mode toggle */
+.practice-toggle {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.toggle-label.practice {
+  background: rgba(241, 196, 15, 0.05);
+  border-color: rgba(241, 196, 15, 0.2);
+}
+
+.toggle-label.practice:hover {
+  background: rgba(241, 196, 15, 0.1);
+  border-color: var(--accent-gold);
+}
+
+.toggle-label.practice input[type="checkbox"] {
+  accent-color: var(--accent-gold);
+}
+
+/* Friend buttons */
+.friend-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.friend-buttons .btn {
+  width: 100%;
+}
+
+/* Coming soon badge */
+.coming-soon {
+  background: var(--warning);
+  color: var(--text-dark);
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Modal description */
+.modal-description {
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+/* Player count selector */
+.player-count-selector {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.count-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  color: var(--text-light);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.count-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent-turquoise);
+}
+
+.count-btn.selected {
+  background: rgba(32, 178, 170, 0.2);
+  border-color: var(--accent-turquoise);
+  box-shadow: 0 0 12px rgba(32, 178, 170, 0.3);
+}
+
+.count-btn .bot-info {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--accent-pink);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .lobby-page h1 {
+    font-size: 28px;
+  }
+
+  .lobby-options {
+    grid-template-columns: 1fr;
+  }
+}

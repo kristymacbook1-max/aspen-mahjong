@@ -1,0 +1,274 @@
+/* Call Dialog Overlay */
+.call-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  z-index: 60;
+  padding-top: 20px;
+  pointer-events: none;
+}
+
+.call-dialog {
+  background: var(--background-medium);
+  border-radius: 16px;
+  padding: 20px;
+  max-width: 600px;
+  width: 95%;
+  text-align: center;
+  border: 2px solid var(--accent-pink-light);
+  box-shadow: 0 0 30px rgba(233, 30, 140, 0.3);
+  pointer-events: auto;
+  max-height: 45vh;
+  overflow-y: auto;
+}
+
+.call-dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.call-dialog h3 {
+  font-size: 20px;
+  margin: 0;
+  color: var(--accent-pink-light);
+}
+
+.btn-cancel {
+  background: var(--accent-pink);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-cancel:hover {
+  background: var(--accent-pink-light);
+  transform: scale(1.05);
+}
+
+/* Error message */
+.call-error {
+  background: rgba(231, 76, 60, 0.2);
+  border: 1px solid #e74c3c;
+  color: #e74c3c;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+/* Discarded tile */
+.discarded-tile {
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.discarded-tile p {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
+}
+
+.discarded-by {
+  font-style: italic;
+  margin-top: 8px !important;
+}
+
+.mahjong-info {
+  background: rgba(241, 196, 15, 0.1);
+  border: 1px solid var(--accent-gold);
+  padding: 16px;
+  border-radius: 8px;
+  color: var(--accent-gold);
+}
+
+.discarded-tile .tile {
+  margin: 0 auto;
+  transform: scale(1.2);
+}
+
+/* Call options */
+.call-options {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.call-option {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  color: var(--text-light);
+}
+
+.call-option:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: var(--primary-green);
+}
+
+.call-option.selected {
+  background: var(--primary-green);
+  border-color: var(--primary-green);
+}
+
+.call-name {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.call-desc {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+/* Call selection */
+.call-selection {
+  margin-bottom: 12px;
+}
+
+.call-selection p {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 12px;
+}
+
+.hand-tiles-mini {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  justify-content: center;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  max-height: 80px;
+  overflow-y: auto;
+}
+
+.selection-count {
+  margin-top: 12px;
+  font-size: 14px;
+  color: var(--accent-turquoise);
+}
+
+/* Call actions */
+.call-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+/* No calls */
+.no-calls {
+  padding: 20px;
+}
+
+.no-calls p {
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 16px;
+}
+
+/* Blank exchange section */
+.blank-exchange-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.blank-divider {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.blank-divider::before,
+.blank-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.blank-divider span {
+  padding: 0 16px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 600;
+}
+
+.blank-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.blank-label {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+}
+
+.blank-tiles {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.btn-success {
+  background: #4caf50;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.btn-success:hover {
+  background: #45a049;
+  transform: translateY(-2px);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .call-dialog {
+    padding: 16px;
+  }
+
+  .call-options {
+    flex-direction: column;
+  }
+
+  .call-option {
+    padding: 10px 16px;
+  }
+}

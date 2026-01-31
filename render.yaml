@@ -1,0 +1,10 @@
+# Render.com deployment configuration
+services:
+  - type: web
+    name: aspen-mahjong
+    env: node
+    buildCommand: npm install && cd client && npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production

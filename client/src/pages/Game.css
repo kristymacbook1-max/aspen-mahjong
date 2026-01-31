@@ -1,0 +1,199 @@
+/* Game Page */
+.game-page {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 80px);
+  padding: 0;
+}
+
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background: rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.game-info {
+  display: flex;
+  gap: 24px;
+}
+
+.game-code {
+  font-weight: 600;
+  color: var(--accent-turquoise);
+}
+
+.game-phase {
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: capitalize;
+}
+
+/* Loading and Error states */
+.game-loading,
+.game-error {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+.game-error h2 {
+  color: var(--error);
+}
+
+.game-error p {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Finished actions */
+.game-finished-actions {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Waiting Room */
+.waiting-room {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 40px;
+  text-align: center;
+}
+
+.waiting-room h2 {
+  font-size: 32px;
+  color: var(--accent-turquoise);
+}
+
+.waiting-info p {
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 12px;
+}
+
+.game-code-display {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 16px 24px;
+  border-radius: 12px;
+  border: 2px solid var(--accent-turquoise);
+}
+
+.game-code-display .code {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  color: var(--accent-turquoise);
+  font-family: monospace;
+}
+
+.player-status {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 24px 48px;
+  border-radius: 16px;
+}
+
+.player-count {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8px;
+}
+
+.player-count .count {
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--accent-pink);
+}
+
+.player-count .separator {
+  font-size: 32px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.player-count .total {
+  font-size: 32px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.player-status p {
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 8px;
+}
+
+.waiting-players {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.waiting-player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  min-width: 100px;
+}
+
+.waiting-player .player-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-turquoise), var(--accent-pink));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.waiting-player .player-name {
+  font-size: 14px;
+  color: var(--text-light);
+}
+
+.waiting-hint {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 14px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .game-header {
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .game-info {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+
+  .waiting-room {
+    padding: 20px;
+  }
+
+  .game-code-display .code {
+    font-size: 20px;
+  }
+
+  .player-count .count {
+    font-size: 36px;
+  }
+}

@@ -1,0 +1,150 @@
+/* Charleston Overlay */
+.charleston-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.charleston-dialog {
+  background: var(--background-medium);
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 700px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  text-align: center;
+}
+
+.charleston-dialog h2 {
+  font-size: 28px;
+  margin-bottom: 16px;
+  color: var(--accent-pink-light);
+}
+
+.charleston-info {
+  margin-bottom: 24px;
+}
+
+.pass-direction {
+  display: inline-block;
+  font-size: 32px;
+  background: var(--primary-green);
+  padding: 8px 24px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.charleston-info p {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 16px;
+}
+
+/* Charleston hand */
+.charleston-hand {
+  margin-bottom: 24px;
+}
+
+.charleston-hand-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.charleston-hand-header .btn-small {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.charleston-hand-header .btn-active {
+  background: var(--accent-gold) !important;
+  color: black !important;
+  border-color: var(--accent-gold) !important;
+}
+
+.arrange-hint-charleston {
+  font-size: 13px;
+  color: var(--accent-gold);
+  font-style: italic;
+  margin-bottom: 8px;
+}
+
+.hand-label,
+.selection-label {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 0;
+}
+
+.charleston-hand .hand-tiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+}
+
+/* Charleston selection */
+.charleston-selection {
+  margin-bottom: 24px;
+}
+
+.selected-tiles {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(32, 178, 170, 0.2);
+  border: 2px dashed var(--accent-turquoise);
+  border-radius: 12px;
+  min-height: 80px;
+}
+
+.tile-slot {
+  width: 44px;
+  height: 60px;
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Waiting state */
+.charleston-waiting {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px;
+}
+
+.charleston-waiting p {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .charleston-dialog {
+    padding: 20px;
+  }
+
+  .charleston-dialog h2 {
+    font-size: 22px;
+  }
+
+  .pass-direction {
+    font-size: 24px;
+    padding: 6px 16px;
+  }
+}

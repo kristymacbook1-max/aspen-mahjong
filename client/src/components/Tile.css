@@ -1,0 +1,374 @@
+/* Tile Styles */
+.tile {
+  width: 48px;
+  height: 68px;
+  background: linear-gradient(145deg, #f5f0e1, #e8e0c8);
+  border: 2px solid #c4a35a;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  position: relative;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  user-select: none;
+  overflow: hidden;
+}
+
+.tile-small {
+  width: 36px;
+  height: 50px;
+}
+
+.tile-clickable {
+  cursor: pointer;
+}
+
+.tile-clickable:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 6px 12px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.tile-selected {
+  transform: translateY(-8px);
+  border-color: var(--accent-turquoise);
+  box-shadow:
+    0 8px 16px rgba(32, 178, 170, 0.4),
+    0 0 0 2px var(--accent-turquoise),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.tile-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tile-disabled:hover {
+  transform: none;
+}
+
+/* Draggable Tiles - cursor grab takes precedence over disabled */
+.tile-draggable {
+  cursor: grab !important;
+  -webkit-user-drag: element;
+}
+
+/* Tiles that are both draggable and disabled should still be draggable */
+.tile-draggable.tile-disabled {
+  cursor: grab !important;
+  opacity: 1;
+}
+
+.tile-draggable:active {
+  cursor: grabbing !important;
+}
+
+.tile-draggable.dragging {
+  opacity: 0.5;
+  transform: scale(1.05);
+}
+
+.tile-draggable:hover {
+  transform: translateY(-4px);
+}
+
+/* Number badge in corner for suited tiles */
+.tile-number {
+  position: absolute;
+  top: 2px;
+  left: 3px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #333;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  z-index: 1;
+}
+
+.tile-small .tile-number {
+  font-size: 9px;
+  top: 1px;
+  left: 2px;
+}
+
+/* Tile Face */
+.tile-face {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 4px;
+}
+
+.tile-symbol {
+  font-size: 26px;
+  line-height: 1;
+}
+
+.tile-small .tile-symbol {
+  font-size: 18px;
+}
+
+.tile-text {
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+}
+
+.tile-small .tile-text {
+  font-size: 11px;
+}
+
+/* Label at bottom */
+.tile-label {
+  font-size: 8px;
+  font-weight: 700;
+  color: #555;
+  padding: 2px 4px;
+  background: rgba(0, 0, 0, 0.08);
+  width: 100%;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tile-small .tile-label {
+  font-size: 7px;
+  padding: 1px 2px;
+}
+
+/* Hidden Tile (Back) */
+.tile-hidden {
+  background: linear-gradient(145deg, #2a4858, #1a3545);
+  border-color: #3a6878;
+}
+
+.tile-back {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tile-back-pattern {
+  width: 70%;
+  height: 80%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 4px,
+    rgba(255, 255, 255, 0.05) 4px,
+    rgba(255, 255, 255, 0.05) 8px
+  );
+}
+
+.tile-small .tile-back-pattern {
+  width: 60%;
+  height: 70%;
+  border-width: 1px;
+}
+
+/* Type-specific styling */
+.tile-dot .tile-symbol {
+  color: #1a5f7a;
+}
+
+.tile-dot .tile-number {
+  color: #1a5f7a;
+}
+
+.tile-dot .tile-label {
+  color: #1a5f7a;
+  background: rgba(26, 95, 122, 0.1);
+}
+
+.tile-bam .tile-symbol {
+  color: #2d5a27;
+}
+
+.tile-bam .tile-number {
+  color: #2d5a27;
+}
+
+.tile-bam .tile-label {
+  color: #2d5a27;
+  background: rgba(45, 90, 39, 0.1);
+}
+
+.tile-crak .tile-symbol {
+  color: #8b0000;
+}
+
+.tile-crak .tile-number {
+  color: #8b0000;
+}
+
+.tile-crak .tile-label {
+  color: #8b0000;
+  background: rgba(139, 0, 0, 0.1);
+}
+
+.tile-wind .tile-symbol {
+  color: #1a1a2e;
+}
+
+.tile-wind .tile-label {
+  color: #1a1a2e;
+  background: rgba(26, 26, 46, 0.1);
+}
+
+.tile-dragon .tile-label {
+  font-weight: 800;
+}
+
+.tile-dragon[data-value="red"] .tile-symbol,
+.tile-dragon[data-value="red"] .tile-label {
+  color: #c0392b;
+}
+
+.tile-dragon[data-value="red"] .tile-label {
+  background: rgba(192, 57, 43, 0.1);
+}
+
+.tile-dragon[data-value="green"] .tile-symbol,
+.tile-dragon[data-value="green"] .tile-label {
+  color: #27ae60;
+}
+
+.tile-dragon[data-value="green"] .tile-label {
+  background: rgba(39, 174, 96, 0.1);
+}
+
+.tile-dragon[data-value="white"] .tile-symbol {
+  color: #7f8c8d;
+}
+
+.tile-dragon[data-value="white"] .tile-label {
+  color: #7f8c8d;
+  background: rgba(127, 140, 141, 0.1);
+}
+
+.tile-flower .tile-symbol {
+  font-size: 22px;
+}
+
+.tile-small.tile-flower .tile-symbol {
+  font-size: 16px;
+}
+
+.tile-flower .tile-label {
+  color: #e91e8c;
+  background: rgba(233, 30, 140, 0.1);
+}
+
+.tile-joker {
+  background: linear-gradient(145deg, #fff9c4, #fff59d);
+  border-color: #ffd700;
+}
+
+.tile-joker .tile-symbol {
+  font-size: 28px;
+}
+
+.tile-small.tile-joker .tile-symbol {
+  font-size: 20px;
+}
+
+.tile-joker .tile-label {
+  color: #d4a000;
+  background: rgba(212, 160, 0, 0.15);
+  font-weight: 800;
+}
+
+/* Blank tile - exchange wild */
+.tile-blank {
+  background: linear-gradient(145deg, #e8f5e9, #c8e6c9);
+  border-color: #4caf50;
+}
+
+.tile-blank .tile-symbol {
+  font-size: 24px;
+  color: #4caf50;
+}
+
+.tile-small.tile-blank .tile-symbol {
+  font-size: 18px;
+}
+
+.tile-blank .tile-label {
+  color: #2e7d32;
+  background: rgba(76, 175, 80, 0.15);
+  font-weight: 800;
+}
+
+/* Tile Row/Group */
+.tile-row {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.tile-group {
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+}
+
+/* Hand Area */
+.hand-tiles {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  min-height: 80px;
+}
+
+/* Exposure Area */
+.exposure-tiles {
+  display: flex;
+  gap: 4px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .tile {
+    width: 40px;
+    height: 56px;
+  }
+
+  .tile-symbol {
+    font-size: 20px;
+  }
+
+  .tile-number {
+    font-size: 10px;
+  }
+
+  .tile-small {
+    width: 30px;
+    height: 42px;
+  }
+
+  .tile-small .tile-symbol {
+    font-size: 14px;
+  }
+
+  .tile-small .tile-number {
+    font-size: 8px;
+  }
+}
