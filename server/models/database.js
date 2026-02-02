@@ -1,12 +1,22 @@
 /**
  * Database setup using better-sqlite3
+ * Optional - game works without database (for cloud deployment)
  */
 
-const Database = require('better-sqlite3');
-const path = require('path');
+let db = null;
 
-const dbPath = path.join(__dirname, '../../data/mahjong.db');
-const db = new Database(dbPath);
+try {
+  const Database = require('better-sqlite3');
+  const path = require('path');
+  const fs = require('fs');
+
+  const dataDir = path.join(__dirname, '../../data');
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+  }
+
+  const dbPath = path.join(dataDir, 'mahjong.db');
+  db = new Database(dbPath);
 
 // Enable foreign keys
 db.pragma('foreign_keys = ON');
@@ -117,5 +127,9 @@ db.exec(`
     FOREIGN KEY (friend_id) REFERENCES users(id)
   );
 `);
+} catch (err) {
+  console.log('Database not available (optional for gameplay):', err.message);
+  db = null;
+}
 
 module.exports = db;
