@@ -680,6 +680,23 @@ class Game {
     if (call.type === CALL_TYPES.MAH_JONGG) {
       // Player wins!
       this.winner = playerIndex;
+      // Include the discard tile in the winning hand
+      const fullHand = [...player.hand, discardTile];
+
+      // Find the matching pattern from the card
+      const { analyzeHand } = require('./handAnalyzer');
+      const analysis = analyzeHand(fullHand, player.exposures, 5);
+      const matchedPattern = analysis.find(r => r.tilesNeeded === 0);
+
+      this.winningHand = {
+        hand: fullHand,
+        exposures: [...player.exposures],
+        pattern: matchedPattern ? {
+          name: matchedPattern.pattern.name,
+          section: matchedPattern.pattern.section,
+          value: matchedPattern.pattern.value
+        } : null
+      };
       this.phase = GAME_PHASES.FINISHED;
       this.finishedAt = new Date();
       return;
@@ -753,13 +770,20 @@ class Game {
 
     const player = this.players[playerIndex];
 
-    // TODO: Validate the winning hand against the card
-    // For now, we'll do a simple validation
+    // Find the matching pattern from the card
+    const { analyzeHand } = require('./handAnalyzer');
+    const analysis = analyzeHand(player.hand, player.exposures, 5);
+    const matchedPattern = analysis.find(r => r.tilesNeeded === 0);
 
     this.winner = playerIndex;
     this.winningHand = {
       hand: [...player.hand],
-      exposures: [...player.exposures]
+      exposures: [...player.exposures],
+      pattern: matchedPattern ? {
+        name: matchedPattern.pattern.name,
+        section: matchedPattern.pattern.section,
+        value: matchedPattern.pattern.value
+      } : null
     };
     this.phase = GAME_PHASES.FINISHED;
     this.finishedAt = new Date();

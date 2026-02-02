@@ -434,11 +434,39 @@ function GameBoard() {
             {gameState.winningHand && (
               <div className="winning-hand">
                 <h3>Winning Hand:</h3>
+                {/* Show pattern info */}
+                {gameState.winningHand.pattern && (
+                  <div className="winning-pattern">
+                    <span className="pattern-section">{gameState.winningHand.pattern.section}</span>
+                    <span className="pattern-name">{gameState.winningHand.pattern.name}</span>
+                    {gameState.winningHand.pattern.value && (
+                      <span className="pattern-value">{gameState.winningHand.pattern.value} points</span>
+                    )}
+                  </div>
+                )}
+                {/* Show exposures */}
+                {gameState.winningHand.exposures?.length > 0 && (
+                  <div className="winning-exposures">
+                    {gameState.winningHand.exposures.map((exposure, expIndex) => (
+                      <div key={`win-exp-${expIndex}`} className="exposure-group">
+                        {exposure.tiles.map((tile, tIndex) => (
+                          <Tile key={`win-exp-${expIndex}-${tile.id}-${tIndex}`} tile={tile} small />
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {/* Show concealed hand tiles */}
                 <div className="hand-tiles">
                   {gameState.winningHand.hand.map((tile, index) => (
                     <Tile key={`win-${tile.id}-${index}`} tile={tile} small />
                   ))}
                 </div>
+                {/* Show total tile count */}
+                <p className="winning-tile-count">
+                  Total: {(gameState.winningHand.hand?.length || 0) +
+                    (gameState.winningHand.exposures?.reduce((sum, exp) => sum + exp.tiles.length, 0) || 0)} tiles
+                </p>
               </div>
             )}
           </div>
