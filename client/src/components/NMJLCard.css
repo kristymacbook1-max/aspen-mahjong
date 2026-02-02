@@ -1,0 +1,239 @@
+/* NMJL Card Container */
+.nmjl-card-container {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  width: 90%;
+  max-width: 900px;
+  transition: all 0.3s ease;
+}
+
+.nmjl-card-container.open {
+  bottom: 0;
+}
+
+/* Toggle Button */
+.nmjl-card-toggle {
+  display: block;
+  width: 200px;
+  margin: 0 auto;
+  padding: 8px 20px;
+  background: linear-gradient(135deg, #8B0000 0%, #5c0000 100%);
+  color: white;
+  border: 2px solid #ffd700;
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nmjl-card-toggle:hover {
+  background: linear-gradient(135deg, #a00000 0%, #700000 100%);
+}
+
+/* Card Content */
+.nmjl-card-content {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border: 2px solid #ffd700;
+  border-radius: 12px 12px 0 0;
+  padding: 16px;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.nmjl-card-header {
+  text-align: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.nmjl-card-header h3 {
+  color: #ffd700;
+  margin: 0 0 8px 0;
+  font-size: 18px;
+}
+
+.nmjl-card-legend {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.legend-item {
+  padding: 2px 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.concealed-legend {
+  background: rgba(255, 0, 0, 0.2);
+  color: #ff6b6b;
+}
+
+/* Category Buttons */
+.nmjl-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.category-btn {
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 6px;
+  color: white;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.category-btn:hover {
+  background: rgba(255, 215, 0, 0.2);
+}
+
+.category-btn.active {
+  background: rgba(255, 215, 0, 0.3);
+  border-color: #ffd700;
+  color: #ffd700;
+}
+
+/* Pattern Display */
+.nmjl-patterns h4,
+.category-section h4 {
+  color: #ffd700;
+  font-size: 14px;
+  margin: 0 0 8px 0;
+  text-align: center;
+}
+
+.pattern-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pattern-list.compact {
+  gap: 4px;
+}
+
+.pattern-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.pattern-row.concealed {
+  background: rgba(255, 0, 0, 0.1);
+  border-left: 3px solid #ff6b6b;
+}
+
+.pattern-name {
+  color: #ffd700;
+  font-weight: bold;
+  min-width: 30px;
+}
+
+.pattern-desc {
+  flex: 1;
+  color: white;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 1px;
+}
+
+.pattern-value {
+  color: #4ade80;
+  font-weight: bold;
+  min-width: 30px;
+  text-align: right;
+}
+
+.concealed-badge {
+  background: #ff6b6b;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+/* All Patterns View */
+.nmjl-all-patterns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.category-section {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.category-section h4 {
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+.category-section .pattern-row {
+  padding: 6px 8px;
+  font-size: 12px;
+}
+
+.category-section .pattern-desc {
+  font-size: 11px;
+}
+
+/* Scrollbar Styling */
+.nmjl-card-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.nmjl-card-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.nmjl-card-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 215, 0, 0.3);
+  border-radius: 4px;
+}
+
+.nmjl-card-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 215, 0, 0.5);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .nmjl-card-container {
+    width: 100%;
+  }
+
+  .nmjl-categories {
+    gap: 4px;
+  }
+
+  .category-btn {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+
+  .nmjl-all-patterns {
+    grid-template-columns: 1fr;
+  }
+}

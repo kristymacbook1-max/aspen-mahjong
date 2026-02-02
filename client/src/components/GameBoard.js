@@ -9,6 +9,7 @@ import ChatBox from './ChatBox';
 import VideoChat from './VideoChat';
 import JokerExchangeDialog from './JokerExchangeDialog';
 import PatternSuggestions from './PatternSuggestions';
+import NMJLCard from './NMJLCard';
 import './GameBoard.css';
 
 function GameBoard() {
@@ -476,6 +477,9 @@ function GameBoard() {
       {/* Chat and Video Chat */}
       <ChatBox />
       <VideoChat />
+
+      {/* NMJL Card Reference */}
+      <NMJLCard />
     </div>
   );
 }
