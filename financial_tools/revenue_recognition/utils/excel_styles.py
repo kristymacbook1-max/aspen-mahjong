@@ -99,11 +99,20 @@ def apply_title(ws, row, col_start, col_end, title):
 
 def auto_fit_columns(ws, min_width=10, max_width=50):
     """Auto-fit column widths based on content."""
+    from openpyxl.utils import get_column_letter
+    from openpyxl.cell.cell import MergedCell
     for column_cells in ws.columns:
         max_length = 0
-        col_letter = column_cells[0].column_letter
+        # Skip merged cells to find a real cell for the column letter
+        col_letter = None
         for cell in column_cells:
-            if cell.value:
+            if not isinstance(cell, MergedCell):
+                col_letter = cell.column_letter
+                break
+        if col_letter is None:
+            continue
+        for cell in column_cells:
+            if not isinstance(cell, MergedCell) and cell.value:
                 max_length = max(max_length, len(str(cell.value)))
         adjusted = min(max(max_length + 2, min_width), max_width)
         ws.column_dimensions[col_letter].width = adjusted
