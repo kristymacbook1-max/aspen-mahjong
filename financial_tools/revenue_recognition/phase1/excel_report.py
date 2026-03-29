@@ -32,6 +32,7 @@ class Phase1ExcelReport:
         self._create_opportunities()
         self._create_risks()
         self._create_deferred_revenue()
+        self._create_progress_collections()
         self._create_phase2_roadmap()
 
         # Remove default sheet if extra
@@ -427,6 +428,149 @@ class Phase1ExcelReport:
             ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=4)
 
         auto_fit_columns(ws)
+
+    def _create_progress_collections(self):
+        """Create progress collections analysis sheet."""
+        pcs = self.results["deferred_revenue"].progress_collections
+        if not pcs:
+            return
+
+        ws = self.wb.create_sheet("Progress Collections")
+        apply_title(ws, 1, 1, 8, "Progress Collection Analysis — Tax Treatment Bifurcation")
+        ws.cell(row=2, column=1,
+                value="Distinguishes advance payments (§451(c) deferral eligible) from "
+                      "non-advance payments (immediate inclusion)").font = FONT_BODY
+
+        # Summary
+        row = 4
+        apply_section_header(ws, row, 1, 8, "Summary")
+        row += 1
+
+        advance_pcs = [pc for pc in pcs if pc.is_advance_payment_under_451]
+        non_advance_pcs = [pc for pc in pcs if not pc.is_advance_payment_under_451]
+        migratable_pcs = [pc for pc in pcs if pc.triggers_migration]
+
+        total = sum(float(pc.amount_current) for pc in pcs)
+        adv_total = sum(float(pc.amount_current) for pc in advance_pcs)
+        non_adv_total = sum(float(pc.amount_current) for pc in non_advance_pcs)
+        mig_total = sum(float(pc.amount_current) for pc in migratable_pcs)
+
+        summary = [
+            ("Total Progress Collections", total),
+            ("Advance Payments (§451(c) Deferral Eligible)", adv_total),
+            ("Non-Advance Payments (Immediate Inclusion)", non_adv_total),
+            ("Migratable (May Change Category)", mig_total),
+        ]
+        for label, value in summary:
+            ws.cell(row=row, column=1, value=label).font = FONT_BODY_BOLD
+            cell = ws.cell(row=row, column=2, value=value)
+            format_currency_cell(cell)
+            ws.cell(row=row, column=1).border = THIN_BORDER
+            cell.border = THIN_BORDER
+            row += 1
+
+        # Advance Payments Detail
+        if advance_pcs:
+            row += 1
+            apply_section_header(ws, row, 1, 8,
+                                 "Advance Payments — Eligible for Deferral Under Treas. Reg. 1.451-8")
+            row += 1
+            headers = ["Name", "Current Amount", "Prior Amount", "Deferral Method",
+                       "Method Change Filed", "Year", "Form 3115 Ref", "Notes"]
+            for i, h in enumerate(headers):
+                ws.cell(row=row, column=i + 1, value=h)
+            apply_header_row(ws, row, 1, len(headers))
+            row += 1
+
+            for idx, pc in enumerate(advance_pcs):
+                data = [
+                    pc.name,
+                    float(pc.amount_current),
+                    float(pc.amount_prior),
+                    pc.deferral_method or "Not specified",
+                    "Yes" if pc.method_change_filed else "No",
+                    pc.method_change_year or "",
+                    pc.form_3115_reference or "",
+                    pc.description,
+                ]
+                write_data_row(ws, row, data, alternate=(idx % 2 == 0))
+                for col in [2, 3]:
+                    format_currency_cell(ws.cell(row=row, column=col))
+                ws.cell(row=row, column=8).alignment = ALIGN_WRAP
+                ws.row_dimensions[row].height = 45
+                row += 1
+
+        # Non-Advance Payments Detail
+        if non_advance_pcs:
+            row += 1
+            apply_section_header(ws, row, 1, 8,
+                                 "Non-Advance Payments — Taxable Upon Receipt (§451 General Rule)")
+            row += 1
+            headers = ["Name", "Current Amount", "Prior Amount", "Refundable",
+                       "Transferable", "Can Migrate", "Migration Trigger", "Description"]
+            for i, h in enumerate(headers):
+                ws.cell(row=row, column=i + 1, value=h)
+            apply_header_row(ws, row, 1, len(headers))
+            row += 1
+
+            for idx, pc in enumerate(non_advance_pcs):
+                data = [
+                    pc.name,
+                    float(pc.amount_current),
+                    float(pc.amount_prior),
+                    "Yes" if pc.is_refundable else "No",
+                    "Yes" if pc.is_transferable else "No",
+                    "Yes" if pc.triggers_migration else "No",
+                    pc.migration_trigger or "N/A",
+                    pc.description,
+                ]
+                write_data_row(ws, row, data, alternate=(idx % 2 == 0))
+                for col in [2, 3]:
+                    format_currency_cell(ws.cell(row=row, column=col))
+                ws.cell(row=row, column=7).alignment = ALIGN_WRAP
+                ws.cell(row=row, column=8).alignment = ALIGN_WRAP
+                ws.row_dimensions[row].height = 55
+                row += 1
+
+        # Tax Treatment Summary
+        row += 1
+        apply_section_header(ws, row, 1, 8, "Tax Treatment Rules")
+        row += 1
+        rules = [
+            ("Advance Payments (Equipment PCs)",
+             "Qualify for deferral under Treas. Reg. 1.451-8. Under the one-year deferral method, "
+             "include in income to the extent recognized on the applicable financial statement in "
+             "the year of receipt, defer the remainder to the next tax year. Requires Form 3115 "
+             "to adopt the deferral method."),
+            ("Slot Reservation Payments",
+             "NOT advance payments under Treas. Reg. 1.451-8. These payments are for the immediate "
+             "purchase of the customer's place in line / right to purchase equipment. The purchased "
+             "right is transferred at the time of payment — no performance obligation remains. "
+             "Non-refundable and transferable. Income is recognized in the year received under "
+             "§451 general inclusion rules."),
+            ("Migration of Slot Reservations",
+             "When a purchase/production agreement is subsequently executed, the slot reservation "
+             "payment character may migrate. The original slot reservation income has already been "
+             "recognized. Any additional amounts paid upon execution of the agreement are treated "
+             "as advance payments and reported under the deferral method adopted via Form 3115, "
+             "unless a subsequent method change to full inclusion has been filed."),
+            ("Book vs. Tax Treatment",
+             "For book purposes (ASC 606), both types of PCs may be recorded as contract "
+             "liabilities / deferred revenue. For tax, they require bifurcated treatment. "
+             "This creates M-1/M-3 adjustments that must be tracked carefully."),
+        ]
+        for label, text in rules:
+            ws.cell(row=row, column=1, value=label).font = FONT_BODY_BOLD
+            ws.merge_cells(start_row=row, start_column=2, end_row=row, end_column=8)
+            ws.cell(row=row, column=2, value=text).font = FONT_BODY
+            ws.cell(row=row, column=2).alignment = ALIGN_WRAP
+            ws.row_dimensions[row].height = 65
+            row += 1
+
+        auto_fit_columns(ws, max_width=50)
+        ws.column_dimensions["H"].width = 50
+        ws.column_dimensions["G"].width = 35
+        ws.sheet_properties.tabColor = "C00000"
 
     def _create_phase2_roadmap(self):
         """Create Phase 2 investigation roadmap sheet."""

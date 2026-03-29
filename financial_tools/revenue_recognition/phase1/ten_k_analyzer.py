@@ -40,6 +40,38 @@ class RevenueStream:
 
 
 @dataclass
+class ProgressCollection:
+    """A category of progress collection / advance payment with its tax treatment.
+
+    Progress collections (PCs) may have different tax treatments depending on
+    their nature. For example:
+    - Equipment advance payments may qualify for deferral under Treas. Reg. 1.451-8
+    - Slot reservation payments (right to purchase / secure production line position)
+      are NOT advance payments under §451 and are taxable upon receipt
+    """
+    name: str
+    description: str = ""
+    pc_type: str = ""  # advance_payment, slot_reservation, deposit, retainer, other
+    amount_current: Decimal = Decimal("0")
+    amount_prior: Decimal = Decimal("0")
+    # Tax treatment
+    tax_treatment: str = ""  # deferral_451c, immediate_inclusion, deposit, other
+    is_advance_payment_under_451: bool = True
+    is_refundable: bool = True
+    is_transferable: bool = False
+    # For advance payments under deferral method
+    deferral_method: str = ""  # one_year_deferral, full_inclusion, ratable_inclusion
+    method_change_filed: bool = False
+    method_change_year: Optional[int] = None
+    form_3115_reference: str = ""
+    # For non-advance payments (e.g., slot reservations)
+    triggers_migration: bool = False  # can this PC migrate into an advance payment later?
+    migration_trigger: str = ""  # e.g., "execution of purchase/production agreement"
+    migration_notes: str = ""
+    notes: str = ""
+
+
+@dataclass
 class DeferredRevenueData:
     """Deferred revenue / contract liability data from the balance sheet."""
     current_balance: Decimal = Decimal("0")
@@ -47,6 +79,7 @@ class DeferredRevenueData:
     current_portion: Decimal = Decimal("0")
     noncurrent_portion: Decimal = Decimal("0")
     revenue_recognized_from_opening: Decimal = Decimal("0")  # recognized from prior-year deferred
+    progress_collections: List[ProgressCollection] = field(default_factory=list)
     notes: str = ""
 
 
@@ -141,6 +174,7 @@ class TenKAnalyzer:
         self._compute_revenue_metrics()
         self._analyze_revenue_trends()
         self._analyze_deferred_revenue()
+        self._analyze_progress_collections()
         self._analyze_contract_assets()
         self._analyze_receivables()
         self._analyze_disclosure_quality()
@@ -340,6 +374,107 @@ class TenKAnalyzer:
                           "Evaluate whether recognition timing aligns with tax positions.",
                 "risk_level": "Low",
                 "phase2_action": "Tie to specific contract groups in tax return work papers",
+            })
+
+    def _analyze_progress_collections(self):
+        """Analyze progress collections by type and tax treatment.
+
+        Distinguishes between:
+        1. Advance payments qualifying for deferral under Treas. Reg. 1.451-8
+        2. Non-advance payments (e.g., slot reservations) taxable upon receipt
+        3. Payments that may migrate between categories
+        """
+        pcs = self.data.deferred_revenue.progress_collections
+        if not pcs:
+            return
+
+        total_pc = sum(pc.amount_current for pc in pcs)
+        advance_pcs = [pc for pc in pcs if pc.is_advance_payment_under_451]
+        non_advance_pcs = [pc for pc in pcs if not pc.is_advance_payment_under_451]
+        migratable_pcs = [pc for pc in pcs if pc.triggers_migration]
+
+        self.metrics["total_progress_collections"] = float(total_pc)
+        self.metrics["advance_payment_pcs"] = float(sum(pc.amount_current for pc in advance_pcs))
+        self.metrics["non_advance_payment_pcs"] = float(sum(pc.amount_current for pc in non_advance_pcs))
+        self.metrics["migratable_pcs"] = float(sum(pc.amount_current for pc in migratable_pcs))
+
+        # Analyze advance payments under §451(c)
+        for pc in advance_pcs:
+            self.opportunities.append({
+                "category": "Progress Collections — Advance Payments",
+                "finding": f"'{pc.name}' qualifies for §451(c) deferral",
+                "detail": f"Current balance: ${float(pc.amount_current):,.0f}. "
+                          f"Deferral method: {pc.deferral_method or 'Not specified'}. "
+                          f"Method change filed: {'Yes (' + str(pc.method_change_year) + ')' if pc.method_change_filed else 'No'}. "
+                          f"{pc.description}",
+                "risk_level": "High",
+                "phase2_action": "Verify deferral method is being applied correctly; "
+                                 "confirm Form 3115 was properly filed; "
+                                 "quantify §481(a) adjustment if applicable",
+            })
+
+            if pc.method_change_filed:
+                self.opportunities.append({
+                    "category": "Progress Collections — Method Change",
+                    "finding": f"Accounting method change filed for '{pc.name}' ({pc.method_change_year})",
+                    "detail": f"Form 3115 reference: {pc.form_3115_reference or 'Not provided'}. "
+                              "Method change from full inclusion to deferral creates a favorable "
+                              "§481(a) adjustment. Verify the adjustment is being spread correctly "
+                              "and the cumulative catch-up was computed accurately.",
+                    "risk_level": "High",
+                    "phase2_action": "Review Form 3115 and §481(a) adjustment computation; "
+                                     "verify 4-year spread if applicable",
+                })
+
+        # Analyze non-advance payments (slot reservations, etc.)
+        for pc in non_advance_pcs:
+            self.opportunities.append({
+                "category": "Progress Collections — Non-Advance Payments",
+                "finding": f"'{pc.name}' is NOT an advance payment under Treas. Reg. 1.451-8",
+                "detail": f"Current balance: ${float(pc.amount_current):,.0f}. "
+                          f"Refundable: {'Yes' if pc.is_refundable else 'No'}. "
+                          f"Transferable: {'Yes' if pc.is_transferable else 'No'}. "
+                          f"{pc.description} "
+                          "This payment is for an immediately transferred right/benefit and is "
+                          "taxable in the year received under the general rules of §451. "
+                          "No deferral is available because no performance obligation exists "
+                          "at the time of receipt.",
+                "risk_level": "High",
+                "phase2_action": "Confirm these payments are being included in income in year received; "
+                                 "verify proper classification on the tax return",
+            })
+
+            if pc.triggers_migration:
+                self.opportunities.append({
+                    "category": "Progress Collections — Migration",
+                    "finding": f"'{pc.name}' may migrate into advance payment status",
+                    "detail": f"Migration trigger: {pc.migration_trigger}. "
+                              f"{pc.migration_notes} "
+                              "When the triggering event occurs (e.g., execution of purchase/production "
+                              "agreement), the payment character changes. The original income has already "
+                              "been recognized, but any additional amounts paid at or after the trigger "
+                              "would be treated as advance payments eligible for the deferral method.",
+                    "risk_level": "High",
+                    "phase2_action": "Track migration events; ensure proper bifurcation of income "
+                                     "already recognized vs. new advance payments eligible for deferral",
+                })
+
+        # Summary comparison
+        if advance_pcs and non_advance_pcs:
+            adv_total = sum(pc.amount_current for pc in advance_pcs)
+            non_adv_total = sum(pc.amount_current for pc in non_advance_pcs)
+            self.opportunities.append({
+                "category": "Progress Collections — Bifurcation Summary",
+                "finding": "Progress collections require bifurcated tax treatment",
+                "detail": f"Total PCs: ${float(total_pc):,.0f}. "
+                          f"Advance payments (§451(c) deferral eligible): ${float(adv_total):,.0f}. "
+                          f"Non-advance payments (immediate inclusion): ${float(non_adv_total):,.0f}. "
+                          f"Migratable: ${float(sum(pc.amount_current for pc in migratable_pcs)):,.0f}. "
+                          "Book treatment may defer all PCs uniformly as contract liabilities, "
+                          "but tax treatment must distinguish between the two categories.",
+                "risk_level": "High",
+                "phase2_action": "Reconcile book contract liabilities to tax treatment by PC type; "
+                                 "verify M-1/M-3 adjustments properly reflect the bifurcation",
             })
 
     def _analyze_contract_assets(self):
