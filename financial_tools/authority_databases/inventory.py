@@ -1,0 +1,267 @@
+"""Technical authority database for inventory methods.
+
+Covers §471 inventory rules, LIFO/FIFO, §263A UNICAP, small business
+exceptions, lower of cost or market, and related authorities.
+"""
+
+import sys
+import os
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from revenue_recognition.technical_authority.authorities.base import (
+    TechnicalAuthority, AuthorityLookup,
+)
+
+INVENTORY_AUTHORITIES = [
+    # --- Core Statutes ---
+    TechnicalAuthority(
+        citation="IRC §471(a)",
+        authority_type="statute",
+        title="Inventories — General Rule",
+        year=1986,
+        relevance="Taxpayers required to use inventories must conform to best accounting practice and clearly reflect income",
+        key_holding="Whenever in the opinion of the Secretary the use of inventories is necessary in order clearly to determine the income of any taxpayer, inventories shall be taken by such taxpayer on such basis as the Secretary may prescribe as conforming as nearly as may be to the best accounting practice in the trade or business and as most clearly reflecting the income.",
+        taxpayer_favorable=False,
+        weight="primary",
+        topics=["inventory", "471", "clearly reflect income"],
+    ),
+    TechnicalAuthority(
+        citation="IRC §471(c)",
+        authority_type="statute",
+        title="Small Business Exception to Inventory Rules",
+        year=2017,
+        relevance="Small businesses meeting §448(c) test may use cash method or treat inventory as non-incidental materials/supplies",
+        key_holding="A taxpayer meeting the §448(c) gross receipts test ($29M for 2024) may account for inventories using: (1) the method used for financial statements, or (2) treatment as non-incidental materials and supplies (deductible when used or consumed). Effectively eliminates §263A for qualifying taxpayers.",
+        facts_summary="TCJA addition. Provides massive simplification for small businesses. Eliminates UNICAP, LIFO, and LCM complexity for taxpayers under the threshold.",
+        taxpayer_favorable=True,
+        weight="primary",
+        topics=["inventory", "small business", "471(c)", "gross receipts test", "materials and supplies"],
+    ),
+    TechnicalAuthority(
+        citation="IRC §472",
+        authority_type="statute",
+        title="LIFO Inventories",
+        year=1986,
+        relevance="Last-in, first-out inventory method — election and conformity requirement",
+        key_holding="A taxpayer may elect to inventory goods using the LIFO method. The LIFO method assumes the last goods purchased or produced are the first goods sold. The LIFO conformity requirement (§472(c)) requires the taxpayer to use LIFO for financial reporting if used for tax.",
+        taxpayer_favorable=True,
+        weight="primary",
+        topics=["LIFO", "472", "inventory method", "conformity requirement"],
+    ),
+    TechnicalAuthority(
+        citation="IRC §472(c)",
+        authority_type="statute",
+        title="LIFO Conformity Requirement",
+        year=1986,
+        relevance="LIFO for tax requires LIFO for financial reporting (book conformity)",
+        key_holding="The LIFO method may not be used for tax unless the taxpayer also uses LIFO for credit purposes and for purposes of reports to shareholders, partners, or other proprietors.",
+        facts_summary="One of the few areas where book-tax conformity is required. Treas. Reg. 1.472-2(e) provides certain exceptions (supplemental disclosures, lower of LIFO cost or market for external reports).",
+        taxpayer_favorable=False,
+        weight="primary",
+        topics=["LIFO", "conformity", "472(c)", "book-tax"],
+    ),
+    TechnicalAuthority(
+        citation="IRC §473",
+        authority_type="statute",
+        title="LIFO Qualified Liquidation — Involuntary Liquidation",
+        year=1986,
+        relevance="Relief for involuntary LIFO layer liquidation due to supply disruptions",
+        key_holding="If a taxpayer using LIFO experiences a qualified liquidation (involuntary reduction in inventory due to circumstances beyond taxpayer's control), the taxpayer may elect to restore the liquidated LIFO layers within 3 years.",
+        taxpayer_favorable=True,
+        weight="primary",
+        topics=["LIFO", "involuntary liquidation", "473"],
+    ),
+
+    # --- §263A UNICAP ---
+    TechnicalAuthority(
+        citation="IRC §263A(a)",
+        authority_type="statute",
+        title="Uniform Capitalization (UNICAP) — General Rule",
+        year=1986,
+        relevance="Producers and resellers must capitalize direct and allocable indirect costs to inventory/self-constructed assets",
+        key_holding="In the case of any property to which this section applies, any costs which are allocable to such property shall be included in: (1) inventory costs (for property held for sale), or (2) capitalized costs (for property used in trade/business). Applies to producers and resellers with average annual gross receipts exceeding the §448(c) threshold.",
+        taxpayer_favorable=False,
+        weight="primary",
+        topics=["263A", "UNICAP", "capitalization", "inventory", "indirect costs"],
+    ),
+    TechnicalAuthority(
+        citation="IRC §263A(b)",
+        authority_type="statute",
+        title="§263A — Property to Which Section Applies",
+        year=1986,
+        relevance="UNICAP applies to inventory produced or acquired for resale, and self-constructed assets",
+        key_holding="§263A applies to: (1) real or tangible personal property produced by the taxpayer, and (2) real or personal property acquired by the taxpayer for resale. Exception for personal property acquired for resale if average annual gross receipts ≤ $29M (2024).",
+        taxpayer_favorable=False,
+        weight="primary",
+        topics=["263A", "UNICAP", "production", "resale"],
+    ),
+    TechnicalAuthority(
+        citation="IRC §263A(i)",
+        authority_type="statute",
+        title="Small Business UNICAP Exception",
+        year=2017,
+        relevance="TCJA small business exception — §263A does not apply if meeting §448(c) gross receipts test",
+        key_holding="§263A shall not apply to any taxpayer meeting the gross receipts test of §448(c). This exempts qualifying small businesses from all UNICAP rules for both produced and resale inventory.",
+        facts_summary="TCJA addition. Before TCJA, only resellers with ≤$10M gross receipts were exempt. Now producers and resellers with ≤$29M (2024) are fully exempt.",
+        taxpayer_favorable=True,
+        weight="primary",
+        topics=["263A", "UNICAP", "small business exception", "gross receipts test"],
+    ),
+
+    # --- Treasury Regulations ---
+    TechnicalAuthority(
+        citation="Treas. Reg. §1.471-1",
+        authority_type="regulation",
+        title="Need for Inventories",
+        year=1973,
+        relevance="When inventories are required — production or merchandise-purchase activities",
+        key_holding="Inventories at the beginning and end of each taxable year are necessary in every case in which the production, purchase, or sale of merchandise is an income-producing factor.",
+        taxpayer_favorable=False,
+        weight="primary",
+        topics=["inventory", "requirement", "merchandise"],
+    ),
+    TechnicalAuthority(
+        citation="Treas. Reg. §1.471-2(c)",
+        authority_type="regulation",
+        title="Inventory Valuation Methods",
+        year=1973,
+        relevance="Permissible inventory valuation methods — cost, LCM",
+        key_holding="Inventory may be valued at (1) cost, or (2) cost or market, whichever is lower (LCM). The basis used must conform to the best accounting practice in the industry and must clearly reflect income.",
+        taxpayer_favorable=True,
+        weight="primary",
+        topics=["inventory valuation", "cost", "lower of cost or market", "LCM"],
+    ),
+    TechnicalAuthority(
+        citation="Treas. Reg. §1.263A-1(a)",
+        authority_type="regulation",
+        title="UNICAP — General Principles",
+        year=1993,
+        relevance="Comprehensive UNICAP regulations — cost allocation methods",
+        key_holding="Taxpayers subject to §263A must capitalize all direct costs and a proper share of indirect costs allocable to property produced or acquired for resale. Provides simplified methods: simplified production method, simplified resale method, and simplified service cost method.",
+        taxpayer_favorable=True,
+        weight="primary",
+        topics=["263A", "UNICAP", "cost allocation", "simplified methods"],
+    ),
+    TechnicalAuthority(
+        citation="Treas. Reg. §1.263A-1(d)",
+        authority_type="regulation",
+        title="UNICAP — Types of Costs",
+        year=1993,
+        relevance="Categories of costs: §471 costs (included regardless), additional §263A costs (capitalizable indirect), and non-capitalizable service costs",
+        key_holding="Costs are categorized as: (1) §471 costs (direct materials, direct labor — always capitalized), (2) additional §263A costs (indirect costs that must be capitalized under UNICAP but would not be under §471 alone), and (3) costs not required to be capitalized (selling, marketing, distribution costs).",
+        taxpayer_favorable=True,
+        weight="primary",
+        topics=["263A", "UNICAP", "cost categories", "direct costs", "indirect costs"],
+    ),
+    TechnicalAuthority(
+        citation="Treas. Reg. §1.263A-2(b)",
+        authority_type="regulation",
+        title="UNICAP Simplified Production Method",
+        year=1993,
+        relevance="Simplified method for producers to compute §263A additional costs",
+        key_holding="Under the simplified production method, additional §263A costs are allocated to ending inventory using an absorption ratio: additional §263A costs / (§471 costs - direct material costs). The ratio is applied to §471 costs in ending inventory.",
+        taxpayer_favorable=True,
+        weight="primary",
+        topics=["263A", "simplified production method", "absorption ratio"],
+    ),
+    TechnicalAuthority(
+        citation="Treas. Reg. §1.263A-3(d)",
+        authority_type="regulation",
+        title="UNICAP Simplified Resale Method",
+        year=1993,
+        relevance="Simplified method for resellers — storage and handling cost allocation",
+        key_holding="Under the simplified resale method, §263A costs are allocated to ending inventory using a combined absorption ratio for purchasing, storage, and handling costs as a percentage of beginning inventory plus current-year purchases.",
+        taxpayer_favorable=True,
+        weight="primary",
+        topics=["263A", "simplified resale method", "resellers"],
+    ),
+
+    # --- Case Law ---
+    TechnicalAuthority(
+        citation="Thor Power Tool Co. v. Commissioner, 439 U.S. 522 (1979)",
+        authority_type="case_law",
+        title="Thor Power Tool — Inventory Write-Downs",
+        year=1979,
+        relevance="Inventory write-down to NRV for GAAP not automatically allowed for tax",
+        key_holding="A taxpayer may not write down inventory to net realizable value for tax purposes merely because GAAP requires or permits such treatment. Tax inventory valuation must independently satisfy the 'clearly reflect income' standard. Write-down requires actual offering for sale at reduced prices.",
+        facts_summary="Landmark case establishing that book and tax inventory methods are independent. GAAP write-downs of excess and obsolete inventory were disallowed for tax.",
+        taxpayer_favorable=False,
+        weight="primary",
+        topics=["inventory", "write-down", "clearly reflect income", "NRV", "GAAP vs tax"],
+    ),
+    TechnicalAuthority(
+        citation="INDOPCO, Inc. v. Commissioner, 503 U.S. 79 (1992)",
+        authority_type="case_law",
+        title="INDOPCO — Capitalization Principle",
+        year=1992,
+        relevance="Expenditures creating future benefits must be capitalized (supports §263A principles)",
+        key_holding="A taxpayer's expenditure that creates or enhances a separate and distinct asset, or produces significant future benefits beyond the current taxable year, must be capitalized rather than deducted.",
+        taxpayer_favorable=False,
+        weight="primary",
+        topics=["capitalization", "future benefits", "INDOPCO"],
+    ),
+    TechnicalAuthority(
+        citation="Suzy's Zoo v. Commissioner, 273 F.3d 875 (9th Cir. 2001)",
+        authority_type="case_law",
+        title="Suzy's Zoo — UNICAP Allocation Methods",
+        year=2001,
+        relevance="UNICAP cost allocation — IRS's method upheld where taxpayer's was unreasonable",
+        key_holding="The IRS's §263A cost allocation method was upheld as reasonable where the taxpayer failed to demonstrate that its method properly allocated indirect costs to inventory.",
+        taxpayer_favorable=False,
+        weight="substantial",
+        topics=["263A", "UNICAP", "cost allocation", "burden of proof"],
+    ),
+
+    # --- Revenue Procedures ---
+    TechnicalAuthority(
+        citation="Rev. Proc. 2024-23 (CAM §22)",
+        authority_type="rev_proc",
+        title="Automatic Consent — §263A Method Changes",
+        year=2024,
+        relevance="Automatic method changes for UNICAP methods",
+        key_holding="Various §263A method changes qualify for automatic consent, including changes to/from the simplified production method, simplified resale method, and changes to implement the small business exception.",
+        taxpayer_favorable=True,
+        weight="primary",
+        topics=["263A", "method change", "automatic consent", "Form 3115"],
+    ),
+    TechnicalAuthority(
+        citation="Rev. Proc. 2024-23 (CAM §21)",
+        authority_type="rev_proc",
+        title="Automatic Consent — Inventory Method Changes",
+        year=2024,
+        relevance="Automatic method changes for inventory valuation methods",
+        key_holding="Changes in inventory valuation methods (cost, LCM, LIFO, small business exception) qualify for automatic consent. Includes changes to adopt or revoke §471(c) small business inventory method.",
+        taxpayer_favorable=True,
+        weight="primary",
+        topics=["inventory", "method change", "automatic consent", "471(c)", "LIFO"],
+    ),
+
+    # --- IRS Guidance ---
+    TechnicalAuthority(
+        citation="Rev. Rul. 2010-29",
+        authority_type="rev_rul",
+        title="Shrinkage Allowance for Inventory",
+        year=2010,
+        relevance="Estimated inventory shrinkage accrual permitted with proper method",
+        key_holding="A taxpayer may accrue a reasonable estimate of inventory shrinkage (theft, damage, administrative errors) at year end, provided the taxpayer takes a physical count after year end and adjusts for actual shrinkage.",
+        taxpayer_favorable=True,
+        weight="substantial",
+        topics=["inventory", "shrinkage", "accrual", "estimation"],
+    ),
+    TechnicalAuthority(
+        citation="CCA 201214026",
+        authority_type="cca",
+        title="§263A — Treatment of Negative Additional §263A Costs",
+        year=2012,
+        relevance="Handling negative §263A adjustments in simplified method",
+        key_holding="Under the simplified production method, if a taxpayer has a negative additional §263A cost amount (additional §263A costs are negative), the absorption ratio should be computed as zero, not as a negative number.",
+        taxpayer_favorable=True,
+        weight="some",
+        topics=["263A", "UNICAP", "negative costs", "simplified method"],
+    ),
+]
+
+
+def get_inventory_lookup() -> AuthorityLookup:
+    """Return an AuthorityLookup loaded with inventory authorities."""
+    return AuthorityLookup(list(INVENTORY_AUTHORITIES))
