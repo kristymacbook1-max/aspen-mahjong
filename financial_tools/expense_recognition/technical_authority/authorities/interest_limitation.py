@@ -1,0 +1,126 @@
+"""Technical authorities for §163(j) business interest limitation.
+
+Covers the 30% ATI limitation, carryforward rules, exceptions for certain
+businesses, and related guidance.
+"""
+
+from .base import TechnicalAuthority
+
+INTEREST_LIMITATION_AUTHORITIES = [
+    TechnicalAuthority(
+        citation="IRC §163(j)(1)",
+        authority_type="statute",
+        title="Business Interest Limitation — General Rule",
+        year=2017,
+        relevance="Core §163(j) — business interest deduction limited to sum of BII + 30% ATI + floor plan interest",
+        key_holding="The amount allowed as a deduction for business interest for any taxable year shall not exceed the sum of: (A) the business interest income, (B) 30% of the adjusted taxable income, and (C) the floor plan financing interest.",
+        facts_summary="TCJA dramatically expanded §163(j) to apply to all businesses (previously only certain corporations). 30% ATI limit (was 50% for 2019-2020 under CARES Act).",
+        taxpayer_favorable=False,
+        weight="primary",
+        topics=["163(j)", "interest limitation", "30% ATI", "business interest"],
+    ),
+    TechnicalAuthority(
+        citation="IRC §163(j)(2)",
+        authority_type="statute",
+        title="Disallowed Interest Carryforward",
+        year=2017,
+        relevance="Carryforward of disallowed business interest — indefinite",
+        key_holding="Any business interest not allowed as a deduction for any taxable year by reason of §163(j)(1) shall be treated as business interest paid or accrued in the succeeding taxable year.",
+        taxpayer_favorable=True,
+        weight="primary",
+        topics=["163(j)", "carryforward", "disallowed interest"],
+    ),
+    TechnicalAuthority(
+        citation="IRC §163(j)(3)",
+        authority_type="statute",
+        title="Small Business Exception",
+        year=2017,
+        relevance="Small business exception — §163(j) does not apply if avg gross receipts ≤ $29M (2024, inflation adjusted)",
+        key_holding="§163(j) shall not apply to any taxpayer (other than a tax shelter) which meets the gross receipts test of §448(c) for any taxable year. The §448(c) test is met if average annual gross receipts for the 3 prior taxable years do not exceed the threshold amount.",
+        taxpayer_favorable=True,
+        weight="primary",
+        topics=["163(j)", "small business exception", "gross receipts test"],
+    ),
+    TechnicalAuthority(
+        citation="IRC §163(j)(7)",
+        authority_type="statute",
+        title="Electing Real Property Trade or Business",
+        year=2017,
+        relevance="Real property business may elect out of §163(j) in exchange for ADS depreciation",
+        key_holding="An electing real property trade or business is not subject to §163(j). However, the election requires using the alternative depreciation system (ADS) for all real property used in the trade or business.",
+        taxpayer_favorable=True,
+        weight="primary",
+        topics=["163(j)", "real property election", "ADS depreciation"],
+    ),
+    TechnicalAuthority(
+        citation="IRC §163(j)(8)",
+        authority_type="statute",
+        title="Adjusted Taxable Income Definition",
+        year=2017,
+        relevance="ATI computation — based on taxable income with specified adjustments",
+        key_holding="Adjusted taxable income is computed by making specified adjustments to taxable income, including adding back business interest expense, and for taxable years beginning before 2022, adding back depreciation, amortization, and depletion (this add-back expired after 2021).",
+        facts_summary="Critical change: for tax years beginning after 12/31/2021, depreciation/amortization/depletion are NO LONGER added back to ATI, making the limitation more restrictive.",
+        taxpayer_favorable=False,
+        weight="primary",
+        topics=["163(j)", "ATI", "adjusted taxable income", "depreciation add-back"],
+    ),
+
+    # --- Treasury Regulations ---
+    TechnicalAuthority(
+        citation="Treas. Reg. §1.163(j)-1",
+        authority_type="regulation",
+        title="§163(j) Definitions",
+        year=2020,
+        relevance="Definitions of business interest expense, business interest income, and related terms",
+        key_holding="Provides comprehensive definitions. Business interest expense means any interest paid or accrued on indebtedness properly allocable to a trade or business. Investment interest and personal interest are excluded.",
+        taxpayer_favorable=True,
+        weight="primary",
+        topics=["163(j)", "definitions", "business interest"],
+    ),
+    TechnicalAuthority(
+        citation="Treas. Reg. §1.163(j)-2",
+        authority_type="regulation",
+        title="§163(j) Deduction Limitation — Mechanics",
+        year=2020,
+        relevance="Detailed computation of the §163(j) limitation",
+        key_holding="Provides step-by-step rules for computing the §163(j) limitation, including ordering rules when multiple limitations apply, and special rules for consolidated groups.",
+        taxpayer_favorable=True,
+        weight="primary",
+        topics=["163(j)", "computation", "limitation mechanics"],
+    ),
+    TechnicalAuthority(
+        citation="Treas. Reg. §1.163(j)-6",
+        authority_type="regulation",
+        title="§163(j) and Partnerships",
+        year=2020,
+        relevance="Partnership-level §163(j) limitation — excess business interest expense (EBIE)",
+        key_holding="The §163(j) limitation applies at the partnership level. If partnership business interest expense exceeds the limitation, the excess is allocated to partners as excess business interest expense (EBIE), which reduces partner outside basis and is carried forward.",
+        taxpayer_favorable=False,
+        weight="primary",
+        topics=["163(j)", "partnerships", "EBIE", "excess business interest"],
+    ),
+
+    # --- IRS Guidance ---
+    TechnicalAuthority(
+        citation="Rev. Proc. 2024-23 (CAM §14.12)",
+        authority_type="rev_proc",
+        title="Automatic Consent — §163(j) Elections",
+        year=2024,
+        relevance="Method change for §163(j) elections",
+        key_holding="Certain §163(j) elections and method changes qualify for automatic consent. Form 3115 filed with timely return.",
+        taxpayer_favorable=True,
+        weight="primary",
+        topics=["163(j)", "method change", "Form 3115", "automatic consent"],
+    ),
+    TechnicalAuthority(
+        citation="Notice 2019-20",
+        authority_type="notice",
+        title="Safe Harbor for §163(j) ATI Computation",
+        year=2019,
+        relevance="Guidance on computing ATI for §163(j) purposes",
+        key_holding="Provides safe harbor methods for computing ATI, including treatment of depreciation capitalized to inventory under §263A.",
+        taxpayer_favorable=True,
+        weight="substantial",
+        topics=["163(j)", "ATI", "safe harbor", "263A"],
+    ),
+]
