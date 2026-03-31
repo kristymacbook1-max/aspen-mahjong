@@ -262,6 +262,17 @@ INVENTORY_AUTHORITIES = [
 ]
 
 
+from .inventory_detail import ALL_INVENTORY_DETAIL_AUTHORITIES
+
+# Combined: core authorities + the 117-authority detailed module
+ALL_INVENTORY_AUTHORITIES = list(INVENTORY_AUTHORITIES) + list(ALL_INVENTORY_DETAIL_AUTHORITIES)
+
+
 def get_inventory_lookup() -> AuthorityLookup:
-    """Return an AuthorityLookup loaded with inventory authorities."""
+    """Return an AuthorityLookup loaded with core inventory authorities only."""
     return AuthorityLookup(list(INVENTORY_AUTHORITIES))
+
+
+def get_full_inventory_lookup() -> AuthorityLookup:
+    """Return an AuthorityLookup loaded with all inventory authorities (core + detailed)."""
+    return AuthorityLookup(ALL_INVENTORY_AUTHORITIES)
