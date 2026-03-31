@@ -30,3 +30,9 @@ npm-debug.log*
 
 # Misc
 .cache/
+
+# Financial tools output
+output/
+data/tracking/
+__pycache__/
+*.pyc

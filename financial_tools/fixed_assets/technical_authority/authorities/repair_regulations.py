@@ -1,0 +1,127 @@
+"""Technical authorities for tangible property repair regulations.
+
+Covers the Reg. 1.263(a)-1/-2/-3 framework for distinguishing capital
+improvements from deductible repairs, de minimis safe harbor, routine
+maintenance safe harbor, and betterment/restoration/adaptation tests.
+"""
+
+from .base import TechnicalAuthority
+
+REPAIR_REGULATION_AUTHORITIES = [
+    # --- Core Regulations ---
+    TechnicalAuthority(
+        citation="Treas. Reg. §1.263(a)-1(f)",
+        authority_type="regulation",
+        title="De Minimis Safe Harbor",
+        year=2014,
+        relevance="Deduct amounts ≤$5,000 (with AFS) or ≤$2,500 (without AFS) per invoice/item",
+        key_holding="A taxpayer with an applicable financial statement (AFS) may elect to deduct amounts paid for tangible property not exceeding $5,000 per invoice (or item). Taxpayers without an AFS: $2,500 threshold. Election made annually on the tax return.",
+        facts_summary="Must have written capitalization policy in place at beginning of year. Applies to materials and supplies as well as property. The policy must be consistently followed for book purposes.",
+        taxpayer_favorable=True,
+        weight="primary",
+        topics=["de minimis safe harbor", "repair regulations", "$5,000", "$2,500", "capitalization policy"],
+    ),
+    TechnicalAuthority(
+        citation="Treas. Reg. §1.263(a)-1(h)",
+        authority_type="regulation",
+        title="Materials and Supplies",
+        year=2014,
+        relevance="Incidental materials/supplies deductible when used or consumed; non-incidental when used",
+        key_holding="Materials and supplies (tangible property used/consumed in operations, not inventory, costing ≤$200 or with useful life ≤12 months) are deductible when used or consumed (incidental) or in the year first used or consumed (non-incidental).",
+        taxpayer_favorable=True,
+        weight="primary",
+        topics=["materials and supplies", "repair regulations", "deductible"],
+    ),
+    TechnicalAuthority(
+        citation="Treas. Reg. §1.263(a)-2(d)",
+        authority_type="regulation",
+        title="Amounts Paid to Acquire Tangible Property",
+        year=2014,
+        relevance="Costs to acquire tangible property must be capitalized (purchase price + transaction costs)",
+        key_holding="Amounts paid to acquire or produce a unit of real or personal property are capital expenditures. Includes invoice price, transaction costs (sales tax, freight, installation), and amounts to defend/perfect title.",
+        taxpayer_favorable=False,
+        weight="primary",
+        topics=["acquisition costs", "capitalization", "tangible property"],
+    ),
+    TechnicalAuthority(
+        citation="Treas. Reg. §1.263(a)-3(d)",
+        authority_type="regulation",
+        title="Improvement Standard — Unit of Property",
+        year=2014,
+        relevance="Improvement analysis applied at the 'unit of property' level, not the entire asset",
+        key_holding="The improvement standard is applied to the 'unit of property.' For buildings, the unit of property is each building and its structural components. However, improvements are analyzed at the building system level (HVAC, plumbing, electrical, fire protection, security, elevators, escalators, and building structure).",
+        facts_summary="This is critical: a roof replacement is analyzed against the 'building structure' system, not the entire building. This makes it more likely to be an improvement.",
+        taxpayer_favorable=True,
+        weight="primary",
+        topics=["unit of property", "building systems", "improvement standard"],
+    ),
+    TechnicalAuthority(
+        citation="Treas. Reg. §1.263(a)-3(j)",
+        authority_type="regulation",
+        title="Betterment Test",
+        year=2014,
+        relevance="Expenditure that betters the property must be capitalized",
+        key_holding="An amount is paid for a betterment if it: (1) ameliorates a material condition or defect that existed prior to acquisition or arose during production, (2) is for a material addition to the unit of property, or (3) results in a material increase in the capacity, productivity, efficiency, strength, or quality of the property.",
+        taxpayer_favorable=False,
+        weight="primary",
+        topics=["betterment", "improvement", "capitalization", "repair regulations"],
+    ),
+    TechnicalAuthority(
+        citation="Treas. Reg. §1.263(a)-3(k)",
+        authority_type="regulation",
+        title="Restoration Test",
+        year=2014,
+        relevance="Expenditure that restores property must be capitalized",
+        key_holding="An amount is paid for a restoration if it: (1) returns the UOP to its ordinarily efficient operating condition after it has deteriorated to a state of disrepair, (2) results in rebuilding the UOP to a like-new condition after the end of its class life, (3) replaces a major component or substantial structural part, (4) is to repair damage for which a loss deduction was or could have been taken, or (5) returns the UOP to working order after it has been in a state of disrepair.",
+        taxpayer_favorable=False,
+        weight="primary",
+        topics=["restoration", "improvement", "capitalization", "major component"],
+    ),
+    TechnicalAuthority(
+        citation="Treas. Reg. §1.263(a)-3(l)",
+        authority_type="regulation",
+        title="Adaptation Test",
+        year=2014,
+        relevance="Expenditure adapting property to a new or different use must be capitalized",
+        key_holding="An amount is paid for an adaptation if it adapts the unit of property to a new or different use. A new or different use is a use that is not consistent with the taxpayer's intended ordinary use of the property at the time it was originally placed in service.",
+        taxpayer_favorable=False,
+        weight="primary",
+        topics=["adaptation", "new use", "improvement", "capitalization"],
+    ),
+    TechnicalAuthority(
+        citation="Treas. Reg. §1.263(a)-3(i)",
+        authority_type="regulation",
+        title="Routine Maintenance Safe Harbor",
+        year=2014,
+        relevance="Recurring maintenance activities are deductible under safe harbor",
+        key_holding="Amounts paid for routine maintenance are deductible. Routine maintenance includes recurring activities that the taxpayer expects to perform as a result of the taxpayer's use of the property to keep it in its ordinarily efficient operating condition. For buildings: activities expected to be performed more than once during the 10-year period beginning on placed-in-service date.",
+        facts_summary="Does NOT apply to betterments or adaptations. Building safe harbor: expected more than once in 10 years. Non-building property: expected more than once between placed-in-service and end of class life.",
+        taxpayer_favorable=True,
+        weight="primary",
+        topics=["routine maintenance", "safe harbor", "repair regulations", "deductible"],
+    ),
+
+    # --- Case Law ---
+    TechnicalAuthority(
+        citation="FedEx Corp. v. United States, 291 F. Supp. 3d 839 (W.D. Tenn. 2018)",
+        authority_type="case_law",
+        title="FedEx — Aircraft Engine Overhauls as Repairs",
+        year=2018,
+        relevance="Aircraft engine overhauls treated as deductible repairs, not capital improvements",
+        key_holding="Aircraft engine overhauls that restored engines to serviceable condition but did not improve them beyond their original condition were deductible as repairs. The court applied the improvement standard at the aircraft level (unit of property) and found no betterment, restoration, or adaptation.",
+        taxpayer_favorable=True,
+        weight="substantial",
+        topics=["repair regulations", "aircraft", "engine overhaul", "unit of property"],
+    ),
+    TechnicalAuthority(
+        citation="Ingersoll Milling Machine Co. v. Commissioner, T.C. Memo 2019-48",
+        authority_type="case_law",
+        title="Ingersoll — Partial Disposition and Repair",
+        year=2019,
+        relevance="Partial disposition allowed concurrent with repair deduction",
+        key_holding="Taxpayer could make a partial disposition election to dispose of a replaced component while simultaneously deducting the cost of the replacement as a repair if it did not rise to the level of an improvement.",
+        taxpayer_favorable=True,
+        weight="some",
+        topics=["partial disposition", "repair regulations", "replacement"],
+    ),
+]
