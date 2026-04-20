@@ -23,6 +23,7 @@ function Navbar() {
 
       <div className="navbar-links">
         <Link to="/lobby" className="nav-link">Play</Link>
+        <Link to="/resources" className="nav-link">Resources</Link>
         {isAuthenticated && !user?.isGuest && (
           <>
             <Link to="/groups" className="nav-link">Groups</Link>

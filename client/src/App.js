@@ -11,6 +11,7 @@ import Lobby from './pages/Lobby';
 import Game from './pages/Game';
 import Profile from './pages/Profile';
 import Groups from './pages/Groups';
+import Resources from './pages/Resources';
 
 // Components
 import Navbar from './components/Navbar';
@@ -32,6 +33,7 @@ function App() {
                 <Route path="/register" element={<Register />} />
                 <Route path="/lobby" element={<Lobby />} />
                 <Route path="/game/:gameId?" element={<Game />} />
+                <Route path="/resources" element={<Resources />} />
                 <Route
                   path="/profile"
                   element={
