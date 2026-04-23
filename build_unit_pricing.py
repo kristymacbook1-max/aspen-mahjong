@@ -70,29 +70,34 @@ def build_readme():
     notes = [
         "",
         "Purpose: price a deliverable by combining a base price, factor scores,",
-        "a tech-stack tier, a token-usage tier, and an AI-automation discount.",
+        "a tech-stack tier, a token-usage tier, residual T&M, and an",
+        "AI-automation discount.",
         "",
         "Convention:",
         "  • Blue font = input (editable)",
         "  • Black font = formula (do not overwrite)",
         "",
         "Workflow:",
-        "  1. Pick deliverable on the Inputs tab.",
-        "  2. Assign scores on the Calc tab (1, 3, or 5 per factor).",
-        "  3. Read the calculated Unit Price on the Calc tab.",
-        "  4. If overridden, populate Override_Reason and Approver on Inputs.",
-        "  5. Log outcomes on the Calibration tab after the matter closes.",
+        "  1. Fill Inputs: matter, deliverable, tiers, T&M hours/rate.",
+        "  2. Assign 7 scores on Calc (1, 3, or 5) — AI is a discount only.",
+        "  3. Read Final Unit Price (highlighted) and Low/High range.",
+        "  4. If overriding, populate Override_Price, Override_Reason, Approver.",
+        "  5. Copy the Calc snapshot row → paste values onto next Calibration row.",
+        "  6. After the matter closes, fill Actual_Final_Price / Actual_Effort_Cost.",
         "",
         "Scoring rule (see Factors tab):",
         "  • 3 = baseline",
         "  • 1 and 5 require explanation",
         "  • AI automation is a downward adjustment only",
         "",
-        "Pilot:",
-        "  Run 10-20 recent matters through the file:",
-        "    pick deliverable → assign scores → calculate price →",
-        "    compare to partner's proposal → compare to actual cost → adjust",
-        "  Adjust order: base deliverable price → weights → tech/token tiers.",
+        "Model knobs (in order to calibrate):",
+        "  1. Base deliverable prices (Deliverables tab)",
+        "  2. Tech / Token tiers",
+        "  3. Multiplier coefficient (Inputs!Mult_Coef, default 0.35)",
+        "  4. Factor weights (Calc!CalcFactors) — must sum to 100%",
+        "",
+        "Pilot: run 10-20 recent matters through the file;",
+        "compare to partner's proposal and actual cost; adjust in the order above.",
     ]
     for i, line in enumerate(notes, start=2):
         ws.cell(row=i, column=1, value=line)
@@ -257,6 +262,9 @@ def build_inputs():
         ("Override_Price",    None),
         ("Override_Reason",   None),
         ("Approver",          None),
+        ("TM_Hours",          0),
+        ("TM_Rate",           350),
+        ("Mult_Coef",         0.35),
     ]
     for i, (label, val) in enumerate(pairs, start=5):
         lc = ws.cell(row=i, column=1, value=label)
@@ -266,8 +274,12 @@ def build_inputs():
         vc = ws.cell(row=i, column=2, value=val)
         vc.font = BLUE
         vc.border = BOX
-        if label == "Override_Price":
+        if label in ("Override_Price", "TM_Rate"):
             vc.number_format = CURRENCY_FMT
+        if label == "Mult_Coef":
+            vc.number_format = "0.000"
+        if label == "TM_Hours":
+            vc.number_format = "0.0"
 
     # Named references for easy formula use
     defined_names = {
@@ -279,6 +291,9 @@ def build_inputs():
         "in_Override":        "Inputs!$B$10",
         "in_OverrideReason":  "Inputs!$B$11",
         "in_Approver":        "Inputs!$B$12",
+        "in_TMHours":         "Inputs!$B$13",
+        "in_TMRate":          "Inputs!$B$14",
+        "in_MultCoef":        "Inputs!$B$15",
     }
     for nm, ref in defined_names.items():
         from openpyxl.workbook.defined_name import DefinedName
@@ -340,15 +355,18 @@ def build_calc():
     headers = ["Factor_Name", "Weight", "Score", "Contribution"]
     write_headers(ws, header_row, headers)
 
+    # AI automation is excluded from the weighted multiplier (treated
+    # purely as a downward discount below). Its weight is held at 0 and
+    # the other seven renormalize to sum to 1.0.
     factors = [
-        ("Technical complexity / guidance profile", 0.20),
-        ("Economic / stakeholder risk",             0.15),
-        ("Controversy risk",                        0.15),
-        ("Deliverable rigor",                       0.15),
-        ("Scope breadth",                           0.10),
+        ("Technical complexity / guidance profile", 0.21),
+        ("Economic / stakeholder risk",             0.16),
+        ("Controversy risk",                        0.16),
+        ("Deliverable rigor",                       0.16),
+        ("Scope breadth",                           0.11),
         ("Data quality / accessibility",            0.10),
         ("Data sensitivity / governance burden",    0.10),
-        ("AI automation level",                     0.05),
+        ("AI automation level",                     0.00),
     ]
     first_row = header_row + 1
     for i, (name, weight) in enumerate(factors):
@@ -386,90 +404,73 @@ def build_calc():
 
     # --- Totals & price build-up ---
     out_row = last_row + 3
-    lines = [
-        ("Weighted factor score (w̄)",
-         "=SUMPRODUCT(CalcFactors[Weight],CalcFactors[Score])",
-         "0.000"),
-        ("Factor multiplier (0.5 at w̄=1, 1.0 at 3, 1.5 at 5)",
-         "=0.25*B{ws}+0.25",   # handled below
-         "0.000"),
-        ("Base deliverable price",
-         "=VLOOKUP(in_Deliverable,Deliverables[[Deliverable_Name]:[Base_Unit_Price]],2,FALSE)",
-         CURRENCY_FMT),
-        ("Tech multiplier",
-         "=VLOOKUP(in_TechTier,TechTable[[Tech_Tier]:[Multiplier]],3,FALSE)",
-         "0.00"),
-        ("Token add-on",
-         "=VLOOKUP(in_TokenTier,TokenTable[[Token_Tier]:[Token_Cost]],3,FALSE)",
-         CURRENCY_FMT),
-        ("AI automation score (1-5)",
-         "=INDEX(CalcFactors[Score],MATCH(\"AI automation level\",CalcFactors[Factor_Name],0))",
-         "0"),
-        ("AI automation discount (downward only)",
-         "=MAX(0,(B{ai_row}-3)/2)*0.15",   # 0% at ≤3, up to 15% at 5
-         PCT_FMT),
-        ("Subtotal (base × factor × tech + token)",
-         "=B{base}*B{fact}*B{tech}+B{tok}",
-         CURRENCY_FMT),
-        ("Unit Price (calculated)",
-         "=B{sub}*(1-B{disc})",
-         CURRENCY_FMT),
-        ("Override in effect?",
-         "=IF(ISNUMBER(in_Override),\"YES\",\"no\")",
-         "@"),
-        ("Final Unit Price",
-         "=IF(ISNUMBER(in_Override),in_Override,B{calc})",
-         CURRENCY_FMT),
-        ("Override_Check",
-         ("=IF(AND(ISNUMBER(in_Override),"
-          "OR(LEN(in_OverrideReason)=0,LEN(in_Approver)=0)),"
-          "\"Missing override reason\",\"OK\")"),
-         "@"),
-        ("Low_End_Range",
-         "=B{fin}*0.9",
-         CURRENCY_FMT),
-        ("High_End_Range",
-         "=B{fin}*1.1",
-         CURRENCY_FMT),
+    labels_and_formats = [
+        ("Weighted factor score (w̄)",                          "0.000"),
+        ("Multiplier coefficient",                              "0.000"),
+        ("Factor multiplier = 1 + coef × (w̄ − 3)",             "0.000"),
+        ("Base deliverable price",                              CURRENCY_FMT),
+        ("Tech multiplier",                                     "0.00"),
+        ("Token add-on",                                        CURRENCY_FMT),
+        ("Residual T&M hours",                                  "0.0"),
+        ("Residual T&M rate",                                   CURRENCY_FMT),
+        ("Residual T&M cost",                                   CURRENCY_FMT),
+        ("AI automation score (1-5)",                           "0"),
+        ("AI automation discount (downward only)",              PCT_FMT),
+        ("Subtotal (base × factor × tech + token + T&M)",       CURRENCY_FMT),
+        ("Unit Price (calculated)",                             CURRENCY_FMT),
+        ("Override in effect?",                                 "@"),
+        ("Final Unit Price",                                    CURRENCY_FMT),
+        ("Override_Check",                                      "@"),
+        ("Low_End_Range",                                       CURRENCY_FMT),
+        ("High_End_Range",                                      CURRENCY_FMT),
+        ("Weight_Sum_Check (must = 100%)",                      PCT_FMT),
     ]
-
-    rows_map = {}
-    for i, (label, _, _) in enumerate(lines):
-        rows_map[i] = out_row + i
-
+    rows_map = {i: out_row + i for i in range(len(labels_and_formats))}
     r_wbar = rows_map[0]
-    r_fmul = rows_map[1]
-    r_base = rows_map[2]
-    r_tech = rows_map[3]
-    r_tok  = rows_map[4]
-    r_ai   = rows_map[5]
-    r_disc = rows_map[6]
-    r_sub  = rows_map[7]
-    r_calc = rows_map[8]
-    r_ovr  = rows_map[9]
-    r_fin  = rows_map[10]
-    r_chk  = rows_map[11]
-    r_lo   = rows_map[12]
-    r_hi   = rows_map[13]
+    r_coef = rows_map[1]
+    r_fmul = rows_map[2]
+    r_base = rows_map[3]
+    r_tech = rows_map[4]
+    r_tok  = rows_map[5]
+    r_tmh  = rows_map[6]
+    r_tmr  = rows_map[7]
+    r_tm   = rows_map[8]
+    r_ai   = rows_map[9]
+    r_disc = rows_map[10]
+    r_sub  = rows_map[11]
+    r_calc = rows_map[12]
+    r_ovr  = rows_map[13]
+    r_fin  = rows_map[14]
+    r_chk  = rows_map[15]
+    r_lo   = rows_map[16]
+    r_hi   = rows_map[17]
+    r_wsum = rows_map[18]
 
     resolved = [
-        lines[0][1],
-        f"=0.25*B{r_wbar}+0.25",
-        lines[2][1],
-        lines[3][1],
-        lines[4][1],
-        lines[5][1],
+        "=SUMPRODUCT(CalcFactors[Weight],CalcFactors[Score])",
+        "=in_MultCoef",
+        f"=1+B{r_coef}*(B{r_wbar}-3)",
+        "=VLOOKUP(in_Deliverable,Deliverables[[Deliverable_Name]:[Base_Unit_Price]],2,FALSE)",
+        "=VLOOKUP(in_TechTier,TechTable[[Tech_Tier]:[Multiplier]],3,FALSE)",
+        "=VLOOKUP(in_TokenTier,TokenTable[[Token_Tier]:[Token_Cost]],3,FALSE)",
+        "=in_TMHours",
+        "=in_TMRate",
+        f"=B{r_tmh}*B{r_tmr}",
+        "=INDEX(CalcFactors[Score],MATCH(\"AI automation level\",CalcFactors[Factor_Name],0))",
         f"=MAX(0,(B{r_ai}-3)/2)*0.15",
-        f"=B{r_base}*B{r_fmul}*B{r_tech}+B{r_tok}",
+        f"=B{r_base}*B{r_fmul}*B{r_tech}+B{r_tok}+B{r_tm}",
         f"=B{r_sub}*(1-B{r_disc})",
-        lines[9][1],
+        "=IF(ISNUMBER(in_Override),\"YES\",\"no\")",
         f"=IF(ISNUMBER(in_Override),in_Override,B{r_calc})",
-        lines[11][1],
+        ("=IF(AND(ISNUMBER(in_Override),"
+         "OR(LEN(in_OverrideReason)=0,LEN(in_Approver)=0)),"
+         "\"Missing override reason\",\"OK\")"),
         f"=B{r_fin}*0.9",
         f"=B{r_fin}*1.1",
+        "=SUM(CalcFactors[Weight])",
     ]
 
-    for i, (label, _, fmt) in enumerate(lines):
+    for i, (label, fmt) in enumerate(labels_and_formats):
         r = rows_map[i]
         la = ws.cell(row=r, column=1, value=label)
         la.font = Font(bold=True)
@@ -486,36 +487,103 @@ def build_calc():
     ws.cell(row=r_fin, column=2).fill = PatternFill("solid", fgColor="DDEBF7")
     ws.cell(row=r_fin, column=2).font = Font(bold=True, color="000000", size=12)
 
-    autosize(ws, [50, 22, 12, 16])
+    # Flag when weights don't sum to exactly 100%
+    ws.conditional_formatting.add(
+        f"B{r_wsum}",
+        FormulaRule(formula=[f"ROUND(B{r_wsum},4)<>1"],
+                    fill=PatternFill("solid", fgColor="F4CCCC"),
+                    font=Font(bold=True, color="9C0006")),
+    )
+
+    # --- Snapshot block (copy → paste values onto next Calibration row) ---
+    snap_header_row = r_wsum + 3
+    ws.cell(row=snap_header_row - 1, column=1,
+            value="Calibration snapshot — copy row below, paste values onto next Calibration row:"
+            ).font = Font(italic=True, bold=True, color="595959")
+
+    snap_cols = [
+        ("Matter_ID",            "=in_MatterID",                        "@"),
+        ("Matter_Name",          "=in_MatterName",                      "@"),
+        ("Deliverable_Type",     "=in_Deliverable",                     "@"),
+        ("Tech_Tier",            "=in_TechTier",                        "@"),
+        ("Token_Tier",           "=in_TokenTier",                       "@"),
+        ("Score_TechCplx",       "=INDEX(CalcFactors[Score],1)",        "0"),
+        ("Score_EconRisk",       "=INDEX(CalcFactors[Score],2)",        "0"),
+        ("Score_Controversy",    "=INDEX(CalcFactors[Score],3)",        "0"),
+        ("Score_Rigor",          "=INDEX(CalcFactors[Score],4)",        "0"),
+        ("Score_Scope",          "=INDEX(CalcFactors[Score],5)",        "0"),
+        ("Score_DataQ",          "=INDEX(CalcFactors[Score],6)",        "0"),
+        ("Score_DataSens",       "=INDEX(CalcFactors[Score],7)",        "0"),
+        ("Score_AI",             "=INDEX(CalcFactors[Score],8)",        "0"),
+        ("TM_Hours",             "=in_TMHours",                         "0.0"),
+        ("TM_Rate",              "=in_TMRate",                          CURRENCY_FMT),
+        ("Mult_Coef",            "=in_MultCoef",                        "0.000"),
+        ("Proposed_Unit_Price",  f"=B{r_fin}",                          CURRENCY_FMT),
+    ]
+    for c, (lbl, _, _) in enumerate(snap_cols, start=1):
+        cell = ws.cell(row=snap_header_row, column=c, value=lbl)
+        cell.font = HEADER
+        cell.fill = HEADER_FILL
+        cell.border = BOX
+    for c, (_, formula, fmt) in enumerate(snap_cols, start=1):
+        cell = ws.cell(row=snap_header_row + 1, column=c, value=formula)
+        cell.font = BLACK
+        cell.border = BOX
+        if fmt != "@":
+            cell.number_format = fmt
+
+    autosize(ws, [50, 22, 16, 14, 18, 18, 18, 18, 18, 18, 18, 18, 14, 14, 14, 22])
 
 
 # ---------------------------------------------------------------- Calibration
 def build_calibration():
     ws = WB.create_sheet("Calibration")
     headers = [
+        # audit snapshot (populate via Calc log row → paste values)
         "Matter_ID", "Matter_Name", "Deliverable_Type",
-        "Proposed_Unit_Price", "Actual_Final_Price", "Actual_Effort_Cost",
-        "Margin_%", "Partner_Feedback", "Client_Reaction",
+        "Tech_Tier", "Token_Tier",
+        "Score_TechCplx", "Score_EconRisk", "Score_Controversy",
+        "Score_Rigor", "Score_Scope", "Score_DataQ",
+        "Score_DataSens", "Score_AI",
+        "TM_Hours", "TM_Rate", "Mult_Coef",
+        "Proposed_Unit_Price",
+        # outcomes (fill in after the matter closes)
+        "Actual_Final_Price", "Actual_Effort_Cost", "Margin_%",
+        "Partner_Feedback", "Client_Reaction",
         "Adjustment_Needed", "Notes",
     ]
     write_headers(ws, 1, headers)
 
-    # Seed a single empty row so the table + structured formula exist.
     seed_row = 2
     for c in range(1, len(headers) + 1):
         cell = ws.cell(row=seed_row, column=c, value=None)
         cell.border = BOX
-    ws.cell(row=seed_row, column=7,
+
+    currency_cols = {"TM_Rate", "Proposed_Unit_Price",
+                     "Actual_Final_Price", "Actual_Effort_Cost"}
+    for idx, h in enumerate(headers, start=1):
+        if h in currency_cols:
+            ws.cell(row=seed_row, column=idx).number_format = CURRENCY_FMT
+
+    margin_col = headers.index("Margin_%") + 1
+    ws.cell(row=seed_row, column=margin_col,
             value=("=IFERROR(([@Actual_Final_Price]-[@Actual_Effort_Cost])"
                    "/[@Actual_Final_Price],0)"))
-    ws.cell(row=seed_row, column=4).number_format = CURRENCY_FMT
-    ws.cell(row=seed_row, column=5).number_format = CURRENCY_FMT
-    ws.cell(row=seed_row, column=6).number_format = CURRENCY_FMT
-    ws.cell(row=seed_row, column=7).number_format = PCT_FMT
-    ws.cell(row=seed_row, column=7).font = BLACK
+    ws.cell(row=seed_row, column=margin_col).number_format = PCT_FMT
+    ws.cell(row=seed_row, column=margin_col).font = BLACK
 
-    add_table(ws, "Calibration", f"A1:K{seed_row}")
-    autosize(ws, [12, 26, 22, 20, 20, 20, 12, 26, 22, 22, 40])
+    last_col = get_column_letter(len(headers))
+    add_table(ws, "Calibration", f"A1:{last_col}{seed_row}")
+    widths = [
+        12, 26, 22,
+        12, 18,
+        14, 14, 16, 12, 12, 12, 14, 12,
+        12, 12, 12,
+        20,
+        20, 20, 10,
+        26, 22, 22, 40,
+    ]
+    autosize(ws, widths)
 
 
 # ---------------------------------------------------------------- build
