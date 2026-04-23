@@ -32,7 +32,7 @@ NOTE_FILL = PatternFill("solid", fgColor="FFF2CC")
 THIN = Side(border_style="thin", color="BFBFBF")
 BOX = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
 
-CURRENCY_FMT = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)'
+CURRENCY_FMT = '$#,##0;($#,##0);-'
 PCT_FMT = "0.0%"
 
 TABLE_STYLE = TableStyleInfo(
@@ -420,6 +420,17 @@ def build_calc():
         ("Final Unit Price",
          "=IF(ISNUMBER(in_Override),in_Override,B{calc})",
          CURRENCY_FMT),
+        ("Override_Check",
+         ("=IF(AND(ISNUMBER(in_Override),"
+          "OR(LEN(in_OverrideReason)=0,LEN(in_Approver)=0)),"
+          "\"Missing override reason\",\"OK\")"),
+         "@"),
+        ("Low_End_Range",
+         "=B{fin}*0.9",
+         CURRENCY_FMT),
+        ("High_End_Range",
+         "=B{fin}*1.1",
+         CURRENCY_FMT),
     ]
 
     rows_map = {}
@@ -437,6 +448,9 @@ def build_calc():
     r_calc = rows_map[8]
     r_ovr  = rows_map[9]
     r_fin  = rows_map[10]
+    r_chk  = rows_map[11]
+    r_lo   = rows_map[12]
+    r_hi   = rows_map[13]
 
     resolved = [
         lines[0][1],
@@ -450,6 +464,9 @@ def build_calc():
         f"=B{r_sub}*(1-B{r_disc})",
         lines[9][1],
         f"=IF(ISNUMBER(in_Override),in_Override,B{r_calc})",
+        lines[11][1],
+        f"=B{r_fin}*0.9",
+        f"=B{r_fin}*1.1",
     ]
 
     for i, (label, _, fmt) in enumerate(lines):
