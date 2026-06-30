@@ -472,11 +472,249 @@ COST_CAPITALIZATION_AUTHORITIES = [
 ]
 
 
+# ---------------------------------------------------------------------------
+# IRS LB&I Practice Units (§263A examiner guidance)
+#
+# Titles, types, dates, governing regs, process steps and examiner-focus items
+# verified across IRS PDF snippets + KPMG/Bloomberg/Orbitax/Tax Adviser
+# (current to 2026-06-30). Practice Units are training/audit roadmaps — NOT
+# authoritative law and may not be cited as precedent. Exact alphanumeric DCNs
+# print only on the (egress-blocked) PDF cover pages; where a DCN could not be
+# independently confirmed it is flagged rather than fabricated.
+# ---------------------------------------------------------------------------
+
+PRACTICE_UNITS_263A = [
+    {
+        "title": "Interest Capitalization for Self-Constructed Assets",
+        "unit_type": "LB&I Process Unit",
+        "date": "rev. ~Feb 2021 (supersedes 5/29/2018, 3/13/2019, 1/27/2020 versions)",
+        "dcn": "UIL IRC 263A; printed DCN on PDF cover — not independently verified",
+        "regs": "Treas. Reg. §§1.263A-8 to -12 (avoided-cost method)",
+        "topic": "interest",
+        "process": (
+            "Identify designated property -> determine unit of property -> determine "
+            "production period (start = first physical production activity; end = ready to "
+            "place in service / hold for sale) -> set computation period & measurement dates "
+            "(>= quarterly when computation period is the tax year) -> identify eligible debt "
+            "-> compute accumulated production expenditures (APE) per unit per date -> "
+            "capitalize traced-debt interest first, then weighted-average nontraced rate on the "
+            "excess-expenditure amount -> compute §481(a) on any Service-imposed method change."
+        ),
+        "key_points": (
+            "Designated property = all real property; or tangible personal property with class "
+            "life >= 20 yrs, or production period > 2 yrs, or > 1 yr & cost > $1M. NOT designated "
+            "if production period <= 90 days AND total production expenditures <= $1,000,000 / "
+            "number of production days."
+        ),
+        "examiner_focus": (
+            "Failure to capitalize §263A(f) interest on self-constructed designated property; "
+            "understated APE; improperly excluding property from designated-property scope; not "
+            "applying traced debt first; too few measurement dates; shortened production period."
+        ),
+        "url": "https://www.irs.gov/pub/fatca/int_practice_units/interest_cap_self_construed.pdf",
+        "current_note": (
+            "Final regs TD 10034 (Oct 2, 2025) narrowed interest capitalization for IMPROVEMENTS "
+            "to designated property and eliminated the associated-property rule — the 2021 unit "
+            "is now partly superseded on those points."
+        ),
+        "favorable": False,
+    },
+    {
+        "title": "Section 263A Costs for Self-Constructed Assets",
+        "unit_type": "LB&I Concept Unit",
+        "date": "posted 9/16/2021 (reflects final regs T.D. 9843, eff. TY on/after 11/20/2018)",
+        "dcn": "UIL 263A.03-00 (Capitalization of Costs); printed DCN on PDF cover",
+        "regs": "Treas. Reg. §1.263A-1 (general); §1.263A-2(a) (definition of produce)",
+        "topic": "capitalization",
+        "process": (
+            "Determine whether the taxpayer produced a self-constructed asset (built for own use, "
+            "not inventory) -> confirm 'produce' (build/install/manufacture/construct/develop/"
+            "improve/create/raise/grow) -> capture the three cost buckets (§471 costs; additional "
+            "§263A costs; §263A(f) interest) -> capitalize direct material + direct labor -> "
+            "allocate indirect costs and mixed service costs to the asset -> confirm timing & "
+            "cost recovery."
+        ),
+        "key_points": (
+            "Three cost buckets: (1) §471 costs (non-interest costs capitalized on the financial "
+            "statements); (2) additional §263A costs (required by §263A but not in §471 costs); "
+            "(3) §263A(f) interest (cross-refs the interest unit). Mixed service costs allocated "
+            "via the Simplified Service Cost Method (labor-based or production-cost ratio), with a "
+            "90% de minimis all-or-nothing election."
+        ),
+        "examiner_focus": (
+            "Whether produced property is identified; completeness of §471 vs additional §263A "
+            "costs; proper allocation of indirect & mixed service costs; timing; cost recovery."
+        ),
+        "url": "https://www.irs.gov/pub/fatca/int_practice_units/self-constructed-assets.pdf",
+        "current_note": "",
+        "favorable": False,
+    },
+    {
+        "title": "Producer's 263A Computation",
+        "unit_type": "LB&I Process Unit",
+        "date": "updated 11/22/2024 (supersedes 12/14/2020); focuses on SPM (pre-2018 final regs)",
+        "dcn": "DCN COR-P-020 (corroborated; not visually confirmed)",
+        "regs": "Treas. Reg. §1.263A-2(b)(3) (Simplified Production Method)",
+        "topic": "producers",
+        "process": (
+            "Identify §471 costs and additional §263A costs -> determine additional §263A costs "
+            "allocable to production -> apply the SPM absorption ratio to §471 costs in ending "
+            "inventory -> test whether the allocation method is reasonable (service-dept and "
+            "officer-comp allocations) -> apply §446/§481(a) method-change rules if needed."
+        ),
+        "key_points": (
+            "SPM absorption ratio = additional §263A costs incurred / §471 costs incurred, "
+            "multiplied by §471 costs remaining in ending inventory. Unit focuses on SPM and does "
+            "not address the 11/20/2018 final regs (MSPM / negatives)."
+        ),
+        "examiner_focus": (
+            "§471 vs additional §263A misclassification; missed service-dept and officer-comp "
+            "allocations to production; absorption-ratio mechanics; unfiled method changes."
+        ),
+        "url": "https://www.irs.gov/pub/irs-lbi/producer-263A-computation.pdf",
+        "current_note": "",
+        "favorable": False,
+    },
+    {
+        "title": "Modified Simplified Production Method (MSPM)",
+        "unit_type": "LB&I Concept Unit",
+        "date": "reflects final regs T.D. 9843 (eff. TY on/after 11/20/2018)",
+        "dcn": "printed DCN on PDF cover — not independently verified",
+        "regs": "Treas. Reg. §1.263A-2(c) (Modified Simplified Production Method)",
+        "topic": "producers",
+        "process": (
+            "Separate additional §263A costs (incl. negatives) into pre-production and production "
+            "pools -> compute the pre-production absorption ratio and the production absorption "
+            "ratio -> apply each to the corresponding §471 costs remaining on hand at year-end."
+        ),
+        "key_points": (
+            "Two-ratio method corrects the SPM's over-capitalization to raw materials. Capitalized "
+            "= (pre-production ratio x pre-production §471 costs on hand) + (production ratio x "
+            "production §471 costs on hand). Under the SPM, 'large producers' (avg annual gross "
+            "receipts > $50M for the 3 prior years) may NOT include negative adjustments; under "
+            "the MSPM they MAY. Historic Absorption Ratio (HAR) election available after 3 "
+            "consecutive years on a simplified method (election statement, not a method change)."
+        ),
+        "examiner_focus": (
+            "Correct pre-production vs production bifurcation (incl. negatives); ratios applied to "
+            "the right §471 cost pools; the $50M negative-adjustment test; HAR eligibility."
+        ),
+        "url": "https://www.irs.gov/pub/fatca/int_practice_units/modified-simplified-production.pdf",
+        "current_note": "",
+        "favorable": False,
+    },
+    {
+        "title": "Examining a Reseller's 263A Computation",
+        "unit_type": "LB&I Process Unit",
+        "date": "rev. 11/07/2024 (PDF) / 12/06/2024 (commentary), supersedes 9/17/2021",
+        "dcn": "DCN COR-P-021 (corroborated; not visually confirmed)",
+        "regs": "Treas. Reg. §1.263A-3 (property acquired for resale); Simplified Resale Method",
+        "topic": "resellers",
+        "process": (
+            "Identify §471 costs first -> determine whether the taxpayer is properly a reseller and "
+            "the extent of any production activities -> identify additional §263A costs (purchasing, "
+            "storage, handling + their mixed service costs) -> capitalize to ending inventory via "
+            "the Simplified Resale Method -> consider exceptions, self-constructed assets, and "
+            "method-change implications."
+        ),
+        "key_points": (
+            "SRM: additional §263A costs to ending inventory = §471 costs on hand x combined "
+            "absorption ratio, where combined ratio = storage & handling ratio + purchasing ratio. "
+            "Resellers with non-de-minimis production must use SPM/MSPM instead. De minimis "
+            "production: producer-gross-receipts < 10% AND production-labor < 10% of totals. "
+            "Purchasing-labor 1/3-2/3 rule; 90-10 dual-function storage rule; negatives permitted; "
+            "HAR available after 3 consecutive SRM years."
+        ),
+        "examiner_focus": (
+            "Improper SRM use despite production activity; understated §471 base; excluded "
+            "purchasing/storage/handling costs; mis-applied 1/3-2/3 labor rule; missed "
+            "self-constructed-asset capitalization; unsupported negatives / LIFO decrements."
+        ),
+        "url": "https://www.irs.gov/pub/fatca/int_practice_units/examining-reseller-irc263a.pdf",
+        "current_note": "",
+        "favorable": False,
+    },
+    {
+        "title": "Alternative Method for Determining Section 471 Costs",
+        "unit_type": "LB&I Concept Unit",
+        "date": "reflects final regs (eff. TY on/after 11/20/2018)",
+        "dcn": "printed DCN on PDF cover — not independently verified",
+        "regs": "Treas. Reg. §1.263A-1(d)(2)(iii)",
+        "topic": "capitalization",
+        "process": (
+            "Determine eligibility for the alternative method -> verify the taxpayer uses "
+            "financial-statement inventory costs as its §471 costs -> confirm the resulting §471 / "
+            "additional §263A split is correct."
+        ),
+        "key_points": (
+            "Defines the §471-cost vs additional-§263A-cost dichotomy underlying all UNICAP "
+            "computations. The alternative method lets eligible taxpayers treat book inventory "
+            "costs as §471 costs instead of recomputing actual tax amounts; misclassification "
+            "distorts the simplified-method absorption ratio."
+        ),
+        "examiner_focus": (
+            "Eligibility; book-to-tax differences; consistency of the §471 vs additional §263A "
+            "split (not used to under-absorb)."
+        ),
+        "url": "https://www.irs.gov/pub/fatca/int_practice_units/alternative-method-471-costs.pdf",
+        "current_note": "",
+        "favorable": False,
+    },
+    {
+        "title": "IRC 481(a) Adjustment for IRC 263A Adjustments",
+        "unit_type": "LB&I Concept Unit",
+        "date": "publication date on PDF cover — not confirmed from snippets",
+        "dcn": "printed DCN on PDF cover — not independently verified",
+        "regs": "IRC §§446 / 481(a); Treas. Reg. §1.263A-7 (revaluing inventory)",
+        "topic": "capitalization",
+        "process": (
+            "Identify whether the §263A method is permissible -> if impermissible, initiate an "
+            "involuntary §446/§481(a) change -> recompute beginning/ending capitalized §263A costs "
+            "under the correct method -> compute the §481(a) adjustment plus current-year effect."
+        ),
+        "key_points": (
+            "§481(a) adjustment = beginning inventory under old §263A method - beginning inventory "
+            "under new method; worked examples across FIFO/LIFO and non-inventory property."
+        ),
+        "examiner_focus": (
+            "Identifying the method-change issue; §481(a) vs current-year adjustment; avoiding "
+            "duplication/omission of capitalized costs."
+        ),
+        "url": "https://www.irs.gov/pub/fatca/irc-481a-adjustments-for-irc-263A.pdf",
+        "current_note": "",
+        "favorable": False,
+    },
+]
+
+
+def _practice_units_as_authorities():
+    """Expose the Practice Units as TechnicalAuthority records for search."""
+    out = []
+    for pu in PRACTICE_UNITS_263A:
+        out.append(TechnicalAuthority(
+            citation=f"IRS LB&I Practice Unit — {pu['title']}",
+            authority_type="practice_unit",
+            title=pu["title"],
+            year=2024 if "2024" in pu["date"] else 2021,
+            relevance=f"263A examiner guidance — {pu['topic']}",
+            key_holding=pu["key_points"],
+            facts_summary="Process: " + pu["process"],
+            taxpayer_favorable=pu["favorable"],
+            weight="some",  # sub-regulatory; not citable as precedent
+            topics=["263A", "practice unit", pu["topic"]],
+            url=pu["url"],
+            notes=("Examiner focus: " + pu["examiner_focus"]
+                   + ((" | " + pu["current_note"]) if pu["current_note"] else "")),
+        ))
+    return out
+
+
 class CostCapAuthorityLookup(AuthorityLookup):
     """Lookup pre-loaded with the cost capitalization authority database."""
 
     def __init__(self):
-        super().__init__(list(COST_CAPITALIZATION_AUTHORITIES))
+        super().__init__(list(COST_CAPITALIZATION_AUTHORITIES)
+                         + _practice_units_as_authorities())
 
 
 # Module-level singleton for convenience

@@ -17,7 +17,8 @@ Tabs:
   8. Capitalization Summary
   9. Reconciliation (account-tag vs allocation-overlay)
  10. Book-Tax / M-1 & Journal Entries
- 11. Authorities
+ 11. IRS Practice Units (§263A examiner guidance)
+ 12. Authorities
 """
 
 import os
@@ -34,7 +35,7 @@ from revenue_recognition.utils.excel_styles import (
     FMT_CURRENCY, FMT_PERCENT,
     apply_title, apply_section_header, apply_header_row, auto_fit_columns,
 )
-from authority_databases.cost_capitalization import COST_CAP_LOOKUP
+from authority_databases.cost_capitalization import COST_CAP_LOOKUP, PRACTICE_UNITS_263A
 from cost_capitalization.analyzer import (
     PROV_DEDUCTIBLE, PROV_266, PROV_263A_ACQ, PROV_263A, PROV_MIXED, PROV_OTHER,
 )
@@ -69,6 +70,7 @@ class CostCapitalizationReport:
         self._create_summary()
         self._create_reconciliation()
         self._create_booktax()
+        self._create_practice_units()
         self._create_authorities()
 
         os.makedirs(os.path.dirname(output_path) or '.', exist_ok=True)
@@ -805,7 +807,41 @@ class CostCapitalizationReport:
         auto_fit_columns(ws, max_width=55)
 
     # ------------------------------------------------------------------
-    # 11. Authorities
+    # 11. IRS Practice Units (§263A examiner guidance)
+    # ------------------------------------------------------------------
+    def _create_practice_units(self):
+        ws = self._wb.create_sheet("IRS Practice Units")
+        apply_title(ws, 1, 1, 7, "IRS LB&I Practice Units — §263A Examiner Guidance")
+        self._label(ws, 2, 1,
+                    "Practice Units are IRS training / audit roadmaps — not authoritative law and "
+                    "not citable as precedent. Current to 2026-06-30.")
+        ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=7)
+        self._headers(ws, 3, [
+            "Practice Unit", "Type", "Date / Status", "Governing regs",
+            "Examiner process steps", "Examiner focus", "Key points / URL",
+        ])
+        row = 4
+        for pu in PRACTICE_UNITS_263A:
+            key_block = pu["key_points"]
+            if pu.get("current_note"):
+                key_block += "\n\n[Current law: " + pu["current_note"] + "]"
+            key_block += "\n\nDCN: " + pu["dcn"] + "\n" + pu["url"]
+            vals = [
+                pu["title"], pu["unit_type"], pu["date"], pu["regs"],
+                pu["process"], pu["examiner_focus"], key_block,
+            ]
+            for i, v in enumerate(vals):
+                c = ws.cell(row=row, column=1 + i, value=v)
+                c.font = FONT_BODY
+                c.alignment = ALIGN_LEFT
+                c.border = THIN_BORDER
+            row += 1
+        widths = {"A": 34, "B": 18, "C": 30, "D": 34, "E": 70, "F": 55, "G": 60}
+        for col, w in widths.items():
+            ws.column_dimensions[col].width = w
+
+    # ------------------------------------------------------------------
+    # 12. Authorities
     # ------------------------------------------------------------------
     def _create_authorities(self):
         ws = self._wb.create_sheet("Authorities")
