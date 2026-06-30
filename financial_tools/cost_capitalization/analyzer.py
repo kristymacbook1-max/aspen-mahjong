@@ -33,10 +33,14 @@ PROV_263A_ACQ = "263(a)"
 PROV_263A = "263A"
 PROV_MIXED = "mixed"
 PROV_OTHER = "other_cap"
+PROV_BOOK = "book_capitalized"   # already capitalized on the books
 
 PROVISION_TAGS = [
-    PROV_DEDUCTIBLE, PROV_266, PROV_263A_ACQ, PROV_263A, PROV_MIXED, PROV_OTHER,
+    PROV_DEDUCTIBLE, PROV_266, PROV_263A_ACQ, PROV_263A, PROV_MIXED, PROV_OTHER, PROV_BOOK,
 ]
+
+# Sentinel a TrialBalanceLine.provision can carry to request auto-classification
+PROV_AUTO = "auto"
 
 # Capitalization buckets that allocation percentages map to
 CAP_BUCKETS = [PROV_266, PROV_263A_ACQ, PROV_263A, PROV_DEDUCTIBLE]
@@ -63,12 +67,16 @@ class TrialBalanceLine:
     cost_center_code: str
     amount: Decimal = Decimal("0")
     book_category: str = ""           # cogs / labor / overhead / interest / taxes / sga ...
-    provision: str = PROV_DEDUCTIBLE  # one of PROVISION_TAGS
+    provision: str = PROV_DEDUCTIBLE  # one of PROVISION_TAGS, "other:SEC", or PROV_AUTO
     other_cap_section: str = ""       # for provision == other_cap: e.g. "174A", "197", "195"
+    cap_pct: Decimal = Decimal("1")   # portion of the line capitalized to the tagged bucket
+    basis: str = ""                   # governing section / Practice Unit (filled by classifier)
+    confidence: str = ""              # high / medium / low (filled by classifier)
     notes: str = ""
 
     def __post_init__(self):
         self.amount = to_decimal(self.amount)
+        self.cap_pct = to_decimal(self.cap_pct)
 
 
 @dataclass
@@ -200,8 +208,35 @@ class CostCapitalizationInput:
 class CostCapitalizationAnalyzer:
     """Computes capitalization by provision using both methods, then reconciles."""
 
+    def _ensure_classified(self, inp: CostCapitalizationInput):
+        """Fill any provision == ''/PROV_AUTO line via the fuzzy classifier."""
+        from cost_capitalization.classifier import classify
+        cc_by_code = {c.code: c for c in inp.cost_centers}
+        for line in inp.trial_balance:
+            if line.provision in ("", PROV_AUTO):
+                cc = cc_by_code.get(line.cost_center_code)
+                cl = classify(line.account_name, cc.name if cc else line.cost_center_code,
+                              cc.type if cc else "", line.book_category)
+                line.provision = cl.provision
+                line.cap_pct = cl.cap_pct
+                line.basis = cl.basis
+                line.confidence = cl.confidence
+
     def analyze(self, inp: CostCapitalizationInput) -> dict:
+        self._ensure_classified(inp)
         alloc_by_cc = {a.cost_center_code: a for a in inp.allocations}
+        # Normalize lean-vocabulary provisions into the full-report tag set:
+        #   "other:SEC" -> other_cap + section;  book_capitalized -> 263A (§471 cost);
+        #   a classified "mixed" with no allocation overlay -> 263A so the full report ties.
+        for line in inp.trial_balance:
+            if line.provision.startswith("other") and line.provision != PROV_OTHER:
+                if ":" in line.provision:
+                    line.other_cap_section = line.other_cap_section or line.provision.split(":", 1)[1]
+                line.provision = PROV_OTHER
+            elif line.provision == PROV_BOOK:
+                line.provision = PROV_263A
+            elif line.provision == PROV_MIXED and line.cost_center_code not in alloc_by_cc:
+                line.provision = PROV_263A
 
         # ---- Account-level (tagging) method, with mixed split by allocation ----
         tagged = {b: Decimal("0") for b in CAP_BUCKETS}
@@ -288,6 +323,66 @@ class CostCapitalizationAnalyzer:
             "total_trial_balance": total_tb,
             "total_capitalized": total_capitalized,
             "total_deductible": tagged[PROV_DEDUCTIBLE],
+            "small_business_exempt": inp.small_business.exempt,
+            "_input": inp,
+        }
+
+    # ------------------------------------------------------------------
+    def analyze_lean(self, inp: CostCapitalizationInput) -> dict:
+        """Streamlined single-method engine for the lean workbook.
+
+        Auto-classifies any line whose provision is blank or PROV_AUTO via the
+        fuzzy classifier, then splits each line into one capitalization bucket
+        (266 / 263(a) / 263A / other / book) by its provision and cap_pct, with
+        the remainder deductible. No allocation overlays / reconciliation.
+        """
+        self._ensure_classified(inp)
+        totals = {"266": Decimal("0"), "263(a)": Decimal("0"), "263A": Decimal("0"),
+                  "other": Decimal("0"), "book": Decimal("0"), "deductible": Decimal("0")}
+        per_line = []
+
+        for line in inp.trial_balance:
+            if not line.confidence:
+                line.confidence = "manual"
+            prov = line.provision
+            amt = line.amount
+            cap_to = round_currency(amt * line.cap_pct)
+            b = {"266": Decimal("0"), "263(a)": Decimal("0"), "263A": Decimal("0"),
+                 "other": Decimal("0"), "book": Decimal("0")}
+
+            if prov == PROV_266:
+                b["266"] = cap_to
+            elif prov == PROV_263A_ACQ:
+                b["263(a)"] = cap_to
+            elif prov == PROV_263A or prov == PROV_MIXED:
+                b["263A"] = cap_to   # mixed service cost capitalizable portion -> §263A
+            elif prov.startswith("other"):
+                b["other"] = cap_to
+            elif prov == PROV_BOOK:
+                b["book"] = amt      # already fully capitalized on the books
+            # else deductible -> nothing capitalized
+
+            deductible = amt - (b["266"] + b["263(a)"] + b["263A"] + b["other"] + b["book"])
+            for k in b:
+                totals[k] += b[k]
+            totals["deductible"] += deductible
+            per_line.append({"line": line, "buckets": b, "deductible": deductible})
+
+        total_cap_tax = totals["266"] + totals["263(a)"] + totals["263A"] + totals["other"]
+        total_tb = sum((l.amount for l in inp.trial_balance), Decimal("0"))
+        unicap = self._compute_263a(inp.section_263a, inp.small_business)
+
+        return {
+            "company_name": inp.company_name,
+            "tax_year": inp.tax_year,
+            "entity_type": inp.entity_type,
+            "per_line": per_line,
+            "totals": totals,
+            "total_capitalized_tax": total_cap_tax,      # M-1 addback (book-deducted -> capitalized)
+            "total_book_capitalized": totals["book"],
+            "total_deductible": totals["deductible"],
+            "total_trial_balance": total_tb,
+            "unicap": unicap,
             "small_business_exempt": inp.small_business.exempt,
             "_input": inp,
         }
