@@ -62,29 +62,35 @@ def get_taxonomy():
     return _TAX
 '''
 
+# Reference sheets are exposed to =PY() as real Excel Tables (xl() needs a
+# structured table reference, not a bare worksheet). Table names differ from the
+# hidden sheet names to avoid any workbook-name collision.
+_TABLE_NAMES = {"_Categories": "CatRef", "_CCZones": "CCZoneRef",
+                "_CCReclass": "CCReclassRef", "_GenericMap": "GenMapRef",
+                "_Lexicon": "LexRef"}
+
 _BOOTSTRAP = '''
-# --- bootstrap: rebuild taxonomy from hidden sheets, classify the Raw TB ---
+# --- bootstrap: rebuild taxonomy from the hidden Tables, classify the Raw TB ---
 import pandas as pd
 def _rows(name):
-    df = xl(name + "[#All]", headers=True)
-    return df.values.tolist()
-_data = reference_data_from_rows(_rows("_Categories"), _rows("_CCZones"),
-                                 _rows("_CCReclass"), _rows("_GenericMap"),
-                                 _rows("_Lexicon"))
+    return xl(name + "[#All]", headers=True).values.tolist()
+_data = reference_data_from_rows(_rows("CatRef"), _rows("CCZoneRef"),
+                                 _rows("CCReclassRef"), _rows("GenMapRef"),
+                                 _rows("LexRef"))
 _TAX = Taxonomy.from_data(**_data)
 _tb = xl("RawTB[#All]", headers=True)
 _out = []
-for _r in _tb.itertuples(index=False):
-    c = classify(acct_num=str(getattr(_r, "Account_Number", "") or ""),
-                 acct_desc=str(getattr(_r, "Account_Description", "") or ""),
-                 cc_num=str(getattr(_r, "Cost_Center", "") or ""),
-                 cc_desc=str(getattr(_r, "Cost_Center_Description", "") or ""),
-                 tax=_TAX)
-    _out.append([c.code, c.tier1, c.treatment["mspm"], c.treatment["resale"],
-                 c.treatment["self_const"], c.treatment["interest"],
+for _row in _tb.itertuples(index=False, name=None):   # positional (header-name safe)
+    _v = ["" if x is None else str(x) for x in _row]
+    _v += [""] * (5 - len(_v))
+    if not _v[1].strip():
+        continue
+    c = classify(acct_num=_v[0], acct_desc=_v[1], cc_num=_v[2], cc_desc=_v[3], tax=_TAX)
+    _out.append([_v[0], _v[1], _v[3] or _v[2], c.code, c.tier1, c.treatment["mspm"],
+                 c.treatment["resale"], c.treatment["self_const"], c.treatment["interest"],
                  c.confidence, ", ".join(c.flags), c.authority])
-pd.DataFrame(_out, columns=["Code","Tier1","MSPM","Resale","SelfConst","Interest",
-                            "Confidence","Flags","Authority"])
+pd.DataFrame(_out, columns=["Account","Description","Cost Center","Code","Tier1","MSPM",
+                            "Resale","SelfConst","Interest","Confidence","Flags","Authority"])
 '''
 
 
@@ -117,16 +123,21 @@ def build_pyexcel_workbook(output_path: str, sample_rows=None) -> str:
         inst.cell(i + 1, 1, line)
     inst.column_dimensions["A"].width = 90
 
+    from openpyxl.worksheet.table import Table
+    from openpyxl.utils import get_column_letter
+
+    def _add_table(ws, name):
+        if ws.max_row < 2:                      # a table needs at least one data row
+            ws.append([None] * ws.max_column)
+        ref = f"A1:{get_column_letter(ws.max_column)}{ws.max_row}"
+        ws.add_table(Table(displayName=name, ref=ref))
+
     tb = wb.create_sheet("Raw TB")
     tb.append(["Account Number", "Account Description", "Cost Center",
                "Cost Center Description", "Amount"])
     for r in (sample_rows or []):
         tb.append(r)
-    # named range RawTB over the header+data (Excel table would be ideal; a named
-    # range keeps openpyxl simple)
-    from openpyxl.workbook.defined_name import DefinedName
-    last = tb.max_row
-    wb.defined_names.add(DefinedName("RawTB", attr_text=f"'Raw TB'!$A$1:$E${max(last,2)}"))
+    _add_table(tb, "RawTB")
 
     wb.create_sheet("Classify")
     code_ws = wb.create_sheet("PY Code")
@@ -134,6 +145,8 @@ def build_pyexcel_workbook(output_path: str, sample_rows=None) -> str:
     code_ws.column_dimensions["A"].width = 120
 
     export_reference_sheets(wb)          # hidden _Categories etc. (single exporter)
+    for sheet, tname in _TABLE_NAMES.items():
+        _add_table(wb[sheet], tname)
     os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
     wb.save(output_path)
     return output_path

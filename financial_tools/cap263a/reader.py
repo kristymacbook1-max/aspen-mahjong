@@ -23,8 +23,13 @@ _ALIASES = {
     "cc_desc": ["cost center description", "cc description", "cc desc",
                 "department description", "dept description", "dept desc",
                 "department", "dept name", "cost center name"],
+    # A single net/amount column is preferred. "debit" is NOT treated as a
+    # standalone amount — on a two-column (Debit/Credit) TB that would zero out
+    # credit-only balances; debit and credit are captured separately and netted.
     "amount": ["amount", "net balance", "net", "total book amount", "balance",
-               "debit", "net amount", "ending balance", "amount (debit / <credit>)"],
+               "net amount", "ending balance", "amount (debit / <credit>)"],
+    "debit": ["debit", "debit amount", "dr"],
+    "credit": ["credit", "credit amount", "cr"],
 }
 _SECTION_HEADERS = {"assets", "liabilities", "equity", "revenue", "expenses",
                     "income", "cost of goods sold", "cogs"}
@@ -100,6 +105,9 @@ def read_trial_balance(path, sheet=None):
         raise ValueError(f"Could not find an account-description column on '{ws.title}' "
                          f"(header row {header_row}).")
 
+    has_amount = "amount" in cols
+    has_debit_credit = "debit" in cols or "credit" in cols
+
     lines = []
     for r in range(header_row + 1, ws.max_row + 1):
         def cell(field):
@@ -108,12 +116,18 @@ def read_trial_balance(path, sheet=None):
         desc = str(cell("acct_desc") or "").strip()
         if not desc or desc.lower() in _SECTION_HEADERS or desc == "0":
             continue
+        if has_amount:
+            amount = _to_decimal(cell("amount"))
+        elif has_debit_credit:
+            amount = _to_decimal(cell("debit")) - _to_decimal(cell("credit"))
+        else:
+            amount = Decimal("0")
         lines.append(TBLine(
             acct_num=str(cell("acct_num") or "").strip(),
             acct_desc=desc,
             cc_num=str(cell("cc_num") or "").strip(),
             cc_desc=str(cell("cc_desc") or "").strip(),
-            amount=_to_decimal(cell("amount")),
+            amount=amount,
             row_index=r,
         ))
     return lines

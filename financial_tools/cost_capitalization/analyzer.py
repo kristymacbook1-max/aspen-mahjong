@@ -247,8 +247,14 @@ class CostCapitalizationAnalyzer:
         for line in inp.trial_balance:
             buckets = {b: Decimal("0") for b in CAP_BUCKETS}
             other = Decimal("0")
-            if line.provision in (PROV_266, PROV_263A_ACQ, PROV_263A, PROV_DEDUCTIBLE):
-                buckets[line.provision] = line.amount
+            cap_pct = getattr(line, "cap_pct", Decimal("1"))
+            if line.provision in (PROV_266, PROV_263A_ACQ, PROV_263A):
+                # honor the per-line capitalized portion; remainder is deductible
+                cap = round_currency(line.amount * cap_pct)
+                buckets[line.provision] = cap
+                buckets[PROV_DEDUCTIBLE] += line.amount - cap
+            elif line.provision == PROV_DEDUCTIBLE:
+                buckets[PROV_DEDUCTIBLE] = line.amount
             elif line.provision == PROV_MIXED:
                 overlay = alloc_by_cc.get(line.cost_center_code)
                 if overlay:
@@ -257,7 +263,8 @@ class CostCapitalizationAnalyzer:
                 else:
                     buckets[PROV_DEDUCTIBLE] = line.amount
             elif line.provision == PROV_OTHER:
-                other = line.amount
+                other = round_currency(line.amount * cap_pct)
+                buckets[PROV_DEDUCTIBLE] += line.amount - other
                 sec = line.other_cap_section or "other"
                 other_cap_by_section[sec] = other_cap_by_section.get(sec, Decimal("0")) + other
 
