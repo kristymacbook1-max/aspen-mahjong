@@ -31,13 +31,23 @@ class TaxonomyError(ValueError):
 
 
 class Taxonomy:
-    def __init__(self):
-        self.categories = _load("categories.yaml")
+    def __init__(self, data=None):
+        """Load from the YAML files, or from an in-memory `data` dict (used by
+        the exported Python-in-Excel workbook so it runs the identical engine)."""
+        if data is None:
+            data = dict(
+                categories=_load("categories.yaml"),
+                cc_zones=_load("cc_zones.yaml"),
+                cc_reclass=_load("cc_reclass.yaml"),
+                generic_map=_load("generic_map.yaml"),
+                lexicon=_load("lexicon.yaml"),
+            )
+        self.categories = data["categories"]
         self.by_code = {c["code"]: c for c in self.categories}
-        self.cc_zones = _load("cc_zones.yaml")          # keyword -> zone/zone_tier1
-        self.cc_reclass = _load("cc_reclass.yaml")      # (zone, expense_type) -> target
-        self.generic_map = _load("generic_map.yaml")    # GEN-*/VAGUE-* -> expense_type
-        lex = _load("lexicon.yaml")
+        self.cc_zones = data["cc_zones"]                # keyword -> zone/zone_tier1
+        self.cc_reclass = data["cc_reclass"]            # (zone, expense_type) -> target
+        self.generic_map = data["generic_map"]          # GEN-*/VAGUE-* -> expense_type
+        lex = data["lexicon"]
         self.abbreviations = lex["abbreviations"]
         self.account_synonyms = lex["account_synonyms"]
         self.cc_synonyms = lex["cc_synonyms"]
@@ -48,6 +58,11 @@ class Taxonomy:
         self._zone_rules = sorted(self.cc_zones, key=lambda z: -len(z["keyword"]))
         self._build_keyword_index()
         self.validate()
+
+    @classmethod
+    def from_data(cls, categories, cc_zones, cc_reclass, generic_map, lexicon):
+        return cls(dict(categories=categories, cc_zones=cc_zones, cc_reclass=cc_reclass,
+                        generic_map=generic_map, lexicon=lexicon))
 
     # ------------------------------------------------------------------
     def _build_keyword_index(self):
