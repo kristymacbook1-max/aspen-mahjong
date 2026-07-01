@@ -1,0 +1,423 @@
+abbreviations:
+  acct: account
+  acctg: accounting
+  accum: accumulated
+  adj: adjustment
+  admin: administrative
+  adv: advertising
+  afe: authorization for expenditure
+  afudc: allowance for funds used during construction
+  alloc: allocation
+  allow: allowance
+  amort: amortization
+  amt: amount
+  anda: abbreviated new drug application
+  ap: accounts payable
+  ar: accounts receivable
+  aro: asset retirement obligation
+  bim: building information modeling
+  bla: biologics license application
+  bldg: building
+  bnk: bank
+  bns: bonus
+  boe: barrel of oil equivalent
+  bopis: buy online pick up in store
+  cam: common area maintenance
+  cap: capital
+  capa: corrective and preventive action
+  capex: capital expenditure
+  cdmo: contract development manufacturing organization
+  cdn: content delivery network
+  cgmp: current good manufacturing practice
+  chg: charge
+  cip: clean in place
+  clng: cleaning
+  cmo: contract manufacturing organization
+  co: company
+  comm: commission
+  comp: compensation
+  con: consulting
+  consol: consolidation
+  consult: consulting
+  cont: contract
+  contr: contract
+  contrib: contribution
+  copas: council of petroleum accountants
+  corp: corporate
+  crac: computer room air conditioning
+  cro: contract research organization
+  cst: cost
+  curr: current
+  cust: customer
+  dac: deferred acquisition cost
+  dcim: data center infrastructure management
+  dd&a: depletion depreciation amortization
+  def: deferred
+  dep: depreciation
+  depr: depreciation
+  dept: department
+  dev: development
+  dir: direct
+  disc: discount
+  dist: distribution
+  div: division
+  dlr: dealer
+  dom: domestic
+  dsm: demand side management
+  ed: emergency department
+  edc: electronic data capture
+  edi: electronic data interchange
+  ee: employee
+  ees: employees
+  elim: elimination
+  emp: employee
+  eng: engineering
+  ent: entertainment
+  env: environmental
+  equip: equipment
+  er: employer
+  er dept: emergency department
+  esp: electric submersible pump
+  espp: employee stock purchase plan
+  est: estimated
+  exp: expense
+  ext: external
+  fac: facility
+  fba: fulfillment by amazon
+  fed: federal
+  fg: finished goods
+  fgds: finished goods
+  fgn: foreign
+  fin: financial
+  fix: fixtures
+  frt: freight
+  furn: furniture
+  fx: foreign exchange
+  fxd: fixed
+  ga: general and administrative
+  gc: general contractor
+  gen: general
+  gmp: good manufacturing practice
+  govt: government
+  grp: group
+  haccp: hazard analysis critical control point
+  hlth: health
+  hq: headquarters
+  hr: human resources
+  hw: hardware
+  iaas: infrastructure as a service
+  ibnr: incurred but not reported
+  icu: intensive care unit
+  idc: intangible drilling cost
+  imp: improvement
+  improv: improvement
+  inc: income
+  indir: indirect
+  info: information
+  ins: insurance
+  int: interest
+  interco: intercompany
+  intl: international
+  inv: inventory
+  iqf: individual quick freeze
+  irb: institutional review board
+  it: information technology
+  jib: joint interest billing
+  lab: laboratory
+  lact: lease automatic custody transfer
+  lbr: labor
+  lgl: legal
+  liab: liability
+  lic: license
+  loc: location
+  loe: lease operating expense
+  mach: machinery
+  maint: maintenance
+  mat: material
+  matl: material
+  matls: materials
+  med: medical
+  mep: mechanical electrical plumbing
+  merch: merchandise
+  mfg: manufacturing
+  mgmt: management
+  misc: miscellaneous
+  mkt: marketing
+  mktg: marketing
+  mro: maintenance repair overhaul
+  msha: mine safety health administration
+  mtce: maintenance
+  mtn: maintenance
+  nas: network attached storage
+  natl: national
+  nda: new drug application
+  ngl: natural gas liquid
+  noc: network operations center
+  nri: net revenue interest
+  offc: office
+  oh: overhead
+  oms: order management system
+  opeb: other post employment benefits
+  oper: operating
+  ops: operations
+  or: operating room
+  orig: origination
+  orri: overriding royalty interest
+  ot: overtime
+  oth: other
+  ovhd: overhead
+  paas: platform as a service
+  pd: paid
+  pdu: power distribution unit
+  pens: pension
+  pkg: packaging
+  plt: plant
+  pmt: payment
+  pos: point of sale
+  ppd: prepaid
+  ppty: property
+  pr: payroll
+  prem: premium
+  proc: processing
+  prod: production
+  prof: professional
+  proj: project
+  prop: property
+  prov: provision
+  puc: public utility commission
+  pue: power usage effectiveness
+  purch: purchase
+  qa: quality assurance
+  qc: quality control
+  r&d: research and development
+  r&m: repairs and maintenance
+  rec: receivable
+  reg: regional
+  reimb: reimbursement
+  reno: renovation
+  rep: repair
+  reps: repairs
+  res: reserve
+  ret: retirement
+  rev: revenue
+  rfi: request for information
+  rgl: regional
+  rm: raw material
+  roy: royalty
+  rsu: restricted stock unit
+  rsv: reserve
+  rtv: return to vendor
+  sal: salary
+  san: storage area network
+  sbc: stock based compensation
+  sec: security
+  serv: service
+  sga: selling general administrative
+  ship: shipping
+  sku: stock keeping unit
+  sls: sales
+  sre: site reliability engineering
+  stk: stock
+  sub: subscription
+  supp: supplies
+  suppl: supplies
+  svc: service
+  svcs: services
+  sw: software
+  swd: saltwater disposal
+  sys: system
+  t&e: travel and entertainment
+  tech: technology
+  tel: telephone
+  temp: temporary
+  ti: tenant improvement
+  trn: training
+  trvl: travel
+  ups: uninterruptible power supply
+  util: utilities
+  var: variance
+  veh: vehicle
+  wc: workers compensation
+  wfi: water for injection
+  whs: warehouse
+  whse: warehouse
+  wi: working interest
+  wip: work in process
+  wms: warehouse management system
+  wrty: warranty
+account_synonyms:
+  401k expense: employee benefits
+  absorption: overhead
+  advisory fee: professional fee
+  amortization: depreciation
+  borrowing cost: interest expense
+  branding expense: advertising expense
+  burden: overhead
+  cartage: freight
+  cellular expense: telephone expense
+  certification expense: training expense
+  cleaning service: janitorial service
+  conference expense: training expense
+  consultant fee: professional fee
+  consulting fee: professional fee
+  consumables: supplies
+  contracted services: professional fee
+  courier expense: freight expense
+  custodial: janitorial
+  data line expense: telephone expense
+  debt service: interest expense
+  dental expense: employee benefits
+  depletion: depreciation
+  drayage: freight
+  expendables: supplies
+  finance charge: interest expense
+  finance cost: interest expense
+  guard service: security service
+  hauling: freight
+  health insurance: employee benefits
+  housekeeping: janitorial
+  indirect cost: overhead
+  indirect expense: overhead
+  internet expense: telephone expense
+  lease cost: rent cost
+  lease expense: rent expense
+  leasing expense: rent expense
+  levy: tax
+  medical insurance: employee benefits
+  occupancy: rent
+  outside services: professional fee
+  pension expense: employee benefits
+  phone expense: telephone expense
+  professional services: professional fee
+  promotional expense: advertising expense
+  public relations expense: advertising expense
+  remuneration: compensation
+  rental expense: rent expense
+  retirement expense: employee benefits
+  salaries: compensation
+  sanitation: janitorial
+  seminar expense: training expense
+  shrinkage: scrap
+  spoilage: scrap
+  sponsorship expense: advertising expense
+  sundries: supplies
+  surveillance expense: security expense
+  taxation: tax
+  taxes: tax
+  trucking: freight
+  tuition expense: training expense
+  voip expense: telephone expense
+  wages: compensation
+  workshop expense: training expense
+  yield loss: scrap
+cc_synonyms:
+  3pl: warehouse
+  account management: sales
+  accounting: corporate
+  admin: corporate
+  administrative: corporate
+  advertising: sales
+  anodizing: production
+  assembly: production
+  audit: corporate
+  back office: corporate
+  batch: production
+  blending: production
+  bottling: production
+  business development: sales
+  call center: sales
+  canning: production
+  casting: production
+  central office: corporate
+  channel: sales
+  clean room: production
+  client services: sales
+  cnc: production
+  coating: production
+  commercial: sales
+  compliance: corporate
+  controller: corporate
+  corporate services: corporate
+  customer service: sales
+  dispatch: warehouse
+  distillation: production
+  distribution: warehouse
+  dock: warehouse
+  e-commerce: sales
+  ecommerce: sales
+  engineering r&d: r&d
+  executive: corporate
+  extrusion: production
+  fab: production
+  fabrication: production
+  factory: production
+  factory operations: production
+  fermentation: production
+  field sales: sales
+  fill line: production
+  finance: corporate
+  finishing: production
+  forging: production
+  formulation: r&d
+  foundry: production
+  fulfillment: warehouse
+  furnace: production
+  g&a: corporate
+  general: corporate
+  grinding: production
+  head office: corporate
+  headquarters: corporate
+  heat treat: production
+  hr: corporate
+  human resources: corporate
+  information technology: corporate
+  innovation: r&d
+  inside sales: sales
+  internal audit: corporate
+  inventory management: warehouse
+  it: corporate
+  kiln: production
+  laboratory: r&d
+  laminating: production
+  legal: corporate
+  logistics: warehouse
+  machining: production
+  main office: corporate
+  management: corporate
+  manufacturing: production
+  manufacturing operations: production
+  marketing: sales
+  material handling: warehouse
+  milling: production
+  mixing: production
+  molding: production
+  new product development: r&d
+  overhead: corporate
+  packaging line: production
+  painting: production
+  payroll: corporate
+  plant: production
+  plant operations: production
+  plating: production
+  press: production
+  product development: r&d
+  production operations: production
+  prototype: r&d
+  r and d: r&d
+  reactor: production
+  receiving: warehouse
+  refining: production
+  research and development: r&d
+  retail: sales
+  risk management: corporate
+  shared services: corporate
+  smelting: production
+  stamping: production
+  stockroom: warehouse
+  storeroom: warehouse
+  supply chain: warehouse
+  tax: corporate
+  territory: sales
+  testing lab: r&d
+  treasury: corporate
+  welding: production

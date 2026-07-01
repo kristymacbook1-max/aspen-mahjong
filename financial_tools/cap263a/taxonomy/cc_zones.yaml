@@ -1,0 +1,180 @@
+- keyword: production
+  zone: production
+  zone_tier1: §471 Cost
+- keyword: manufacturing
+  zone: production
+  zone_tier1: §471 Cost
+- keyword: plant
+  zone: production
+  zone_tier1: §471 Cost
+- keyword: factory
+  zone: production
+  zone_tier1: §471 Cost
+- keyword: assembly
+  zone: production
+  zone_tier1: §471 Cost
+- keyword: fabrication
+  zone: production
+  zone_tier1: §471 Cost
+- keyword: machining
+  zone: production
+  zone_tier1: §471 Cost
+- keyword: mfg
+  zone: production
+  zone_tier1: §471 Cost
+- keyword: plt
+  zone: production
+  zone_tier1: §471 Cost
+- keyword: prod
+  zone: production
+  zone_tier1: §471 Cost
+- keyword: foundry
+  zone: production
+  zone_tier1: §471 Cost
+- keyword: welding
+  zone: production
+  zone_tier1: §471 Cost
+- keyword: extrusion
+  zone: production
+  zone_tier1: §471 Cost
+- keyword: stamping
+  zone: production
+  zone_tier1: §471 Cost
+- keyword: paint line
+  zone: production
+  zone_tier1: §471 Cost
+- keyword: mixing
+  zone: production
+  zone_tier1: §471 Cost
+- keyword: bottling
+  zone: production
+  zone_tier1: §471 Cost
+- keyword: cnc
+  zone: production
+  zone_tier1: §471 Cost
+- keyword: press room
+  zone: production
+  zone_tier1: §471 Cost
+- keyword: molding
+  zone: production
+  zone_tier1: §471 Cost
+- keyword: warehouse
+  zone: warehouse
+  zone_tier1: Additional §263A
+- keyword: distribution
+  zone: warehouse
+  zone_tier1: Additional §263A
+- keyword: shipping
+  zone: warehouse
+  zone_tier1: Additional §263A
+- keyword: receiving
+  zone: warehouse
+  zone_tier1: Additional §263A
+- keyword: whse
+  zone: warehouse
+  zone_tier1: Additional §263A
+- keyword: fulfillment
+  zone: warehouse
+  zone_tier1: Additional §263A
+- keyword: logistics
+  zone: warehouse
+  zone_tier1: Additional §263A
+- keyword: dock
+  zone: warehouse
+  zone_tier1: Additional §263A
+- keyword: 3pl
+  zone: warehouse
+  zone_tier1: Additional §263A
+- keyword: sales
+  zone: sales
+  zone_tier1: Excluded
+- keyword: marketing
+  zone: sales
+  zone_tier1: Excluded
+- keyword: business development
+  zone: sales
+  zone_tier1: Excluded
+- keyword: mktg
+  zone: sales
+  zone_tier1: Excluded
+- keyword: advertising
+  zone: sales
+  zone_tier1: Excluded
+- keyword: customer service
+  zone: sales
+  zone_tier1: Excluded
+- keyword: call center
+  zone: sales
+  zone_tier1: Excluded
+- keyword: r&d
+  zone: r&d
+  zone_tier1: Excluded
+- keyword: research
+  zone: r&d
+  zone_tier1: Excluded
+- keyword: laboratory
+  zone: r&d
+  zone_tier1: Excluded
+- keyword: lab
+  zone: r&d
+  zone_tier1: Excluded
+- keyword: innovation
+  zone: r&d
+  zone_tier1: Excluded
+- keyword: development
+  zone: r&d
+  zone_tier1: Excluded
+- keyword: corporate
+  zone: corporate
+  zone_tier1: Mixed Service
+- keyword: headquarters
+  zone: corporate
+  zone_tier1: Mixed Service
+- keyword: admin
+  zone: corporate
+  zone_tier1: Mixed Service
+- keyword: finance
+  zone: corporate
+  zone_tier1: Mixed Service
+- keyword: accounting
+  zone: corporate
+  zone_tier1: Mixed Service
+- keyword: it
+  zone: corporate
+  zone_tier1: Mixed Service
+- keyword: human resources
+  zone: corporate
+  zone_tier1: Mixed Service
+- keyword: hr
+  zone: corporate
+  zone_tier1: Mixed Service
+- keyword: legal
+  zone: corporate
+  zone_tier1: Mixed Service
+- keyword: executive
+  zone: corporate
+  zone_tier1: Mixed Service
+- keyword: treasury
+  zone: corporate
+  zone_tier1: Mixed Service
+- keyword: tax
+  zone: corporate
+  zone_tier1: Mixed Service
+- keyword: unimproved
+  zone: land
+  zone_tier1: §266 Carrying Charges
+- keyword: vacant land
+  zone: land
+  zone_tier1: §266 Carrying Charges
+- keyword: held for development
+  zone: land
+  zone_tier1: §266 Carrying Charges
+- keyword: idle land
+  zone: land
+  zone_tier1: §266 Carrying Charges
+- keyword: land held
+  zone: land
+  zone_tier1: §266 Carrying Charges
+- keyword: raw land
+  zone: land
+  zone_tier1: §266 Carrying Charges

@@ -1,0 +1,3808 @@
+- code: BS-ASSET
+  tier1: Balance Sheet
+  tier2: Asset
+  tier3: ''
+  treatment:
+    mspm: N/A
+    resale: N/A
+    self_const: N/A
+    interest: N/A
+  priority: 0
+  keywords:
+  - accounts receivable
+  - receivable
+  - cash
+  - bank account
+  - checking
+  - savings account
+  - notes receivable
+  - prepaid
+  - other assets
+  - goodwill
+  - intangible asset
+  - fixed asset
+  - land
+  - machinery and equipment
+  - leasehold improvement
+  - construction in progress
+  - capital lease
+  - right of use
+  - rou asset
+  - investment
+  - fixed assets
+  cc_clues: []
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: BS-LIAB
+  tier1: Balance Sheet
+  tier2: Liability
+  tier3: ''
+  treatment:
+    mspm: N/A
+    resale: N/A
+    self_const: N/A
+    interest: N/A
+  priority: 0
+  keywords:
+  - accounts payable
+  - payable
+  - notes payable
+  - loan payable
+  - mortgage
+  - accrued liabilities
+  - accrued expenses
+  - deferred revenue
+  - unearned revenue
+  - current portion
+  - long term debt
+  - bonds payable
+  cc_clues: []
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: BS-EQUITY
+  tier1: Balance Sheet
+  tier2: Equity
+  tier3: ''
+  treatment:
+    mspm: N/A
+    resale: N/A
+    self_const: N/A
+    interest: N/A
+  priority: 0
+  keywords:
+  - retained earnings
+  - common stock
+  - preferred stock
+  - equity
+  - treasury stock
+  - paid in capital
+  - additional paid in
+  - accumulated other comprehensive
+  cc_clues: []
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: REV-OPER
+  tier1: Revenue
+  tier2: Operating Revenue
+  tier3: ''
+  treatment:
+    mspm: N/A
+    resale: N/A
+    self_const: N/A
+    interest: N/A
+  priority: 0
+  keywords:
+  - revenue
+  - sales revenue
+  - service revenue
+  - product sales
+  - net revenue
+  - gross revenue
+  cc_clues:
+  - sales
+  - revenue
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: REV-OTHER
+  tier1: Revenue
+  tier2: Other Income
+  tier3: ''
+  treatment:
+    mspm: N/A
+    resale: N/A
+    self_const: N/A
+    interest: N/A
+  priority: 0
+  keywords:
+  - other income
+  - interest income
+  - rental income
+  - dividend income
+  - gain on sale
+  - royalty income
+  cc_clues: []
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: INV-BOOK
+  tier1: §471 Cost
+  tier2: Inventory
+  tier3: Book Inventory
+  treatment:
+    mspm: '471'
+    resale: '471'
+    self_const: '471'
+    interest: '471'
+  priority: 0
+  keywords:
+  - inventory
+  - work in process
+  - wip
+  - finished goods
+  - raw materials inventory
+  - merchandise inventory
+  - inventory valuation
+  - inventory reserve
+  - inventory obsolescence
+  cc_clues:
+  - inventory
+  - warehouse
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: DM-RAW
+  tier1: §471 Cost
+  tier2: Direct Materials
+  tier3: Raw Materials
+  treatment:
+    mspm: 471-Pre
+    resale: '471'
+    self_const: '471'
+    interest: '471'
+  priority: 0
+  keywords:
+  - raw material
+  - materials purchased
+  - material cost
+  - raw materials
+  - direct material
+  - material purchases
+  cc_clues:
+  - material
+  - purchasing
+  - procurement
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: DM-PKG
+  tier1: §471 Cost
+  tier2: Direct Materials
+  tier3: Packaging Materials
+  treatment:
+    mspm: 471-Pre
+    resale: '471'
+    self_const: '471'
+    interest: '471'
+  priority: 0
+  keywords:
+  - packaging
+  - packing material
+  - containers
+  - cartons
+  - labels
+  - packaging supplies
+  - corrugated
+  cc_clues:
+  - packaging
+  - material
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: DM-COMP
+  tier1: §471 Cost
+  tier2: Direct Materials
+  tier3: Components / Parts
+  treatment:
+    mspm: 471-Pre
+    resale: '471'
+    self_const: '471'
+    interest: '471'
+  priority: 0
+  keywords:
+  - components
+  - parts
+  - sub-assemblies
+  - subassembly
+  - purchased parts
+  - component materials
+  cc_clues:
+  - material
+  - assembly
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: DM-FRT
+  tier1: §471 Cost
+  tier2: Direct Materials
+  tier3: Inbound Freight
+  treatment:
+    mspm: 471-Pre
+    resale: '471'
+    self_const: '471'
+    interest: '471'
+  priority: 0
+  keywords:
+  - freight in
+  - inbound freight
+  - shipping in
+  - transportation in
+  - freight inbound
+  - inbound transportation
+  cc_clues:
+  - logistics
+  - receiving
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: DM-DUTY
+  tier1: §471 Cost
+  tier2: Direct Materials
+  tier3: Import Duties & Tariffs
+  treatment:
+    mspm: 471-Pre
+    resale: '471'
+    self_const: '471'
+    interest: '471'
+  priority: 0
+  keywords:
+  - customs duty
+  - import duty
+  - tariff
+  - customs
+  - import tax
+  - customs broker
+  - landed cost
+  cc_clues:
+  - logistics
+  - import
+  - trade
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: DL-PROD
+  tier1: §471 Cost
+  tier2: Direct Labor
+  tier3: Production Labor
+  treatment:
+    mspm: '471'
+    resale: N/A
+    self_const: '471'
+    interest: '471'
+  priority: 0
+  keywords:
+  - direct labor
+  - production labor
+  - manufacturing labor
+  - factory labor
+  - line labor
+  - assembly labor
+  - production wages
+  - manufacturing wages
+  - shop labor
+  cc_clues:
+  - production
+  - manufacturing
+  - plant
+  - factory
+  - assembly
+  is_labor: true
+  labor_type: direct
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: DL-OT
+  tier1: §471 Cost
+  tier2: Direct Labor
+  tier3: Production Overtime
+  treatment:
+    mspm: '471'
+    resale: N/A
+    self_const: '471'
+    interest: '471'
+  priority: 0
+  keywords:
+  - production overtime
+  - factory overtime
+  - manufacturing overtime
+  - shift premium
+  - shift differential
+  cc_clues:
+  - production
+  - manufacturing
+  - plant
+  is_labor: true
+  labor_type: direct
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: DL-TAX
+  tier1: §471 Cost
+  tier2: Direct Labor
+  tier3: Production Payroll Taxes
+  treatment:
+    mspm: '471'
+    resale: N/A
+    self_const: '471'
+    interest: '471'
+  priority: 0
+  keywords:
+  - production payroll tax
+  - factory payroll tax
+  - mfg fica
+  - mfg futa
+  - production fica
+  - manufacturing payroll tax
+  cc_clues:
+  - production
+  - manufacturing
+  - plant
+  is_labor: true
+  labor_type: direct
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: DL-BEN
+  tier1: §471 Cost
+  tier2: Direct Labor
+  tier3: Production Benefits
+  treatment:
+    mspm: '471'
+    resale: N/A
+    self_const: '471'
+    interest: '471'
+  priority: 0
+  keywords:
+  - production benefit
+  - factory benefit
+  - mfg insurance
+  - mfg health
+  - mfg medical
+  - production insurance
+  - factory health
+  - manufacturing benefit
+  cc_clues:
+  - production
+  - manufacturing
+  - plant
+  is_labor: true
+  labor_type: direct
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: FO-DEP
+  tier1: §471 Cost
+  tier2: Factory Overhead
+  tier3: Factory Depreciation
+  treatment:
+    mspm: '471'
+    resale: N/A
+    self_const: '471'
+    interest: '471'
+  priority: 0
+  keywords:
+  - factory depreciation
+  - plant depreciation
+  - mfg depreciation
+  - production depreciation
+  - manufacturing equipment depreciation
+  - depreciation factory
+  - depreciation plant
+  - depreciation manufacturing
+  - depreciation production
+  - depreciation machinery
+  - depreciation equipment
+  cc_clues:
+  - production
+  - plant
+  - manufacturing
+  - factory
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: FO-RENT
+  tier1: §471 Cost
+  tier2: Factory Overhead
+  tier3: Factory Rent
+  treatment:
+    mspm: '471'
+    resale: N/A
+    self_const: '471'
+    interest: '471'
+  priority: 0
+  keywords:
+  - factory rent
+  - plant rent
+  - manufacturing rent
+  - plant lease
+  - factory lease
+  - rent factory
+  - rent plant
+  - rent manufacturing
+  cc_clues:
+  - production
+  - plant
+  - manufacturing
+  - factory
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: FO-UTIL
+  tier1: §471 Cost
+  tier2: Factory Overhead
+  tier3: Factory Utilities
+  treatment:
+    mspm: '471'
+    resale: N/A
+    self_const: '471'
+    interest: '471'
+  priority: 0
+  keywords:
+  - factory utilities
+  - plant utilities
+  - manufacturing utilities
+  - plant electric
+  - plant gas
+  - plant water
+  - utilities factory
+  - utilities plant
+  - utilities manufacturing
+  cc_clues:
+  - production
+  - plant
+  - manufacturing
+  - factory
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: FO-INS
+  tier1: §471 Cost
+  tier2: Factory Overhead
+  tier3: Factory Insurance
+  treatment:
+    mspm: '471'
+    resale: N/A
+    self_const: '471'
+    interest: '471'
+  priority: 0
+  keywords:
+  - factory insurance
+  - plant insurance
+  - manufacturing insurance
+  - product liability insurance
+  - insurance factory
+  - insurance plant
+  - insurance manufacturing
+  cc_clues:
+  - production
+  - plant
+  - manufacturing
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: FO-PTAX
+  tier1: §471 Cost
+  tier2: Factory Overhead
+  tier3: Factory Property Taxes
+  treatment:
+    mspm: '471'
+    resale: N/A
+    self_const: '471'
+    interest: '471'
+  priority: 0
+  keywords:
+  - factory property tax
+  - plant property tax
+  - manufacturing property tax
+  - property tax factory
+  - property tax plant
+  cc_clues:
+  - production
+  - plant
+  - manufacturing
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: FO-RM
+  tier1: §471 Cost
+  tier2: Factory Overhead
+  tier3: Factory R&M
+  treatment:
+    mspm: '471'
+    resale: N/A
+    self_const: '471'
+    interest: '471'
+  priority: 0
+  keywords:
+  - factory repair
+  - plant repair
+  - manufacturing repair
+  - equipment repair
+  - factory maintenance
+  - plant maintenance
+  - repair factory
+  - repair plant
+  - repairs factory
+  - repairs plant
+  - maintenance factory
+  - maintenance plant
+  cc_clues:
+  - production
+  - plant
+  - maintenance
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: FO-SUPP
+  tier1: §471 Cost
+  tier2: Factory Overhead
+  tier3: Factory Supplies
+  treatment:
+    mspm: '471'
+    resale: N/A
+    self_const: '471'
+    interest: '471'
+  priority: 0
+  keywords:
+  - factory supplies
+  - plant supplies
+  - manufacturing supplies
+  - production supplies
+  - supplies factory
+  - supplies plant
+  - supplies manufacturing
+  - supplies production
+  cc_clues:
+  - production
+  - plant
+  - manufacturing
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: FO-QC
+  tier1: §471 Cost
+  tier2: Factory Overhead
+  tier3: Quality Control
+  treatment:
+    mspm: '471'
+    resale: N/A
+    self_const: '471'
+    interest: '471'
+  priority: 0
+  keywords:
+  - quality control
+  - quality testing
+  - inspection
+  - quality assurance
+  - qa testing
+  - qc
+  - quality lab
+  - product testing
+  - test lab
+  cc_clues:
+  - quality
+  - production
+  - qa
+  - qc
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: FO-SUPV
+  tier1: §471 Cost
+  tier2: Factory Overhead
+  tier3: Production Supervision
+  treatment:
+    mspm: '471'
+    resale: N/A
+    self_const: '471'
+    interest: '471'
+  priority: 0
+  keywords:
+  - production supervision
+  - plant manager
+  - factory supervisor
+  - manufacturing management
+  - production management
+  - plant foreman
+  - production superintendent
+  cc_clues:
+  - production
+  - plant
+  - manufacturing
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: FO-SCRAP
+  tier1: §471 Cost
+  tier2: Factory Overhead
+  tier3: Scrap / Spoilage / Rework
+  treatment:
+    mspm: '471'
+    resale: N/A
+    self_const: '471'
+    interest: '471'
+  priority: 0
+  keywords:
+  - rework
+  - scrap
+  - spoilage
+  - waste
+  - defective
+  - yield loss
+  - scrap recovery
+  cc_clues:
+  - production
+  - manufacturing
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: FO-TOOL
+  tier1: §471 Cost
+  tier2: Factory Overhead
+  tier3: Small Tools & Dies
+  treatment:
+    mspm: '471'
+    resale: N/A
+    self_const: '471'
+    interest: '471'
+  priority: 0
+  keywords:
+  - tools
+  - dies
+  - molds
+  - jigs
+  - fixtures
+  - small tools
+  - tooling
+  - gauges
+  - cutting tools
+  cc_clues:
+  - production
+  - tooling
+  - manufacturing
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: FO-IE
+  tier1: §471 Cost
+  tier2: Factory Overhead
+  tier3: Industrial Engineering
+  treatment:
+    mspm: '471'
+    resale: N/A
+    self_const: '471'
+    interest: '471'
+  priority: 0
+  keywords:
+  - industrial engineering
+  - manufacturing engineering
+  - process engineering
+  - methods engineering
+  - production engineering
+  cc_clues:
+  - engineering
+  - manufacturing
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: FO-ENV
+  tier1: §471 Cost
+  tier2: Factory Overhead
+  tier3: Environmental (Plant)
+  treatment:
+    mspm: '471'
+    resale: N/A
+    self_const: '471'
+    interest: '471'
+  priority: 0
+  keywords:
+  - environmental compliance plant
+  - plant environmental
+  - factory environmental
+  - waste disposal plant
+  - ehs plant
+  - environmental health safety plant
+  cc_clues:
+  - environmental
+  - ehs
+  - plant
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: FO-SAFETY
+  tier1: §471 Cost
+  tier2: Factory Overhead
+  tier3: Plant Safety
+  treatment:
+    mspm: '471'
+    resale: N/A
+    self_const: '471'
+    interest: '471'
+  priority: 0
+  keywords:
+  - plant safety
+  - factory safety
+  - production safety
+  - safety equipment plant
+  - osha compliance
+  - ppe plant
+  - personal protective equipment
+  cc_clues:
+  - safety
+  - plant
+  - production
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: COGS-RESALE
+  tier1: §471 Cost
+  tier2: COGS
+  tier3: Cost of Goods Sold (Resale)
+  treatment:
+    mspm: N/A
+    resale: '471'
+    self_const: N/A
+    interest: N/A
+  priority: 0
+  keywords:
+  - cost of goods
+  - cogs
+  - cost of sales
+  - merchandise cost
+  - product cost
+  - cost of revenue
+  - cost of merchandise
+  cc_clues:
+  - merchandising
+  - retail
+  - wholesale
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: PP-PURCH
+  tier1: Additional §263A
+  tier2: Pre-Production
+  tier3: Purchasing Costs
+  treatment:
+    mspm: I-Pre
+    resale: P
+    self_const: I
+    interest: I
+  priority: 0
+  keywords:
+  - purchasing
+  - procurement
+  - buyer salary
+  - purchasing agent
+  - procurement cost
+  - purchase order
+  - po processing
+  - order processing
+  - vendor management
+  - supplier management
+  - sourcing
+  cc_clues:
+  - purchasing
+  - procurement
+  - sourcing
+  is_labor: true
+  labor_type: support
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: PP-RMSTORE
+  tier1: Additional §263A
+  tier2: Pre-Production
+  tier3: RM Storage & Handling
+  treatment:
+    mspm: I-Pre
+    resale: S
+    self_const: I
+    interest: I
+  priority: 0
+  keywords:
+  - raw material storage
+  - raw material handling
+  - material warehouse
+  - receiving
+  - receiving dock
+  - raw material warehouse
+  - material handling
+  cc_clues:
+  - receiving
+  - warehouse
+  - material
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: PP-INQC
+  tier1: Additional §263A
+  tier2: Pre-Production
+  tier3: Inbound QC
+  treatment:
+    mspm: I-Pre
+    resale: P
+    self_const: I
+    interest: I
+  priority: 0
+  keywords:
+  - incoming inspection
+  - inbound testing
+  - receiving inspection
+  - material testing
+  - incoming quality
+  - vendor quality
+  cc_clues:
+  - quality
+  - receiving
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: ADD-FGWH
+  tier1: Additional §263A
+  tier2: Warehousing
+  tier3: FG Warehouse
+  treatment:
+    mspm: I
+    resale: S
+    self_const: I
+    interest: I
+  priority: 0
+  keywords:
+  - finished goods warehouse
+  - fg warehouse
+  - product storage
+  - distribution center
+  - finished goods storage
+  - warehouse cost
+  - warehouse expense
+  cc_clues:
+  - warehouse
+  - distribution
+  - logistics
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: ADD-WHLBR
+  tier1: Additional §263A
+  tier2: Warehousing
+  tier3: Warehouse Labor
+  treatment:
+    mspm: I
+    resale: S
+    self_const: I
+    interest: I
+  priority: 0
+  keywords:
+  - warehouse labor
+  - warehouse wages
+  - warehouse staff
+  - distribution labor
+  - shipping labor
+  - receiving labor
+  - warehouse payroll
+  - picker packer
+  cc_clues:
+  - warehouse
+  - distribution
+  - shipping
+  is_labor: true
+  labor_type: support
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: ADD-WHUTIL
+  tier1: Additional §263A
+  tier2: Warehousing
+  tier3: Warehouse Utilities
+  treatment:
+    mspm: I
+    resale: S
+    self_const: I
+    interest: I
+  priority: 0
+  keywords:
+  - warehouse utilities
+  - warehouse electric
+  - warehouse gas
+  - distribution center utilities
+  cc_clues:
+  - warehouse
+  - distribution
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: ADD-WHINS
+  tier1: Additional §263A
+  tier2: Warehousing
+  tier3: Warehouse Insurance
+  treatment:
+    mspm: I
+    resale: S
+    self_const: I
+    interest: I
+  priority: 0
+  keywords:
+  - warehouse insurance
+  - inventory insurance
+  - storage insurance
+  - distribution insurance
+  cc_clues:
+  - warehouse
+  - distribution
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: ADD-WHPTAX
+  tier1: Additional §263A
+  tier2: Warehousing
+  tier3: Warehouse Property Tax
+  treatment:
+    mspm: I
+    resale: S
+    self_const: I
+    interest: I
+  priority: 0
+  keywords:
+  - warehouse property tax
+  - warehouse real estate tax
+  - distribution center property tax
+  cc_clues:
+  - warehouse
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: ADD-WHRM
+  tier1: Additional §263A
+  tier2: Warehousing
+  tier3: Warehouse R&M
+  treatment:
+    mspm: I
+    resale: S
+    self_const: I
+    interest: I
+  priority: 0
+  keywords:
+  - warehouse repair
+  - warehouse maintenance
+  - warehouse r&m
+  - distribution center repair
+  cc_clues:
+  - warehouse
+  - maintenance
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: ADD-FRTOUT
+  tier1: Additional §263A
+  tier2: Distribution
+  tier3: Outbound Shipping
+  treatment:
+    mspm: I
+    resale: S
+    self_const: N/A
+    interest: N/A
+  priority: 0
+  keywords:
+  - freight out
+  - outbound freight
+  - shipping out
+  - delivery
+  - transportation out
+  - outbound shipping
+  - distribution cost
+  - freight outbound
+  cc_clues:
+  - shipping
+  - distribution
+  - logistics
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: ADD-PLAN
+  tier1: Additional §263A
+  tier2: Production Support
+  tier3: Production Planning
+  treatment:
+    mspm: I
+    resale: N/A
+    self_const: I
+    interest: I
+  priority: 0
+  keywords:
+  - production planning
+  - production scheduling
+  - materials planning
+  - mrp
+  - demand planning
+  - capacity planning
+  - supply planning
+  cc_clues:
+  - planning
+  - production
+  - supply chain
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: ADD-WHDEP
+  tier1: Additional §263A
+  tier2: Warehousing
+  tier3: Warehouse Depreciation
+  treatment:
+    mspm: I
+    resale: S
+    self_const: I
+    interest: I
+  priority: 0
+  keywords:
+  - warehouse depreciation
+  - distribution depreciation
+  - warehouse equipment depreciation
+  - forklift depreciation
+  cc_clues:
+  - warehouse
+  - distribution
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: ADD-WHRENT
+  tier1: Additional §263A
+  tier2: Warehousing
+  tier3: Warehouse Rent
+  treatment:
+    mspm: I
+    resale: S
+    self_const: I
+    interest: I
+  priority: 0
+  keywords:
+  - warehouse rent
+  - warehouse lease
+  - distribution center rent
+  - storage rent
+  - 3pl cost
+  - third party logistics
+  cc_clues:
+  - warehouse
+  - distribution
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: ADD-WHSUPP
+  tier1: Additional §263A
+  tier2: Warehousing
+  tier3: Warehouse Supplies
+  treatment:
+    mspm: I
+    resale: S
+    self_const: I
+    interest: I
+  priority: 0
+  keywords:
+  - warehouse supplies
+  - shipping supplies
+  - pallet
+  - stretch wrap
+  - distribution supplies
+  cc_clues:
+  - warehouse
+  - shipping
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: MSC-HR
+  tier1: Mixed Service
+  tier2: HR
+  tier3: Human Resources
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: 0
+  keywords:
+  - human resources
+  - hr department
+  - personnel
+  - hr salary
+  - hr benefit
+  - employee relations
+  - recruiting
+  - talent acquisition
+  - staffing
+  - hris
+  - onboarding
+  cc_clues:
+  - hr
+  - human resources
+  - personnel
+  - talent
+  is_labor: true
+  labor_type: support
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: MSC-FIN
+  tier1: Mixed Service
+  tier2: Finance
+  tier3: Finance & Accounting
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: 0
+  keywords:
+  - accounting
+  - finance department
+  - controller
+  - bookkeeping
+  - financial reporting
+  - accounts payable
+  - accounts receivable
+  - payroll department
+  - ap department
+  - ar department
+  - treasury
+  - general ledger
+  - financial planning
+  cc_clues:
+  - accounting
+  - finance
+  - controller
+  - treasury
+  is_labor: true
+  labor_type: support
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: MSC-IT
+  tier1: Mixed Service
+  tier2: IT
+  tier3: Information Technology
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: 0
+  keywords:
+  - information technology
+  - it department
+  - data processing
+  - computer services
+  - it support
+  - help desk
+  - erp
+  - it infrastructure
+  - software license
+  - it salary
+  - it maintenance
+  - cloud services
+  - saas
+  - cybersecurity
+  - network
+  cc_clues:
+  - it
+  - information technology
+  - technology
+  - infrastructure
+  is_labor: true
+  labor_type: support
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: MSC-LEGAL
+  tier1: Mixed Service
+  tier2: Legal
+  tier3: Legal Department
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: 0
+  keywords:
+  - legal department
+  - in-house legal
+  - general counsel
+  - corporate legal
+  - legal salary
+  - legal fee
+  - legal expense
+  - compliance department
+  - regulatory compliance
+  cc_clues:
+  - legal
+  - counsel
+  - compliance
+  is_labor: true
+  labor_type: support
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: MSC-SEC
+  tier1: Mixed Service
+  tier2: Facilities
+  tier3: Security Services
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: 0
+  keywords:
+  - security
+  - guard
+  - security service
+  - plant security
+  - facility security
+  - access control
+  - surveillance
+  cc_clues:
+  - security
+  - facilities
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: MSC-JANIT
+  tier1: Mixed Service
+  tier2: Facilities
+  tier3: Janitorial / Custodial
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: 0
+  keywords:
+  - janitorial
+  - custodial
+  - cleaning
+  - housekeeping
+  - sanitation
+  - grounds maintenance
+  - landscaping
+  cc_clues:
+  - custodial
+  - facilities
+  - janitorial
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: MSC-CORPRENT
+  tier1: Mixed Service
+  tier2: Corporate Occupancy
+  tier3: Corporate Office Rent
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: 0
+  keywords:
+  - corporate rent
+  - office rent
+  - headquarters rent
+  - hq rent
+  - corporate lease
+  - administrative rent
+  cc_clues:
+  - corporate
+  - headquarters
+  - admin
+  - hq
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: MSC-CORPUTIL
+  tier1: Mixed Service
+  tier2: Corporate Occupancy
+  tier3: Corporate Utilities
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: 0
+  keywords:
+  - corporate utilities
+  - office utilities
+  - hq utilities
+  - headquarters utilities
+  cc_clues:
+  - corporate
+  - headquarters
+  - admin
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: MSC-CORPINS
+  tier1: Mixed Service
+  tier2: Corporate
+  tier3: Corporate Insurance
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: 0
+  keywords:
+  - corporate insurance
+  - general insurance
+  - general liability
+  - d&o insurance
+  - directors officers
+  - umbrella insurance
+  - professional liability
+  - errors omissions
+  cc_clues:
+  - corporate
+  - risk
+  - insurance
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: MSC-CORPDEP
+  tier1: Mixed Service
+  tier2: Corporate
+  tier3: Corporate Depreciation
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: 0
+  keywords:
+  - corporate depreciation
+  - office depreciation
+  - office equipment depreciation
+  - furniture depreciation
+  - hq depreciation
+  cc_clues:
+  - corporate
+  - admin
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: MSC-GA
+  tier1: Mixed Service
+  tier2: G&A
+  tier3: General & Administrative
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: 0
+  keywords:
+  - general administrative
+  - g&a
+  - admin expense
+  - administrative
+  - office expense
+  - office supplies
+  - postage
+  - printing
+  - copier
+  - general expense
+  cc_clues:
+  - admin
+  - general
+  - corporate
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: MSC-EXEC
+  tier1: Mixed Service
+  tier2: Compensation
+  tier3: Executive Compensation
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: 0
+  keywords:
+  - executive salary
+  - executive comp
+  - management salary
+  - management compensation
+  - vp salary
+  - director salary
+  - management bonus
+  cc_clues:
+  - executive
+  - corporate
+  - management
+  is_labor: true
+  labor_type: support
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: MSC-TRAIN
+  tier1: Mixed Service
+  tier2: HR
+  tier3: Employee Training
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: 0
+  keywords:
+  - training
+  - employee training
+  - professional development
+  - seminars
+  - conferences
+  - education
+  - tuition
+  - continuing education
+  - leadership development
+  cc_clues:
+  - training
+  - hr
+  - learning
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: MSC-TEL
+  tier1: Mixed Service
+  tier2: IT
+  tier3: Telephone / Communications
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: 0
+  keywords:
+  - telephone
+  - telecom
+  - communications
+  - phone
+  - internet
+  - cell phone
+  - mobile phone
+  - video conferencing
+  - voip
+  cc_clues:
+  - telecom
+  - it
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: MSC-AUTO
+  tier1: Mixed Service
+  tier2: Fleet
+  tier3: Auto / Vehicle Expense
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: 0
+  keywords:
+  - auto expense
+  - vehicle expense
+  - car expense
+  - fleet
+  - mileage
+  - gas expense
+  - fuel expense
+  - vehicle maintenance
+  - vehicle lease
+  - vehicle insurance
+  cc_clues:
+  - fleet
+  - transportation
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: MSC-FACMGMT
+  tier1: Mixed Service
+  tier2: Facilities
+  tier3: Facilities Management
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: 0
+  keywords:
+  - facilities management
+  - building management
+  - facility expense
+  - building expense
+  - property management
+  - campus operations
+  cc_clues:
+  - facilities
+  - property
+  - campus
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: MSC-AUDIT
+  tier1: Mixed Service
+  tier2: Professional Fees
+  tier3: Audit & Tax Fees
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: 0
+  keywords:
+  - audit fee
+  - tax fee
+  - advisory fee
+  - consulting fee
+  - professional fee
+  - external audit
+  - tax compliance
+  - tax consulting
+  - management consulting
+  cc_clues:
+  - finance
+  - tax
+  - corporate
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: MSC-ENVGEN
+  tier1: Mixed Service
+  tier2: Environmental
+  tier3: Environmental (General)
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: 0
+  keywords:
+  - environmental
+  - environmental compliance
+  - waste management
+  - hazmat
+  - remediation
+  - ehs
+  - environmental health safety
+  cc_clues:
+  - environmental
+  - ehs
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: CAP-ROY
+  tier1: Capitalizable (MSPM)
+  tier2: Royalties
+  tier3: Sales-Based Royalties
+  treatment:
+    mspm: C
+    resale: N/A
+    self_const: N/A
+    interest: N/A
+  priority: 0
+  keywords:
+  - royalty
+  - royalties
+  - licensing royalty
+  - sales royalty
+  - production royalty
+  - franchise royalty
+  - technology royalty
+  cc_clues: []
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: CAP-DEPL
+  tier1: Capitalizable (MSPM)
+  tier2: Depletion
+  tier3: Depletion Expense
+  treatment:
+    mspm: C
+    resale: N/A
+    self_const: N/A
+    interest: N/A
+  priority: 0
+  keywords:
+  - depletion
+  - mineral depletion
+  - oil depletion
+  - gas depletion
+  - natural resource
+  - timber depletion
+  - percentage depletion
+  - cost depletion
+  cc_clues:
+  - mining
+  - oil
+  - gas
+  - natural resource
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: EX-SALES
+  tier1: Excluded
+  tier2: Selling
+  tier3: Sales Compensation
+  treatment:
+    mspm: E
+    resale: E
+    self_const: E
+    interest: E
+  priority: 0
+  keywords:
+  - sales salary
+  - sales commission
+  - sales compensation
+  - sales rep
+  - sales force
+  - sales incentive
+  - commission expense
+  - sales bonus
+  - sales award
+  cc_clues:
+  - sales
+  is_labor: true
+  labor_type: support
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: EX-MKT
+  tier1: Excluded
+  tier2: Selling
+  tier3: Marketing & Advertising
+  treatment:
+    mspm: E
+    resale: E
+    self_const: E
+    interest: E
+  priority: 0
+  keywords:
+  - marketing
+  - advertising
+  - promotion
+  - trade show
+  - branding
+  - marketing campaign
+  - digital marketing
+  - media buy
+  - sponsorship
+  - public relations
+  - brand management
+  cc_clues:
+  - marketing
+  - advertising
+  - brand
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: EX-SALSTE
+  tier1: Excluded
+  tier2: Selling
+  tier3: Sales Travel & Entertainment
+  treatment:
+    mspm: E
+    resale: E
+    self_const: E
+    interest: E
+  priority: 0
+  keywords:
+  - sales travel
+  - client entertainment
+  - business meal
+  - sales meal
+  - sales entertainment
+  - customer entertainment
+  - client dinner
+  cc_clues:
+  - sales
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: EX-CUSTSVC
+  tier1: Excluded
+  tier2: Selling
+  tier3: Customer Service
+  treatment:
+    mspm: E
+    resale: E
+    self_const: E
+    interest: E
+  priority: 0
+  keywords:
+  - customer service
+  - customer support
+  - call center
+  - warranty service
+  - after-sale
+  - post-sale
+  - returns processing
+  - technical support customer
+  cc_clues:
+  - customer service
+  - support
+  - call center
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: EX-RD
+  tier1: Excluded
+  tier2: R&D
+  tier3: Research & Development
+  treatment:
+    mspm: E
+    resale: E
+    self_const: E
+    interest: E
+  priority: 0
+  keywords:
+  - research
+  - r&d
+  - r&e
+  - research and development
+  - lab expense
+  - laboratory
+  - testing expense
+  - prototype
+  - clinical trial
+  - experimentation
+  - patent cost
+  - product development
+  - new product
+  - formulation
+  cc_clues:
+  - r&d
+  - research
+  - engineering
+  - laboratory
+  - innovation
+  - product development
+  is_labor: true
+  labor_type: support
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: EX-174AMORT
+  tier1: Excluded
+  tier2: R&D
+  tier3: §174 Amortization
+  treatment:
+    mspm: E
+    resale: E
+    self_const: E
+    interest: E
+  priority: 0
+  keywords:
+  - 174 amortization
+  - sre amortization
+  - r&d amortization
+  - section 174 amortization
+  - specified research expense
+  cc_clues:
+  - r&d
+  - tax
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: EX-BID
+  tier1: Additional §263A
+  tier2: Bidding
+  tier3: Bidding / Proposal Costs
+  treatment:
+    mspm: I
+    resale: I
+    self_const: I
+    interest: I
+  priority: 0
+  keywords:
+  - bidding
+  - proposal
+  - bid cost
+  - rfp cost
+  - quote cost
+  - estimating
+  - pre-contract
+  cc_clues:
+  - sales
+  - business development
+  - estimating
+  is_labor: false
+  labor_type: ''
+  authority: §1.263A-1(e)(3)(ii)(T) — bidding costs (successful bids)
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  note: 'FIX: was Excluded; successful-bid costs are capitalizable indirect (conditional)'
+  election_required: false
+- code: EX-DIST
+  tier1: Excluded
+  tier2: Selling
+  tier3: Post-Sale Distribution
+  treatment:
+    mspm: E
+    resale: E
+    self_const: E
+    interest: E
+  priority: 0
+  keywords:
+  - distribution to customer
+  - last mile delivery
+  - customer delivery
+  - installation
+  - field service
+  cc_clues:
+  - distribution
+  - field service
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: EX-WARRANTY
+  tier1: Excluded
+  tier2: After-Sale
+  tier3: Warranty Expense
+  treatment:
+    mspm: E
+    resale: E
+    self_const: E
+    interest: E
+  priority: 0
+  keywords:
+  - warranty expense
+  - warranty cost
+  - warranty claim
+  - warranty repair
+  - product recall
+  - warranty accrual
+  cc_clues:
+  - warranty
+  - customer service
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: NO-INT
+  tier1: Non-Operating
+  tier2: Interest
+  tier3: Interest Expense
+  treatment:
+    mspm: N
+    resale: N
+    self_const: N
+    interest: N
+  priority: 0
+  keywords:
+  - interest expense
+  - interest cost
+  - loan interest
+  - debt interest
+  - line of credit interest
+  - revolving interest
+  - bank interest
+  - interest paid
+  - bond interest
+  cc_clues:
+  - treasury
+  - finance
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: NO-INTCAP
+  tier1: §263A(f) Interest
+  tier2: Capitalizable Interest
+  tier3: Capitalizable Interest
+  treatment:
+    mspm: N/A
+    resale: N/A
+    self_const: F
+    interest: F
+  priority: 0
+  keywords:
+  - capitalized interest
+  - construction interest
+  - avoided cost interest
+  - 263a f interest
+  - interest capitalization
+  - construction period interest
+  - capitalized interest construction
+  cc_clues:
+  - treasury
+  - construction
+  is_labor: false
+  labor_type: ''
+  authority: §263A(f) / Reg §1.263A-8..-15 — avoided-cost interest
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: true
+  note: 'FIX: re-tiered from Non-Operating to §263A(f); interest flag F'
+  election_required: false
+- code: NO-INCTAX
+  tier1: Non-Operating
+  tier2: Tax
+  tier3: Income Tax Expense
+  treatment:
+    mspm: N
+    resale: N
+    self_const: N
+    interest: N
+  priority: 0
+  keywords:
+  - income tax
+  - federal tax
+  - state income tax
+  - tax provision
+  - deferred tax
+  - tax expense
+  - income tax provision
+  - current tax
+  - deferred tax benefit
+  cc_clues:
+  - tax
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: NO-CHARITY
+  tier1: Non-Operating
+  tier2: Non-Deductible
+  tier3: Charitable Contributions
+  treatment:
+    mspm: N
+    resale: N
+    self_const: N
+    interest: N
+  priority: 0
+  keywords:
+  - charitable
+  - contribution
+  - donation
+  - philanthropic
+  - gift
+  - foundation grant
+  - united way
+  cc_clues: []
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: NO-OFFICER
+  tier1: Mixed Service
+  tier2: Compensation
+  tier3: Officer Compensation
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: 0
+  keywords:
+  - officer salary
+  - officer compensation
+  - ceo salary
+  - cfo salary
+  - president salary
+  - officer bonus
+  - coo salary
+  - cto salary
+  cc_clues:
+  - executive
+  - corporate
+  is_labor: true
+  labor_type: support
+  authority: §1.263A-1(e)(3)(ii)(A) — officers comp allocable to production
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  note: 'FIX: was Non-Operating N/N/N/N; officer comp allocable to production is mixed-service (COR-P-020
+    top audit issue)'
+  election_required: false
+- code: NO-LOBBY
+  tier1: Non-Operating
+  tier2: Non-Deductible
+  tier3: Lobbying / Political
+  treatment:
+    mspm: N
+    resale: N
+    self_const: N
+    interest: N
+  priority: 0
+  keywords:
+  - lobbying
+  - political
+  - government affairs
+  - political action
+  - pac contribution
+  - political action committee
+  cc_clues:
+  - government affairs
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: NO-FINE
+  tier1: Non-Operating
+  tier2: Non-Deductible
+  tier3: Fines & Penalties
+  treatment:
+    mspm: N
+    resale: N
+    self_const: N
+    interest: N
+  priority: 0
+  keywords:
+  - fine
+  - penalty
+  - settlement
+  - litigation expense
+  - legal settlement
+  - regulatory fine
+  - sec fine
+  cc_clues:
+  - legal
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: NO-GAINLOSS
+  tier1: Non-Operating
+  tier2: Disposition
+  tier3: Gain/Loss on Disposal
+  treatment:
+    mspm: N
+    resale: N
+    self_const: N
+    interest: N
+  priority: 0
+  keywords:
+  - gain on sale
+  - loss on sale
+  - asset disposition
+  - asset disposal
+  - gain loss
+  - realized gain
+  - realized loss
+  - loss on disposal
+  - gain on disposal
+  - impairment
+  - write-off
+  - write-down
+  cc_clues: []
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: NO-FX
+  tier1: Non-Operating
+  tier2: Other
+  tier3: Foreign Exchange
+  treatment:
+    mspm: N
+    resale: N
+    self_const: N
+    interest: N
+  priority: 0
+  keywords:
+  - foreign exchange
+  - fx gain
+  - fx loss
+  - currency gain
+  - currency loss
+  - translation adjustment
+  - remeasurement
+  cc_clues:
+  - treasury
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: NO-RESTRUC
+  tier1: Non-Operating
+  tier2: Other
+  tier3: Restructuring Charges
+  treatment:
+    mspm: N
+    resale: N
+    self_const: N
+    interest: N
+  priority: 0
+  keywords:
+  - restructuring
+  - reorganization
+  - severance restructuring
+  - plant closure
+  - exit cost
+  - facility closure
+  cc_clues:
+  - corporate
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: NO-MISC
+  tier1: Non-Operating
+  tier2: Other
+  tier3: Misc Non-Operating
+  treatment:
+    mspm: N
+    resale: N
+    self_const: N
+    interest: N
+  priority: 0
+  keywords:
+  - miscellaneous
+  - other non-operating
+  - sundry
+  - extraordinary
+  - other expense
+  - non-recurring
+  cc_clues: []
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: NO-IC
+  tier1: Non-Operating
+  tier2: Intercompany
+  tier3: Intercompany Charges
+  treatment:
+    mspm: N
+    resale: N
+    self_const: N
+    interest: N
+  priority: 0
+  keywords:
+  - intercompany
+  - management fee intercompany
+  - affiliate charge
+  - related party
+  - transfer price
+  - ic allocation
+  cc_clues:
+  - intercompany
+  - corporate
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: RES-MERCH
+  tier1: §471 Cost
+  tier2: COGS
+  tier3: Merchandise / Inventory Purchases
+  treatment:
+    mspm: '471'
+    resale: '471'
+    self_const: N/A
+    interest: N/A
+  priority: 0
+  keywords:
+  - merchandise
+  - merchandise purchases
+  - inventory purchases
+  - goods for resale
+  - purchase inventory
+  - buy for resale
+  - cost of merchandise
+  - product cost
+  cc_clues:
+  - purchasing
+  - merchandising
+  - buying
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: RES-MARKDOWN
+  tier1: §471 Cost
+  tier2: COGS
+  tier3: Markdowns / Inventory Shrinkage
+  treatment:
+    mspm: '471'
+    resale: '471'
+    self_const: N/A
+    interest: N/A
+  priority: 0
+  keywords:
+  - markdown
+  - markdowns
+  - inventory shrink
+  - shrinkage
+  - inventory shortage
+  - inventory loss
+  - stock loss
+  - damaged goods
+  - obsolete inventory
+  - inventory write-off
+  - inventory write-down
+  - inventory reserve
+  cc_clues:
+  - inventory
+  - loss prevention
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: RES-STOREOPS
+  tier1: Mixed Service
+  tier2: Store Operations
+  tier3: Retail Store Occupancy & Operations
+  treatment:
+    mspm: M
+    resale: S
+    self_const: N/A
+    interest: N/A
+  priority: 0
+  keywords:
+  - store rent
+  - store utilities
+  - store depreciation
+  - store insurance
+  - store supplies
+  - store maintenance
+  - retail rent
+  - retail lease
+  - store lease
+  - stockroom
+  - stockroom labor
+  - backroom
+  - store labor
+  - store payroll
+  - retail operations
+  cc_clues:
+  - store
+  - retail
+  - branch
+  - location
+  is_labor: true
+  labor_type: support
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: RES-HANDLING
+  tier1: Additional §263A
+  tier2: Handling
+  tier3: Handling / Assembly / Repackaging
+  treatment:
+    mspm: I
+    resale: S
+    self_const: N/A
+    interest: N/A
+  priority: 0
+  keywords:
+  - handling
+  - handling cost
+  - repackaging
+  - repack
+  - assembly for resale
+  - kitting
+  - pick and pack
+  - pick pack
+  - sorting
+  - labeling
+  - price tagging
+  - ticketing
+  - stocking
+  - restocking
+  cc_clues:
+  - warehouse
+  - distribution
+  - fulfillment
+  - logistics
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: RES-BUYING
+  tier1: Additional §263A
+  tier2: Purchasing
+  tier3: Buying Office / Procurement
+  treatment:
+    mspm: I-Pre
+    resale: P
+    self_const: N/A
+    interest: N/A
+  priority: 0
+  keywords:
+  - buyer salary
+  - buying office
+  - procurement staff
+  - merchandise buyer
+  - category manager salary
+  - sourcing
+  - vendor management
+  - supplier management
+  cc_clues:
+  - buying
+  - procurement
+  - sourcing
+  - merchandising
+  is_labor: true
+  labor_type: support
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: BANK-ORIGINATE
+  tier1: Mixed Service
+  tier2: Loan Origination
+  tier3: Loan Origination / Processing
+  treatment:
+    mspm: M
+    resale: N/A
+    self_const: M
+    interest: M
+  priority: 0
+  keywords:
+  - loan origination
+  - loan processing
+  - mortgage origination
+  - loan underwriting
+  - underwriting expense
+  - underwriting
+  - credit analysis
+  - credit underwriting
+  - loan setup
+  - loan closing cost
+  - origination fee expense
+  cc_clues:
+  - lending
+  - mortgage
+  - origination
+  - underwriting
+  - credit
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: BANK-SERVICING
+  tier1: Mixed Service
+  tier2: Loan Servicing
+  tier3: Loan Servicing / Collections
+  treatment:
+    mspm: M
+    resale: N/A
+    self_const: M
+    interest: M
+  priority: 0
+  keywords:
+  - loan servicing
+  - servicing expense
+  - collection expense
+  - collections
+  - loan administration
+  - payment processing
+  - escrow administration
+  - default management
+  - foreclosure expense
+  - loss mitigation
+  cc_clues:
+  - servicing
+  - collections
+  - loan admin
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: BANK-PROVISION
+  tier1: Non-Operating
+  tier2: Provision
+  tier3: Provision for Credit Losses
+  treatment:
+    mspm: N
+    resale: N/A
+    self_const: N
+    interest: N
+  priority: 0
+  keywords:
+  - provision for loan losses
+  - provision for credit losses
+  - allowance for loan losses
+  - loan loss reserve
+  - credit loss expense
+  - charge-off
+  - net charge-off
+  - impairment
+  - ecl
+  - expected credit loss
+  - provision for bad debt
+  cc_clues:
+  - credit risk
+  - risk management
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: BANK-APPRAISAL
+  tier1: Mixed Service
+  tier2: Loan Origination
+  tier3: Appraisal & Title Services
+  treatment:
+    mspm: M
+    resale: N/A
+    self_const: M
+    interest: M
+  priority: 0
+  keywords:
+  - appraisal fee
+  - appraisal
+  - title insurance
+  - title search
+  - title fee
+  - settlement cost
+  - closing cost
+  - survey cost
+  - flood certification
+  - environmental assessment
+  cc_clues:
+  - appraisal
+  - title
+  - settlement
+  - closing
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: BANK-TRADING
+  tier1: Non-Operating
+  tier2: Trading
+  tier3: Securities Trading / Investment
+  treatment:
+    mspm: N
+    resale: N/A
+    self_const: N
+    interest: N
+  priority: 0
+  keywords:
+  - securities trading
+  - trading desk
+  - investment management
+  - portfolio management
+  - bond trading
+  - equity trading
+  - derivatives
+  - hedging cost
+  - trading loss
+  - mark to market
+  - unrealized gain loss
+  cc_clues:
+  - trading
+  - investment
+  - treasury
+  - capital markets
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: BANK-CDI
+  tier1: Balance Sheet
+  tier2: Intangible
+  tier3: Core Deposit Intangible / Amortization
+  treatment:
+    mspm: N/A
+    resale: N/A
+    self_const: N/A
+    interest: N/A
+  priority: 0
+  keywords:
+  - core deposit intangible
+  - cdi
+  - core deposit amortization
+  - deposit premium
+  - customer list intangible
+  cc_clues: []
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: BANK-BRANCH
+  tier1: Mixed Service
+  tier2: Branch Operations
+  tier3: Branch / Retail Banking Operations
+  treatment:
+    mspm: M
+    resale: N/A
+    self_const: M
+    interest: M
+  priority: 0
+  keywords:
+  - branch rent
+  - branch utilities
+  - branch depreciation
+  - branch insurance
+  - branch supplies
+  - teller salary
+  - teller
+  - branch manager
+  - branch operations
+  - atm maintenance
+  - atm
+  - vault
+  - safe deposit
+  cc_clues:
+  - branch
+  - retail banking
+  - teller
+  - atm
+  is_labor: true
+  labor_type: support
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: BANK-TRUST
+  tier1: Excluded
+  tier2: Fiduciary
+  tier3: Trust & Fiduciary Services
+  treatment:
+    mspm: E
+    resale: N/A
+    self_const: E
+    interest: E
+  priority: 0
+  keywords:
+  - trust services
+  - fiduciary
+  - trust administration
+  - estate administration
+  - wealth management
+  - trust fee
+  - custody services
+  cc_clues:
+  - trust
+  - fiduciary
+  - wealth
+  - private banking
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: SC-CAPLAB
+  tier1: §471 Cost
+  tier2: Self-Constructed
+  tier3: Capitalized Labor (Self-Constructed)
+  treatment:
+    mspm: '471'
+    resale: N/A
+    self_const: '471'
+    interest: '471'
+  priority: 0
+  keywords:
+  - capitalized labor
+  - capitalized wages
+  - construction labor
+  - project labor
+  - capital project labor
+  - internal construction labor
+  cc_clues:
+  - construction
+  - capital projects
+  - facilities
+  is_labor: true
+  labor_type: direct
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: SC-IUS
+  tier1: §471 Cost
+  tier2: Self-Constructed
+  tier3: Internal Use Software (§263A(b))
+  treatment:
+    mspm: '471'
+    resale: N/A
+    self_const: '471'
+    interest: '471'
+  priority: 5
+  keywords:
+  - internal use software
+  - internally developed software
+  - software development cost
+  - software development
+  - application development
+  - capitalized software
+  - software project
+  - software capitalization
+  - asc 350-40
+  cc_clues:
+  - software development
+  - application development
+  - it development
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: SC-CONSTRUCT
+  tier1: §471 Cost
+  tier2: Self-Constructed
+  tier3: Construction / Leasehold Improvement
+  treatment:
+    mspm: '471'
+    resale: N/A
+    self_const: '471'
+    interest: '471'
+  priority: 0
+  keywords:
+  - tenant improvement
+  - leasehold improvement
+  - ti cost
+  - build-out
+  - buildout
+  - construction cost
+  - building improvement
+  - facility construction
+  - renovation
+  - remodel
+  - capital improvement
+  cc_clues:
+  - construction
+  - facilities
+  - capital projects
+  - build-out
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: SC-EQUIP
+  tier1: §471 Cost
+  tier2: Self-Constructed
+  tier3: Equipment Fabrication / Tool & Die
+  treatment:
+    mspm: '471'
+    resale: N/A
+    self_const: '471'
+    interest: '471'
+  priority: 0
+  keywords:
+  - equipment fabrication
+  - fabrication
+  - tool and die
+  - tool making
+  - die making
+  - tooling fabrication
+  - jig and fixture
+  - custom equipment
+  - machine build
+  - prototype fabrication
+  cc_clues:
+  - tool room
+  - die shop
+  - fabrication
+  - machine shop
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: GEN-DEP
+  tier1: Mixed Service
+  tier2: Depreciation
+  tier3: Depreciation (General)
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: -10
+  keywords:
+  - depreciation
+  - amortization
+  cc_clues: []
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: GEN-RENT
+  tier1: Mixed Service
+  tier2: Occupancy
+  tier3: Rent / Lease (General)
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: -10
+  keywords:
+  - rent
+  - lease expense
+  - lease payment
+  - operating lease
+  cc_clues: []
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: GEN-INS
+  tier1: Mixed Service
+  tier2: Insurance
+  tier3: Insurance (General)
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: -10
+  keywords:
+  - insurance expense
+  - insurance premium
+  - insurance cost
+  - insurance
+  - general liability
+  cc_clues: []
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: GEN-UTIL
+  tier1: Mixed Service
+  tier2: Occupancy
+  tier3: Utilities (General)
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: -10
+  keywords:
+  - utilities
+  - utility expense
+  - electric
+  - gas expense
+  - water
+  cc_clues: []
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: GEN-PTAX
+  tier1: Mixed Service
+  tier2: Tax
+  tier3: Property Tax (General)
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: -10
+  keywords:
+  - property tax
+  - real estate tax
+  cc_clues: []
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: GEN-RM
+  tier1: Mixed Service
+  tier2: R&M
+  tier3: R&M (General)
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: -10
+  keywords:
+  - repair
+  - maintenance
+  - r&m expense
+  - repairs and maintenance
+  cc_clues: []
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: GEN-TE
+  tier1: Mixed Service
+  tier2: T&E
+  tier3: T&E (General)
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: -10
+  keywords:
+  - travel
+  - entertainment
+  - meals
+  - travel expense
+  - business travel
+  - travel and entertainment
+  - domestic
+  cc_clues: []
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: GEN-COMP
+  tier1: Mixed Service
+  tier2: Compensation
+  tier3: Compensation (General)
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: -10
+  keywords:
+  - salary
+  - wages
+  - payroll
+  - compensation
+  - bonus
+  - labor
+  - labour
+  cc_clues: []
+  is_labor: true
+  labor_type: support
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: GEN-BEN
+  tier1: Mixed Service
+  tier2: Benefits
+  tier3: Benefits (General)
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: -10
+  keywords:
+  - benefit
+  - health insurance
+  - medical
+  - dental
+  - vision
+  - 401k
+  - retirement
+  - pension
+  - life insurance
+  cc_clues: []
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: GEN-PRTAX
+  tier1: Mixed Service
+  tier2: Payroll Tax
+  tier3: Payroll Tax (General)
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: -10
+  keywords:
+  - payroll tax
+  - fica
+  - futa
+  - suta
+  - workers compensation
+  - employer tax
+  cc_clues: []
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: GEN-PROF
+  tier1: Mixed Service
+  tier2: Professional Fees
+  tier3: Professional Fees (General)
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: -10
+  keywords:
+  - professional fee
+  - consulting
+  - consultant
+  - outside services
+  - contract labor
+  - temporary labor
+  - staffing agency
+  cc_clues: []
+  is_labor: true
+  labor_type: support
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: GEN-SUPP
+  tier1: Mixed Service
+  tier2: Supplies
+  tier3: Supplies (General)
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: -10
+  keywords:
+  - supplies
+  - supply expense
+  - office supplies
+  - general supplies
+  - consumables
+  cc_clues: []
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: GEN-FRT
+  tier1: Mixed Service
+  tier2: Freight
+  tier3: Freight (General)
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: -10
+  keywords:
+  - freight
+  - shipping expense
+  - shipping cost
+  - delivery expense
+  - carrier
+  - postage
+  cc_clues: []
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: GEN-COMM
+  tier1: Mixed Service
+  tier2: Commission
+  tier3: Commission (General)
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: -10
+  keywords:
+  - commission
+  - commission expense
+  - sales commission
+  - broker fee
+  - referral fee
+  - finder fee
+  cc_clues: []
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: GEN-ENV
+  tier1: Mixed Service
+  tier2: Compliance
+  tier3: Environmental / Regulatory Compliance
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: -10
+  keywords:
+  - epa
+  - environmental
+  - compliance
+  - regulatory
+  - hazmat
+  - hazardous
+  - waste disposal
+  - remediation
+  - environmental compliance
+  - epa compliance
+  cc_clues: []
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: MSC-MGMTFEE
+  tier1: Mixed Service
+  tier2: Management Fee
+  tier3: Management / Corporate Fee
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: 0
+  keywords:
+  - management fee
+  - mgmt fee
+  - management charge
+  - corporate charge
+  - corporate fee
+  - admin fee
+  - administrative fee
+  - shared service fee
+  - shared services charge
+  - home office charge
+  - home office allocation
+  - central service
+  - corporate allocation
+  - hq charge
+  - hq allocation
+  cc_clues: []
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: VAGUE-ALLOC
+  tier1: Mixed Service
+  tier2: Allocation
+  tier3: Cost Allocation / Pool
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: -15
+  keywords:
+  - allocation
+  - alloc
+  - overhead allocation
+  - cost pool
+  - burden rate
+  - burden
+  - indirect cost
+  - indirect
+  - cost allocation
+  - overhead pool
+  - oh alloc
+  - overhead rate
+  - absorbed overhead
+  - unabsorbed
+  cc_clues: []
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: VAGUE-ACCR
+  tier1: Mixed Service
+  tier2: Accrual
+  tier3: Accrual / Adjustment
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: -15
+  keywords:
+  - accrual
+  - accrued
+  - adjustment
+  - adj
+  - reclassification
+  - reclass
+  - true-up
+  - true up
+  - trueup
+  - year end adjustment
+  - month end adjustment
+  - period close
+  - closing entry
+  cc_clues: []
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: VAGUE-VAR
+  tier1: Mixed Service
+  tier2: Variance
+  tier3: Variance / Clearing
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: -15
+  keywords:
+  - variance
+  - clearing
+  - clearing account
+  - suspense
+  - contra
+  - offset
+  - rounding
+  - difference
+  - purchase price variance
+  - ppv
+  - standard cost variance
+  - volume variance
+  - spending variance
+  - rate variance
+  cc_clues: []
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: VAGUE-OTHER
+  tier1: Mixed Service
+  tier2: Other
+  tier3: Other / Unspecified
+  treatment:
+    mspm: M
+    resale: M
+    self_const: M
+    interest: M
+  priority: -20
+  keywords:
+  - other
+  - other expense
+  - sundry
+  - miscellaneous expense
+  - misc expense
+  - unassigned
+  - unallocated
+  - tbd
+  - pending classification
+  - general expense
+  cc_clues: []
+  is_labor: false
+  labor_type: ''
+  authority: ''
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: SEC266-TAX
+  tier1: §266 Carrying Charges
+  tier2: Taxes
+  tier3: ''
+  treatment:
+    mspm: N/A
+    resale: N/A
+    self_const: N/A
+    interest: N/A
+  priority: 6
+  keywords:
+  - carrying charge
+  - property tax unimproved
+  - vacant land tax
+  - idle land tax
+  cc_clues:
+  - land
+  - unimproved
+  - held for development
+  - investment property
+  is_labor: false
+  labor_type: ''
+  authority: §266 / Reg §1.266-1(b)(1)(i)
+  cap_vs_deduct: elective
+  allows_negative_adj: false
+  designated_property: false
+  election_required: true
+- code: SEC266-INT
+  tier1: §266 Carrying Charges
+  tier2: Interest
+  tier3: ''
+  treatment:
+    mspm: N/A
+    resale: N/A
+    self_const: N/A
+    interest: N/A
+  priority: 6
+  keywords:
+  - carrying interest
+  - loan interest land
+  - mortgage interest land
+  - idle land interest
+  cc_clues:
+  - land
+  - development
+  - unimproved
+  is_labor: false
+  labor_type: ''
+  authority: §266 / Reg §1.266-1(b)(1)(ii)
+  cap_vs_deduct: elective
+  allows_negative_adj: false
+  designated_property: false
+  election_required: true
+- code: SEC266-OTHER
+  tier1: §266 Carrying Charges
+  tier2: Other Carrying Charges
+  tier3: ''
+  treatment:
+    mspm: N/A
+    resale: N/A
+    self_const: N/A
+    interest: N/A
+  priority: 6
+  keywords:
+  - storage carrying
+  - insurance carrying
+  - other carrying charge
+  cc_clues:
+  - land
+  - unimproved
+  is_labor: false
+  labor_type: ''
+  authority: §266 / Reg §1.266-1(b)(1)(iii)-(iv)
+  cap_vs_deduct: elective
+  allows_negative_adj: false
+  designated_property: false
+  election_required: true
+- code: SEC263A-TXN
+  tier1: §263(a) Transaction/Intangible
+  tier2: Transaction Costs
+  tier3: ''
+  treatment:
+    mspm: N/A
+    resale: N/A
+    self_const: N/A
+    interest: N/A
+  priority: 5
+  keywords:
+  - transaction cost
+  - facilitative
+  - acquisition legal
+  - debt issuance
+  - success fee
+  - due diligence
+  - merger cost
+  - investment banking fee
+  cc_clues: []
+  is_labor: false
+  labor_type: ''
+  authority: Reg §1.263(a)-5
+  cap_vs_deduct: capitalize
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: SEC263A-INTANG
+  tier1: §263(a) Transaction/Intangible
+  tier2: Created/Acquired Intangible
+  tier3: ''
+  treatment:
+    mspm: N/A
+    resale: N/A
+    self_const: N/A
+    interest: N/A
+  priority: 5
+  keywords:
+  - intangible
+  - customer list
+  - covenant not to compete
+  - franchise fee
+  - trademark
+  - license acquired
+  - goodwill
+  cc_clues: []
+  is_labor: false
+  labor_type: ''
+  authority: Reg §1.263(a)-4 / §197
+  cap_vs_deduct: capitalize
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: SEC195-STARTUP
+  tier1: §263(a) Transaction/Intangible
+  tier2: Start-up / Org
+  tier3: ''
+  treatment:
+    mspm: N/A
+    resale: N/A
+    self_const: N/A
+    interest: N/A
+  priority: 5
+  keywords:
+  - start-up
+  - startup
+  - pre-opening
+  - organizational cost
+  - incorporation
+  - syndication
+  cc_clues: []
+  is_labor: false
+  labor_type: ''
+  authority: §195 / §248 / §709
+  cap_vs_deduct: capitalize
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: SEC263A-IMPROVE
+  tier1: §263(a) Tangible
+  tier2: Improvement (BAR)
+  tier3: ''
+  treatment:
+    mspm: N/A
+    resale: N/A
+    self_const: '471'
+    interest: '471'
+  priority: 5
+  keywords:
+  - betterment
+  - restoration
+  - adaptation
+  - major component
+  - capital improvement
+  - building improvement
+  - unit of property
+  cc_clues: []
+  is_labor: false
+  labor_type: ''
+  authority: Reg §1.263(a)-3 (BAR test)
+  cap_vs_deduct: capitalize
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: SEC263A-REPAIR
+  tier1: §263(a) Tangible
+  tier2: Repair / Deductible
+  tier3: ''
+  treatment:
+    mspm: M
+    resale: M
+    self_const: N/A
+    interest: N/A
+  priority: 4
+  keywords:
+  - routine maintenance safe harbor
+  - de minimis safe harbor
+  - materials and supplies
+  - incidental supplies
+  cc_clues: []
+  is_labor: false
+  labor_type: ''
+  authority: Reg §1.263(a)-3(i)/(h)/(f); §1.162-3
+  cap_vs_deduct: deduct
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+- code: NEG-263A
+  tier1: Additional §263A
+  tier2: Negative Adjustment
+  tier3: ''
+  treatment:
+    mspm: C
+    resale: C
+    self_const: N/A
+    interest: N/A
+  priority: 5
+  keywords:
+  - negative 263a
+  - book tax difference
+  - excess book depreciation
+  - 471 add-back
+  - unfavorable m-1 reversal
+  cc_clues: []
+  is_labor: false
+  labor_type: ''
+  authority: §1.263A-1(d)(3); T.D. 9843 negatives
+  cap_vs_deduct: null
+  allows_negative_adj: true
+  designated_property: false
+  election_required: false
+- code: DL-PENSION
+  tier1: §471 Cost
+  tier2: Direct Labor
+  tier3: Production Pension/Benefits
+  treatment:
+    mspm: '471'
+    resale: N/A
+    self_const: '471'
+    interest: '471'
+  priority: 1
+  keywords:
+  - production pension
+  - 401k production
+  - factory pension
+  - production profit sharing
+  - production retirement
+  cc_clues: []
+  is_labor: true
+  labor_type: benefits
+  authority: §1.263A-1(e)(3)(ii)(B)-(C)
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
