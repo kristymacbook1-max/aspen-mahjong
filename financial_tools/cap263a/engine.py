@@ -22,6 +22,13 @@ _LEADING_ACCT = re.compile(r"^[\s]*[\d\-\.]+[\s:·\-]+")
 _PARENS = re.compile(r"\([^)]*\)")
 
 
+def _phrase_in(phrase, text):
+    """Word-boundary containment, not raw substring: a bare `in` check let short
+    keywords/clues like "it" match inside unrelated words ("credit", "capital"),
+    silently mis-tagging unrelated cost centers/accounts."""
+    return re.search(rf"\b{re.escape(phrase)}\b", text) is not None
+
+
 def normalize(text: str) -> str:
     t = (text or "").lower().strip()
     t = _LEADING_ACCT.sub("", t)        # strip "6100-20 · " style prefixes
@@ -44,11 +51,17 @@ def _prep(text, tax, syn):
 
 
 def detect_cc_zone(cc_text, tax):
-    """Return (zone, zone_tier1) from the longest matching cost-center keyword."""
+    """Return (zone, zone_tier1) from the longest matching cost-center keyword.
+
+    Word-boundary match, not raw substring: a bare `in` check let short zone
+    keywords like "it" match inside unrelated words ("capital", "credit",
+    "waiting"), silently mis-zoning ordinary cost centers as corporate IT.
+    """
     if not cc_text:
         return "", ""
     for rule in tax.zone_rules():
-        if rule["keyword"] and rule["keyword"] in cc_text:
+        kw = rule["keyword"]
+        if kw and re.search(rf"\b{re.escape(kw)}\b", cc_text):
             return rule["zone"], rule["zone_tier1"]
     return "", ""
 
@@ -96,9 +109,9 @@ def classify(acct_num="", acct_desc="", cc_num="", cc_desc="", tax=None):
         # Layer 1: keyword
         kw_hit = False; desc_hit = False
         kws = c.get("keywords", [])
-        if any(k.lower() in desc for k in kws):
+        if any(_phrase_in(k.lower(), desc) for k in kws):
             score += 50; method.append("kw:desc"); kw_hit = True; desc_hit = True
-        elif any(k.lower() in combined for k in kws):
+        elif any(_phrase_in(k.lower(), combined) for k in kws):
             score += 35; method.append("kw:comb"); kw_hit = True
 
         # Balance-Sheet / Revenue / Non-Operating accounts are inherent to the
@@ -110,7 +123,7 @@ def classify(acct_num="", acct_desc="", cc_num="", cc_desc="", tax=None):
 
         # cost-center clues
         clue_hits = sum(1 for clue in c.get("cc_clues", [])
-                        if clue.lower() in cc)
+                        if _phrase_in(clue.lower(), cc))
         if clue_hits:
             score += min(20 + (clue_hits - 1) * 10, 40); method.append("cc")
 
@@ -180,7 +193,7 @@ def classify(acct_num="", acct_desc="", cc_num="", cc_desc="", tax=None):
     # signal than the raw score implies. Zone-only / cost-center-only matches must
     # not report high confidence (so the review queue is meaningful).
     has_desc_kw = "kw:desc" in best_method
-    if not has_desc_kw and not reclassed and not suspense:
+    if not has_desc_kw and not suspense:
         conf = min(conf, 55 if "kw" in best_method else 40)
 
     flags = []

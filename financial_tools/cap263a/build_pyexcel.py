@@ -58,6 +58,16 @@ def lru_cache(*a, **k):
     def deco(fn): return fn
     return deco
 _TAX = None
+'''
+
+# Rebound AFTER the real taxonomy.py source is inlined below (see
+# build_engine_source): taxonomy.py's own get_taxonomy() calls Taxonomy() with
+# data=None, which needs the file-loading _load() this shim strips out — if
+# that definition were left standing it would silently win (later definition
+# in a flat exec'd script shadows the earlier shim one) and raise NameError
+# the moment anything calls classify() without an explicit tax= (the bootstrap
+# always passes tax=_TAX today, but that made this a landmine, not a guarantee).
+_REBIND_GET_TAXONOMY = '''
 def get_taxonomy():
     return _TAX
 '''
@@ -100,6 +110,7 @@ def build_engine_source(with_bootstrap: bool = True) -> str:
         with open(os.path.join(_HERE, fname)) as fh:
             parts.append(f"# ===== {fname} =====")
             parts.append(_strip_module(fh.read()))
+    parts.append(_REBIND_GET_TAXONOMY)
     if with_bootstrap:
         parts.append(_BOOTSTRAP)
     return "\n".join(parts)

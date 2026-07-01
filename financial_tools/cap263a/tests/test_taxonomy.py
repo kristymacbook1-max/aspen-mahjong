@@ -1,6 +1,11 @@
 """Taxonomy integrity + tax-fix regression tests."""
 
+import ast
+import inspect
+
+import pytest
 from financial_tools.cap263a import get_taxonomy
+from financial_tools.cap263a.taxonomy import Taxonomy, TaxonomyError
 
 
 def test_taxonomy_loads_and_validates():
@@ -56,3 +61,34 @@ def test_missing_regimes_added():
     assert "§263A(f) Interest" in tiers
     # §266 codes present
     assert "SEC266-TAX" in t.by_code
+
+
+def test_no_dead_code_after_return():
+    """The original bug class: __init__'s tail (_zone_rules/_build_keyword_index/
+    validate) landed after a `return` in from_data() and never ran. Statically
+    assert no function body in taxonomy.py has unreachable statements after an
+    unconditional `return` at the same block level."""
+    src = inspect.getsource(inspect.getmodule(Taxonomy))
+    tree = ast.parse(src)
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            for i, stmt in enumerate(node.body[:-1]):
+                if isinstance(stmt, ast.Return):
+                    unreachable = node.body[i + 1]
+                    pytest.fail(f"{node.name}: unreachable code after return at "
+                                f"line {unreachable.lineno}")
+
+
+def test_validate_actually_raises_on_bad_data():
+    """validate() must really run and really catch a dangling reference —
+    not just claim to via a docstring."""
+    t = get_taxonomy()
+    bad_categories = [dict(c) for c in t.categories]
+    bad_cc_reclass = list(t.cc_reclass) + [
+        {"zone": "production", "expense_type": "bogus", "target": "NOT-A-REAL-CODE"}]
+    with pytest.raises(TaxonomyError):
+        Taxonomy.from_data(
+            categories=bad_categories, cc_zones=t.cc_zones, cc_reclass=bad_cc_reclass,
+            generic_map=t.generic_map,
+            lexicon={"abbreviations": t.abbreviations, "account_synonyms": t.account_synonyms,
+                     "cc_synonyms": t.cc_synonyms})

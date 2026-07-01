@@ -43,8 +43,13 @@ class CapitalizationReport:
         self._create_asset_basis()
         self._create_adjusted_is()
         self._create_method_changes()
-        # order tabs: Summary first
-        self._wb.move_sheet("Summary Dashboard", -(len(self._wb.sheetnames) - 1))
+        # order tabs: Summary first. The offset must be relative to Summary
+        # Dashboard's OWN current index (it's created 2nd, right after
+        # Classified TB, not last) — a fixed "-(total sheets - 1)" offset only
+        # lands correctly if the sheet being moved happens to be the last one,
+        # which silently failed to reorder anything here.
+        idx = self._wb.sheetnames.index("Summary Dashboard")
+        self._wb.move_sheet("Summary Dashboard", -idx)
         os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
         self._wb.save(output_path)
         return output_path
@@ -105,13 +110,15 @@ class CapitalizationReport:
             cf.alignment = ALIGN_RIGHT
             cf.border = THIN_BORDER
             self._label(ws, r, 16, ", ".join(cl.flags))
-        self._tb_last = _TB_FIRST + len(rows) - 1
+        self._tb_last = max(_TB_FIRST + len(rows) - 1, _TB_FIRST)
 
-        # conditional flag: low-confidence rows
-        from openpyxl.formatting.rule import CellIsRule
-        ws.conditional_formatting.add(
-            f"O{_TB_FIRST}:O{self._tb_last}",
-            CellIsRule(operator="lessThan", formula=["40"], fill=FILL_HIGHLIGHT_ORANGE))
+        # conditional flag: low-confidence rows (skip on an empty TB — an
+        # inverted O4:O3 range crashes openpyxl's ConditionalFormatting)
+        if rows:
+            from openpyxl.formatting.rule import CellIsRule
+            ws.conditional_formatting.add(
+                f"O{_TB_FIRST}:O{self._tb_last}",
+                CellIsRule(operator="lessThan", formula=["40"], fill=FILL_HIGHLIGHT_ORANGE))
         widths = {"B": 34, "C": 22, "D": 15, "E": 18, "N": 40, "P": 8}
         for col, w in {"A": 12, **widths, "H": 14, "I": 20}.items():
             ws.column_dimensions[col].width = w

@@ -48,3 +48,19 @@ def test_assembled_engine_source_is_valid_and_matches():
         canon = classify(acct_desc=acct, cc_desc=cc)
         assert assembled.code == canon.code, f"{acct}/{cc}: {assembled.code} != {canon.code}"
         assert assembled.confidence == canon.confidence
+
+
+def test_get_taxonomy_fallback_does_not_raise():
+    """Regression: the inlined taxonomy.py's own get_taxonomy() calls
+    Taxonomy(data=None), which needs the file-loading _load() the shim strips
+    out — if that definition were left standing (instead of being rebound
+    after inlining) it would silently shadow the shim's version and raise
+    NameError the moment classify() is called without an explicit tax=
+    (the implicit `tax = tax or get_taxonomy()` fallback in engine.py)."""
+    src = build_engine_source(with_bootstrap=False)
+    ns = {}
+    exec(compile(src, "<pyexcel>", "exec"), ns)
+    ns["_TAX"] = get_taxonomy()
+    assert ns["get_taxonomy"]() is ns["_TAX"]
+    r = ns["classify"](acct_desc="Direct labor", cc_desc="Production")   # no tax= kwarg
+    assert r.code == "DL-PROD"

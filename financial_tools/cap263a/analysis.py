@@ -160,9 +160,15 @@ def compute_unicap(result: dict, profile: EntityProfile) -> dict:
                 "absorption_ratio": Decimal("0"), "additional_capitalized_to_inventory": Decimal("0")}
 
     rows = result["rows"]
+    # Reg §1.263A-1(h): the SSCM labor ratio is capitalizable production labor
+    # over total UNICAP-relevant labor (production + mixed-service), NOT total
+    # enterprise labor. Sales/R&D/other Excluded-tier compensation is never part
+    # of that base and must not dilute the denominator.
+    UNICAP_LABOR_TIERS = ("§471 Cost", "Mixed Service")
     prod_labor = sum((r.line.amount for r in rows
                       if r.cls.is_labor and r.cls.tier1 == "§471 Cost"), Decimal("0"))
-    total_labor = sum((r.line.amount for r in rows if r.cls.is_labor), Decimal("0"))
+    total_labor = sum((r.line.amount for r in rows
+                       if r.cls.is_labor and r.cls.tier1 in UNICAP_LABOR_TIERS), Decimal("0"))
     if profile.mixed_alloc_ratio is not None:
         ratio = profile.mixed_alloc_ratio
     else:

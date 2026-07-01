@@ -142,6 +142,9 @@
 - keyword: it
   zone: corporate
   zone_tier1: Mixed Service
+- keyword: information technology
+  zone: corporate
+  zone_tier1: Mixed Service
 - keyword: human resources
   zone: corporate
   zone_tier1: Mixed Service

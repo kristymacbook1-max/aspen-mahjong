@@ -30,6 +30,8 @@ Contract that keeps the waterfall stable: **every inventory method returns `addi
 
 ## Phase A — Input data model & ingestion (everything else depends on this)
 
+**None of `BookTaxDifference`, `FixedAsset`, `CIPProject`, `DebtInstrument`, or `EngagementData` exist yet** — `model.py` today has only `TBLine`/`Classification` (42 lines). This phase is net-new schema, not an "extension" in the sense of touching existing fields; there's nothing to conflict with, but there's also nothing to validate the design against except this plan. Build it before Phase B/C/D, since none of them can run without it.
+
 New dataclasses (mirror `TBLine`: `Decimal` money, `Optional[date]`, `row_index`, `source_sheet`, coercion in `__post_init__`). Keys link the schedules:
 
 ```
@@ -109,20 +111,30 @@ New `engines/interest.py`, `compute_263Af(result, profile)`, called after `compu
 
 **2. Production period** (Reg §1.263A-12): start = first physical activity (real) / 5%-of-total-cost (TPP); end = ready for intended use (PIS). Mid-year PIS → prorate the sub-period by active days.
 
-**3. Avoided-cost method** (Reg §1.263A-9), per unit, per measurement date (≥ quarterly):
+**3. Avoided-cost method** (Reg §1.263A-9), per unit, per measurement period *i* (≥ quarterly). Every rate below is **annual**; `day_fraction_i` converts it to the period's share of the year (0.25 for an ordinary full quarter; smaller for a partial/mid-year period — this is the *same* fraction that prorates a mid-year PIS sub-period in step 2, not a separate variable):
 ```
-APE_avg_i = (APE_open + APE_close)/2            # APE includes prior §263(a)+§263A costs AND
-                                                # prior capitalized interest (COMPOUNDING, mandatory)
-traced_applied = min(APE_avg, traced_principal)
-traced_interest = actual_traced_interest * (traced_applied/traced_principal) * proration
-excess = max(0, APE_avg - traced_applied)
-avoided_interest = excess * WAIR_nontraced * day_fraction * proration
-WAIR = Σ interest(nontraced eligible) / Σ avg_principal(nontraced eligible)
-unit_capitalized = Σ (traced_interest + avoided_interest)
-total = min(Σ units, total_interest_incurred)   # cap; if binds, pro-rate + flag
+APE_avg_i        = (APE_open_i + APE_close_i) / 2   # APE includes prior §263(a)+§263A costs AND
+                                                     # prior capitalized interest (COMPOUNDING, mandatory)
+traced_applied_i = min(APE_avg_i, traced_principal)
+traced_interest_i  = (traced_principal * traced_annual_rate * day_fraction_i)
+                     * (traced_applied_i / traced_principal)
+excess_i         = max(0, APE_avg_i - traced_applied_i)
+avoided_interest_i = excess_i * WAIR_nontraced_annual * day_fraction_i
+WAIR_nontraced_annual = Σ interest(nontraced eligible) / Σ avg_principal(nontraced eligible)
+unit_capitalized = Σ_i (traced_interest_i + avoided_interest_i)
+total = min(Σ units, total_interest_incurred)       # cap; if binds, pro-rate + flag
 ```
 - Data contract: FixedAsset (type, class_life, cost, PIS date), CIP detail (cumulative expenditure per measurement date, production start, total est. cost, `is_improvement`), Debt (principal, rate, interest_incurred, `traced_to`, `related_party`). Legacy scalar APE×rate stub retained as fallback when schedules are empty.
-- Worked test: real-property CIP, 4 quarters, cumulative 2M→8M, traced loan 3M@6%, nontraced pool WAIR 7.142857% → traced 150,000 + avoided 111,023.69 = **261,023.69** (cap 680,000 doesn't bind); asserts per-quarter compounding and that uncovered Q1 traced interest stays deductible.
+- **Worked test** (real-property CIP, 4 equal quarters, traced loan $3,000,000 @ 6% annual, nontraced-pool WAIR 7.142857% (1/14) annual, APE ramping linearly from $2,000,000 to $8,000,000 over the year — `day_fraction_i = 0.25` for every quarter, no mid-year proration in this example):
+
+  | Q | APE open | APE close | APE avg | traced_applied | traced_interest | excess | avoided_interest |
+  |---|---|---|---|---|---|---|---|
+  | 1 | 2,000,000 | 3,500,000 | 2,750,000 | 2,750,000 | 41,250.00 | 0 | 0.00 |
+  | 2 | 3,500,000 | 5,000,000 | 4,250,000 | 3,000,000 | 45,000.00 | 1,250,000 | 22,321.43 |
+  | 3 | 5,000,000 | 6,500,000 | 5,750,000 | 3,000,000 | 45,000.00 | 2,750,000 | 49,107.14 |
+  | 4 | 6,500,000 | 8,000,000 | 7,250,000 | 3,000,000 | 45,000.00 | 4,250,000 | 75,892.86 |
+
+  Totals: traced **176,250.00** + avoided **147,321.43** = **323,571.43** capitalized (verified with exact `Decimal` arithmetic, not rounded intermediates). Cap (`total_interest_incurred`, assumed ≥ $500,000 across traced + nontraced debt in this example) doesn't bind. Q1's traced-applied equals its full APE (excess = 0) because the loan principal exceeds the APE that quarter — illustrates the "uncovered" case only starting Q2, once cumulative APE outgrows the $3M traced loan and the excess spills into the avoided-cost/nontraced-WAIR calculation. This table is the literal fixture for `test_interest.py` — encode the per-quarter APE_open/close pairs directly rather than re-deriving them.
 - **T.D. 10034 (Oct 2025) caveat, gated on `tax_year`:** associated-property rule eliminated (don't add land/existing structure to APE for TY≥2026); interest narrowed for improvements (`is_improvement` → only the improvement's own costs in APE). Flags `ASSOCIATED-PROPERTY-EXCLUDED`, `IMPROVEMENT-NARROWED-2025`; verify effective-date/mechanics against the published T.D. before locking.
 - Outputs: a real **§263A(f) Interest tab** (per-unit 7-step APE worksheet in Practice-Unit format), the interest column of the Asset Basis Schedule, and the Summary `§263A(f) Interest` bucket (route *capitalized* interest to the bucket; incurred − capitalized stays deductible — document in the tie-check to avoid double count).
 

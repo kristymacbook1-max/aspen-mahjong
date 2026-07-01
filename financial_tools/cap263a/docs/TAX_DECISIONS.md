@@ -70,8 +70,36 @@ These are defensible-but-debatable calls the tool cannot make on the facts alone
 
 ---
 
+## §5 — Hardening-Pass Corrections (post-review, 2026-07-01)
+
+An independent multi-agent audit of the implemented layers (taxonomy, classification engine,
+reader, SPM/SSCM math, workbook output) found and fixed the following. None of these change the
+taxonomy's category count or scope (§1/§2 above) — they fix defects in the code that consumes it.
+
+| # | Change | Severity | Citation / rationale |
+|---|--------|----------|----------------------|
+| 16 | **SSCM labor ratio denominator** (`analysis.py`) restricted to §471 Cost + Mixed Service labor. Previously summed *all* `is_labor` rows including Excluded-tier compensation (sales commissions, R&D labor), which could understate the capitalizable mixed-service share by up to ~85% whenever sales/R&D payroll was large relative to production payroll. | **High — wrong dollar answer** | Reg §1.263A-1(h)(4): the SSCM ratio is capitalizable mixed-service labor over total production + mixed-service labor, not total enterprise labor. |
+| 17 | **Word-boundary keyword/clue/zone matching** (`engine.py`). All matching previously used raw substring containment, so short keywords/clues ("it", generic 2-3 letter abbreviations) matched inside unrelated words — e.g. a cost center named "Capital Projects" or "Credit Department" was silently zoned as corporate IT because both contain the letters "it". Fixed to word-boundary regex matching everywhere (desc keywords, combined keywords, cc_clues, zone detection). | **High — silent misclassification** | Mechanical/data-integrity fix; no reg citation, just correct string matching. |
+| 18 | **"IT" cost-center zone restored.** The abbreviation expander turns "IT" into "information technology" *before* zone detection runs, so the zone rule needed the expanded phrase too (added to `cc_zones.yaml`) — otherwise fixing #17 would have broken the one legitimate "IT department" case it was trying to protect. | High (paired with #17) | Same. |
+| 19 | **`NO-CHARITY` keyword set narrowed.** Bare `contribution`/`donation`/`gift` matched ordinary payroll benefit lines (e.g. "401k employer contribution") and mis-tagged them Non-Operating/charitable instead of a benefits/labor code. Replaced with specific phrases (`charitable contribution`, `charitable donation`, `charitable gift`, `donation to charity`). | **High — wrong tier, high confidence, no review flag** | §1.263A-1(e)(3)(ii)(B)–(C) (pension/benefits are capitalizable indirect costs, not charitable contributions). |
+| 20 | **Confidence calibration applied to cost-center-reclassified lines.** A line reclassified purely by zone/cc-clue context (no direct account-description keyword) was previously exempted from the confidence cap, so it could report 70 confidence with no `LOW-CONF`/`REVIEW` flag — exactly the "zone-only match" case the calibration comment says must be flagged. | Medium — review-queue integrity | Consistency with the tool's own stated design intent. |
+| 21 | **`GEN-FRT`/`GEN-COMM` now reclassify by cost-center zone** for the zones where the direction is unambiguous: `sales` → `EX-SALES`/`ADD-FRTOUT` (commission and freight in a sales cost center), `production` → `DM-FRT` (freight in a plant/production cost center defaults to inbound material freight), `r&d` → `EX-RD`. Previously these always fell to a flat Mixed-Service default regardless of department. **Warehouse and corporate-zone freight/commission remain unmapped** (genuinely ambiguous — could be inbound or outbound — left for SME review rather than guessed). | Medium | §1.263A-1(e)(4) fallback correctness. |
+| 22 | **Reader hardening** (`reader.py`): a TB with no amount/debit/credit column now raises instead of silently producing $0 for every line; Excel formula-error literals (`#REF!`, `#N/A`, etc.) are filtered instead of becoming phantom line items; an accounting-negative amount with a dollar sign *and* a space before the parenthesis (`"$ (1,234.00)"`) now parses correctly instead of silently zeroing; picking among multiple candidate sheets with no name-hint match now raises requesting an explicit `sheet=` instead of arbitrarily taking the first one in workbook order; the header-row scan window was widened from 20 to 100 rows (real ERP exports commonly have 20–40 preamble rows). | High (several silent-corruption paths) | Data-integrity, not tax-law. |
+| 23 | **Report generation crash on an empty trial balance** (`report.py`) — a zero-row TB inverted the conditional-formatting range (`O4:O3`), which openpyxl rejects, aborting workbook generation entirely. Guarded. | High (hard crash) | — |
+| 24 | **Tab ordering bug** (`report.py`) — the "move Summary Dashboard to the front" offset was computed assuming it was always the *last* sheet; since it's actually created 2nd (right after Classified TB), the reorder silently did nothing and "Classified TB" stayed first, contradicting the documented "Tab 1 = Summary Dashboard" contract. Fixed to compute the offset from Summary's actual current index. | Medium (contract violation, not wrong numbers) | — |
+| 25 | **`get_taxonomy()` dead-code landmine in the `=PY()` blob** (`build_pyexcel.py`) — the assembled Python-in-Excel source contained two definitions of `get_taxonomy()`: the shim's (returns the live taxonomy) and the *real* `taxonomy.py`'s (calls `Taxonomy()`, which needs the file-loading `_load()` the assembly strips out). The real one executed last and silently shadowed the shim's, so any code path that fell back to the no-argument `get_taxonomy()` (the same fallback `engine.classify()` uses in the CLI) would raise `NameError`. It didn't fire in practice only because the bootstrap always passes `tax=` explicitly — a landmine, not a guarantee. Fixed by re-binding `get_taxonomy()` after all modules are inlined, so the shim's version always wins. | High (latent crash, single-source-of-truth risk) | — |
+
+All fixes are covered by new regression tests (`test_engine.py`, `test_analysis.py`, `test_reader.py`,
+`test_report.py`, `test_pyexcel.py`, `test_taxonomy.py`) and the §263A(f) worked example in
+`docs/BUILD_PLAN.md` was independently re-derived with exact `Decimal` arithmetic after the prior
+version was found not to reconcile with its own stated formula (see that document's Phase D
+section for the corrected, fully-shown quarterly table).
+
+---
+
 ### Reviewer summary
 - **7 bug fixes (§1):** all recommended **approve**; items #3 (EX-BID) and the scope items carry a "revisit scope" caveat.
 - **8 new-code groups / 10 codes (§2):** all recommended **approve** (SEC195-STARTUP and the SEC263A-IMPROVE/REPAIR keyword set carry minor-revisit notes).
 - **4 SME judgment calls (§3):** require an explicit human decision before reliance.
 - **5 known limitations (§4):** computation layers (MSPM/SRM, §263A(f), negative adj., per-asset basis) are not yet built; classification-only at this stage.
+- **10 hardening-pass corrections (§5):** found by independent multi-agent audit, all fixed and regression-tested; the SSCM labor-ratio fix (#16) changes computed dollar output on any TB with significant Excluded-tier labor (sales/R&D compensation) and should be re-run against any output generated before this pass.

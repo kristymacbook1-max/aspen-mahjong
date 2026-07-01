@@ -60,3 +60,23 @@ def test_unicap_exempt_when_small():
     r = analyze(_tb(), EntityProfile(avg_gross_receipts=D("1000000")))
     assert r["unicap"]["exempt"] is True
     assert r["unicap"]["additional_capitalized_to_inventory"] == D("0")
+
+
+def test_sscm_labor_ratio_excludes_excluded_tier_labor():
+    """Reg §1.263A-1(h): the SSCM ratio denominator is production + mixed-service
+    labor only. Sales-commission labor (Excluded tier, is_labor=True) must not
+    dilute it — a prior bug summed ALL is_labor rows regardless of tier,
+    understating the capitalizable mixed-service share whenever sales/R&D
+    compensation was large relative to production labor."""
+    lines = [
+        TBLine("5000", "Direct labor", "100", "Production", amount=Decimal("100000")),
+        TBLine("8000", "Officer compensation", "400", "Executive", amount=Decimal("50000")),
+        TBLine("9000", "Sales commissions", "500", "Sales", amount=Decimal("850000")),
+    ]
+    p = EntityProfile(avg_gross_receipts=Decimal("75000000"), ending_inventory_471=Decimal("0"))
+    r = analyze(lines, p)
+    u = r["unicap"]
+    # denominator must be production (100k) + mixed-service officer comp (50k) = 150k,
+    # NOT + sales commissions (850k) = 1,000,000
+    assert u["total_labor"] == Decimal("150000"), f"got {u['total_labor']}"
+    assert u["mixed_alloc_ratio"] == Decimal("0.666667")

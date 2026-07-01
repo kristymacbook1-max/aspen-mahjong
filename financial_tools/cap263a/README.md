@@ -59,8 +59,10 @@ a bundled 250-line labeled trial balance (6 industries, deliberately messy GL
 abbreviations, many same-account-different-department pairs). Current measure:
 
 - Tier-1 agreement **~66% raw / ~71% incl. documented judgment differences**
-- High-confidence **precision ~78%**, with a **~28% review queue** (confidence is
-  calibrated so weak/zone-only matches are flagged, not auto-accepted)
+- High-confidence **precision ~75%**, with a **~39% review queue** (confidence is
+  calibrated so weak/zone-only matches — including cost-center reclassifications
+  driven only by department context, with no direct keyword hit — are flagged,
+  not auto-accepted)
 
 A regression test pins these as a floor. The number is honest, not aspirational:
 a keyword+cost-center heuristic on maximally-diverse data will misroute edge

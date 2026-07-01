@@ -3,4 +3,5 @@ openpyxl>=3.1.0        # required: TB read + workbook write
 PyYAML>=6.0            # required: data-driven taxonomy
 rapidfuzz>=3.0.0       # optional: Layer 2 fuzzy matching (engine degrades gracefully without)
 pytest>=7.0.0          # dev: test suite
+formulas>=1.2.0        # dev: evaluate live Excel formulas in tests (LibreOffice headless unavailable)
 # sentence-transformers  # optional: Layer 3 semantic plugin (heavy; off by default)

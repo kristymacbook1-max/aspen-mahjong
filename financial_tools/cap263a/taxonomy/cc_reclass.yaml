@@ -79,6 +79,12 @@
 - zone: sales
   expense_type: supplies
   target: EX-SALES
+- zone: sales
+  expense_type: commission
+  target: EX-SALES
+- zone: sales
+  expense_type: freight
+  target: ADD-FRTOUT
 - zone: r&d
   expense_type: compensation
   target: EX-RD
@@ -94,6 +100,12 @@
 - zone: r&d
   expense_type: prof_fees
   target: EX-RD
+- zone: r&d
+  expense_type: freight
+  target: EX-RD
+- zone: production
+  expense_type: freight
+  target: DM-FRT
 - zone: corporate
   expense_type: compensation
   target: MSC-GA
