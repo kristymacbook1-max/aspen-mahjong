@@ -87,6 +87,20 @@ def test_401k_contribution_is_not_charitable():
     assert r.code != "NO-CHARITY"
     assert r.tier1 != "Non-Operating"
 
+
+def test_401k_parens_shorthand_still_matches_the_keyword():
+    """"401(k)" (the standard way payroll GLs spell it) was silently mangled
+    to "401 " by the generic parenthetical-content stripper, losing the
+    "401k" keyword entirely and falling through to NO-CHARITY via a
+    zero-score tie-break on the bare "contribution" word."""
+    r = classify(acct_desc="401(k) employer match contribution", cc_desc="Manufacturing Plant")
+    assert r.code != "NO-CHARITY"
+    assert r.tier1 != "Non-Operating"
+
+    r2 = classify(acct_desc="403(b) plan contribution", cc_desc="Corporate HQ")
+    assert r2.code != "NO-CHARITY"
+    assert r2.tier1 != "Non-Operating"
+
     r2 = classify(acct_desc="Pension plan contribution expense", cc_desc="Corporate HQ")
     assert r2.code != "NO-CHARITY"
     assert r2.tier1 != "Non-Operating"
@@ -112,3 +126,17 @@ def test_zone_only_reclass_is_calibrated_not_overconfident():
     assert "CC-RECLASSED" in r.flags
     assert r.confidence < 70
     assert "LOW-CONF" in r.flags or "REVIEW" in r.flags
+
+
+def test_zero_signal_code_cannot_win_on_priority_alone():
+    """A code with zero real signal (no keyword/clue/zone/fuzzy hit) could
+    still "win" purely because a nonnegative `priority` default outscored
+    every other candidate's negative-priority generic fallback — reachable
+    whenever a single word from a multi-word keyword phrase (e.g.
+    "contribution" from NO-CHARITY's "charitable contribution") pulls a code
+    into the candidate pool without it ever actually phrase-matching. Such a
+    zero-evidence pick must fall back to VAGUE-OTHER, not a specific
+    (and here, wrong) tier1 like Non-Operating."""
+    r = classify(acct_desc="401(k) employer match contribution", cc_desc="")
+    assert r.code != "NO-CHARITY"
+    assert r.tier1 != "Non-Operating"

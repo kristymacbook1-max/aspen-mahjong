@@ -20,6 +20,10 @@ except Exception:                       # pragma: no cover
 
 _LEADING_ACCT = re.compile(r"^[\s]*[\d\-\.]+[\s:·\-]+")
 _PARENS = re.compile(r"\([^)]*\)")
+# IRC-section shorthand ("401(k)", "403(b)", "457(b)") is not a narrative aside —
+# the blanket parens-stripper below was eating the "(k)"/"(b)" entirely, turning
+# "401(k) contribution" into "401 contribution" and losing the "401k" keyword.
+_IRC_PAREN = re.compile(r"(\d)\s*\(\s*([a-z]{1,3})\s*\)")
 
 
 def _phrase_in(phrase, text):
@@ -32,6 +36,7 @@ def _phrase_in(phrase, text):
 def normalize(text: str) -> str:
     t = (text or "").lower().strip()
     t = _LEADING_ACCT.sub("", t)        # strip "6100-20 · " style prefixes
+    t = _IRC_PAREN.sub(r"\1\2", t)       # "401(k)" -> "401k" before the parens strip below
     t = _PARENS.sub(" ", t)
     t = re.sub(r"[^a-z0-9&\s\-/]", " ", t)
     return re.sub(r"\s+", " ", t).strip()
@@ -159,6 +164,15 @@ def classify(acct_num="", acct_desc="", cc_num="", cc_desc="", tax=None):
 
     if best is None:
         best, best_score, best_method = "VAGUE-OTHER", 0, "no-match"
+    elif not best_method:
+        # Won with an empty method list — i.e. purely on a nonnegative `priority`
+        # default with ZERO real signal (no keyword/clue/zone/fuzzy hit at all).
+        # A code only reaches the candidate pool via incidental single-word
+        # overlap in the keyword index (e.g. "contribution" pulling in
+        # NO-CHARITY for a "401(k) ... contribution" line that never actually
+        # phrase-matched); priority alone must never pick a specific tier1 out
+        # of thin air — fall back to the safe, flagged default instead.
+        best, best_score, best_method, best_kw_hit = "VAGUE-OTHER", 0, "no-match", False
 
     # --- generic reclassification by cost-center zone ---
     # Fire when the winner is itself generic, OR when a generic code had a keyword
