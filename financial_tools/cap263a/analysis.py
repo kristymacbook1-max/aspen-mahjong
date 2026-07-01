@@ -28,12 +28,25 @@ class EntityProfile:
     industry: str = ""
     produces: bool = True                  # §263A producer
     acquires_for_resale: bool = False
+    # §263A UNICAP inputs (Phase 3)
+    method: str = "SPM"                    # SPM / MSPM / SRM
+    ending_inventory_471: Decimal = Decimal("0")   # §471 costs in ending inventory
+    mixed_alloc_ratio: Optional[Decimal] = None    # SSCM ratio; None -> labor-based
+    # §263A(f) interest inputs (Phase 4)
+    accumulated_production_expenditures: Decimal = Decimal("0")
+    avoided_cost_rate: Decimal = Decimal("0")
+    has_designated_property: bool = False
 
     THRESHOLDS = {2024: Decimal("30000000"), 2025: Decimal("31000000"),
                   2026: Decimal("32000000")}
 
     def __post_init__(self):
         self.avg_gross_receipts = Decimal(str(self.avg_gross_receipts or 0))
+        self.ending_inventory_471 = Decimal(str(self.ending_inventory_471 or 0))
+        self.accumulated_production_expenditures = Decimal(str(self.accumulated_production_expenditures or 0))
+        self.avoided_cost_rate = Decimal(str(self.avoided_cost_rate or 0))
+        if self.mixed_alloc_ratio is not None:
+            self.mixed_alloc_ratio = Decimal(str(self.mixed_alloc_ratio))
 
     @property
     def sec448_threshold(self) -> Decimal:
@@ -113,7 +126,7 @@ def analyze(lines: List[TBLine], profile: Optional[EntityProfile] = None) -> dic
     mixed = totals["Mixed (allocable)"]
     deductible = totals["Deductible"] + totals["Non-Operating"]
 
-    return {
+    result = {
         "profile": profile,
         "rows": rows,
         "bucket_totals": totals,
@@ -123,4 +136,55 @@ def analyze(lines: List[TBLine], profile: Optional[EntityProfile] = None) -> dic
         "deductible_total": deductible,
         "review_count": sum(1 for r in rows if r.cls.review),
         "tie_check": is_total - (capitalized + mixed + deductible),
+    }
+    result["unicap"] = compute_unicap(result, profile)
+    return result
+
+
+def _q(x):
+    return x.quantize(Decimal("0.01"))
+
+
+def compute_unicap(result: dict, profile: EntityProfile) -> dict:
+    """§263A UNICAP: SSCM mixed-service allocation + SPM absorption ratio.
+
+    Mixed-service costs are split into a capitalizable share (labor-based SSCM
+    ratio, unless overridden) that joins the additional §263A pool, and a
+    deductible remainder. The simplified production method then computes the
+    absorption ratio (additional §263A ÷ §471) and the additional §263A cost
+    capitalized to ending inventory.
+    """
+    if profile.small_business_exempt:
+        return {"exempt": True, "note": "§263A(i)/§448(c) small-business exception — UNICAP off.",
+                "mixed_capitalized": Decimal("0"), "mixed_deductible": result["mixed_total"],
+                "absorption_ratio": Decimal("0"), "additional_capitalized_to_inventory": Decimal("0")}
+
+    rows = result["rows"]
+    prod_labor = sum((r.line.amount for r in rows
+                      if r.cls.is_labor and r.cls.tier1 == "§471 Cost"), Decimal("0"))
+    total_labor = sum((r.line.amount for r in rows if r.cls.is_labor), Decimal("0"))
+    if profile.mixed_alloc_ratio is not None:
+        ratio = profile.mixed_alloc_ratio
+    else:
+        ratio = (prod_labor / total_labor) if total_labor else Decimal("0")
+    ratio = ratio.quantize(Decimal("0.000001"))
+    mixed = result["mixed_total"]
+    mixed_cap = _q(mixed * ratio)
+    mixed_ded = mixed - mixed_cap
+
+    sec471_pool = result["bucket_totals"]["Inventory §471"]
+    additional_pool = result["bucket_totals"]["§263A Additional"] + mixed_cap
+    absorption = _q(additional_pool / sec471_pool) if sec471_pool else Decimal("0")
+    add_to_inv = _q(profile.ending_inventory_471 * absorption)
+
+    return {
+        "exempt": False,
+        "mixed_alloc_ratio": ratio,
+        "production_labor": prod_labor, "total_labor": total_labor,
+        "mixed_capitalized": mixed_cap, "mixed_deductible": mixed_ded,
+        "sec471_pool": sec471_pool, "additional_263a_pool": additional_pool,
+        "absorption_ratio": absorption,
+        "ending_inventory_471": profile.ending_inventory_471,
+        "additional_capitalized_to_inventory": add_to_inv,
+        "adjusted_deductible_post": result["deductible_total"] + mixed_ded,
     }

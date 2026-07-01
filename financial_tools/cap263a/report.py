@@ -184,7 +184,37 @@ class CapitalizationReport:
         row += 1
         self._label(ws, row, 1, "Lines flagged for review", bold=True)
         self._label(ws, row, 3, str(self._r["review_count"]))
-        for col, w in {"A": 42, "C": 20}.items():
+        row += 2
+
+        # --- §263A UNICAP computation ---
+        u = self._r["unicap"]
+        apply_section_header(ws, row, 1, 4, "§263A UNICAP")
+        row += 1
+        if u.get("exempt"):
+            self._label(ws, row, 1, u["note"])
+        else:
+            for lbl, val, pct in [
+                ("Mixed-service SSCM allocation ratio", u["mixed_alloc_ratio"], True),
+                ("Mixed capitalized to §263A", u["mixed_capitalized"], False),
+                ("Mixed remaining deductible", u["mixed_deductible"], False),
+                ("§471 cost pool", u["sec471_pool"], False),
+                ("Additional §263A pool (incl. mixed)", u["additional_263a_pool"], False),
+                ("SPM absorption ratio", u["absorption_ratio"], True),
+                ("§471 costs in ending inventory", u["ending_inventory_471"], False),
+                ("Additional §263A capitalized to ending inventory",
+                 u["additional_capitalized_to_inventory"], False),
+                ("Adjusted deductible after mixed allocation",
+                 u["adjusted_deductible_post"], False),
+            ]:
+                self._label(ws, row, 1, lbl, bold=True)
+                cell = ws.cell(row, 3, float(val))
+                cell.number_format = FMT_PERCENT if pct else FMT_CURRENCY
+                cell.alignment = ALIGN_RIGHT
+                cell.border = THIN_BORDER
+                if "absorption" in lbl or "capitalized to ending" in lbl:
+                    cell.fill = FILL_HIGHLIGHT_GREEN
+                row += 1
+        for col, w in {"A": 46, "C": 20}.items():
             ws.column_dimensions[col].width = w
 
     # ------------------------------------------------------------------
@@ -197,16 +227,138 @@ class CapitalizationReport:
         return ws
 
     def _create_asset_basis(self):
-        self._scaffold("Asset Basis Schedule",
-                       "Populated in Phase 3 — requires beginning balance-sheet asset detail; "
-                       "posts §263(a)/§263A/§263A(f) capitalization events to each asset's basis.")
+        ws = self._scaffold(
+            "Asset Basis Schedule",
+            "Capitalization additions by regime. Per-asset original basis is seeded from "
+            "beginning balance-sheet detail when provided; otherwise additions are shown by regime.")
+        row = 5
+        self._headers = ["Regime", "Capitalized additions", "Authority"]
+        for i, h in enumerate(self._headers):
+            ws.cell(row, 1 + i, h)
+        apply_header_row(ws, row, 1, 3)
+        row += 1
+        b = self._r["bucket_totals"]
+        u = self._r["unicap"]
+        items = [
+            ("§263(a) Mandatory (tangible + transaction/intangible)", b["§263(a) Mandatory"],
+             "Reg §1.263(a)-2/-3/-4/-5"),
+            ("§263(a) Elective (safe-harbor capitalize)", b["§263(a) Elective"],
+             "Reg §1.263(a)-1(f)/-3(h)(i)(n)"),
+            ("§263A additional cost to ending inventory",
+             u.get("additional_capitalized_to_inventory", 0), "SPM Reg §1.263A-2(b)"),
+            ("§263A(f) interest (see Method Changes tab)", 0, "Reg §1.263A-9"),
+        ]
+        first = row
+        for lbl, val, auth in items:
+            self._label(ws, row, 1, lbl)
+            self._money(ws, row, 2, float(val))
+            self._label(ws, row, 3, auth)
+            row += 1
+        self._label(ws, row, 1, "Total basis additions", bold=True)
+        c = ws.cell(row, 2, f"=SUM(B{first}:B{row-1})")
+        c.number_format = FMT_CURRENCY
+        c.font = FONT_BODY_BOLD
+        c.alignment = ALIGN_RIGHT
+        c.border = THIN_BORDER
+        c.fill = FILL_HIGHLIGHT_GREEN
+        ws.column_dimensions["A"].width = 52
+        ws.column_dimensions["B"].width = 22
+        ws.column_dimensions["C"].width = 30
 
     def _create_adjusted_is(self):
-        self._scaffold("Adjusted IS",
-                       "Populated in Phase 4 — remaining deductible expenses after all "
-                       "capitalization layers, with full traceability to the Classified TB.")
+        ws = self._scaffold(
+            "Adjusted IS",
+            "Income-statement expenses remaining deductible after all capitalization layers.")
+        row = 5
+        for i, h in enumerate(["Account #", "Description", "Cost Center", "Amount", "Basis"]):
+            ws.cell(row, 1 + i, h)
+        apply_header_row(ws, row, 1, 5)
+        row += 1
+        first = row
+        for cr in self._r["rows"]:
+            if cr.bucket in ("Deductible", "Non-Operating"):
+                self._label(ws, row, 1, cr.line.acct_num)
+                self._label(ws, row, 2, cr.line.acct_desc)
+                self._label(ws, row, 3, cr.line.cc_desc or cr.line.cc_num)
+                self._money(ws, row, 4, float(cr.line.amount))
+                self._label(ws, row, 5, cr.bucket)
+                row += 1
+        # plus the deductible remainder of mixed-service costs
+        u = self._r["unicap"]
+        self._label(ws, row, 1, "", )
+        self._label(ws, row, 2, "Mixed-service deductible remainder (post-SSCM)", bold=True)
+        self._money(ws, row, 4, float(u.get("mixed_deductible", 0)))
+        row += 1
+        self._label(ws, row, 1, "TOTAL remaining deductible", bold=True)
+        c = ws.cell(row, 4, f"=SUM(D{first}:D{row-1})")
+        c.number_format = FMT_CURRENCY
+        c.font = FONT_BODY_BOLD
+        c.alignment = ALIGN_RIGHT
+        c.border = THIN_BORDER
+        c.fill = FILL_HIGHLIGHT_GREEN
+        ws.column_dimensions["B"].width = 40
+        ws.column_dimensions["C"].width = 22
+        ws.column_dimensions["D"].width = 16
 
     def _create_method_changes(self):
-        self._scaffold("Method Changes",
-                       "Populated in Phase 4 — items differing from current method mapped to a "
-                       "Rev. Proc. 2025-23 DCN with the §481(a) adjustment (Form 3115).")
+        ws = self._scaffold(
+            "Method Changes",
+            "§263A(f) interest capitalization and accounting-method-change candidates. "
+            "DCNs are representative (confirm against the current Rev. Proc. list); "
+            "§481(a) = catch-up on adopting the proper method.")
+        p = self._r["profile"]
+        u = self._r["unicap"]
+        row = 5
+        apply_section_header(ws, row, 1, 4, "§263A(f) interest capitalization (avoided cost)")
+        row += 1
+        ape = float(p.accumulated_production_expenditures)
+        rate = float(p.avoided_cost_rate)
+        interest = ape * rate if p.has_designated_property else 0.0
+        for lbl, val, pct in [
+            ("Designated property?", "Yes" if p.has_designated_property else "No", None),
+            ("Accumulated production expenditures", ape, False),
+            ("Avoided-cost rate", rate, True),
+            ("Interest capitalized (§263A(f))", interest, False),
+        ]:
+            self._label(ws, row, 1, lbl, bold=True)
+            if pct is None:
+                self._label(ws, row, 3, str(val))
+            else:
+                c = ws.cell(row, 3, val)
+                c.number_format = FMT_PERCENT if pct else FMT_CURRENCY
+                c.alignment = ALIGN_RIGHT
+                c.border = THIN_BORDER
+                if "Interest capitalized" in lbl:
+                    c.fill = FILL_HIGHLIGHT_GREEN
+            row += 1
+        row += 1
+
+        apply_section_header(ws, row, 1, 4, "Accounting-method-change candidates")
+        row += 1
+        for i, h in enumerate(["Regime / issue", "Amount", "Repr. DCN", "§481(a) note"]):
+            ws.cell(row, 1 + i, h)
+        apply_header_row(ws, row, 1, 4)
+        row += 1
+        b = self._r["bucket_totals"]
+        candidates = [
+            ("§263A UNICAP (additional costs to inventory)",
+             float(u.get("additional_capitalized_to_inventory", 0)), "DCN 22",
+             "§481(a) on beginning inventory revaluation (Reg §1.263A-7)"),
+            ("§263(a) tangible / repair regs",
+             float(b["§263(a) Mandatory"] + b["§263(a) Elective"]), "DCN 184-193",
+             "Cut-off or §481(a) per change"),
+            ("§263A(f) interest capitalization", interest, "DCN 22",
+             "§481(a) if not previously capitalizing"),
+            ("§266 carrying-charge election", float(b["§266 Carrying"]), "n/a (annual election)",
+             "Statement on original return; no §481(a)"),
+        ]
+        for lbl, val, dcn, note in candidates:
+            self._label(ws, row, 1, lbl)
+            self._money(ws, row, 2, val)
+            self._label(ws, row, 3, dcn)
+            self._label(ws, row, 4, note)
+            row += 1
+        ws.column_dimensions["A"].width = 44
+        ws.column_dimensions["B"].width = 16
+        ws.column_dimensions["C"].width = 16
+        ws.column_dimensions["D"].width = 46

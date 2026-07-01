@@ -20,13 +20,22 @@ def main(argv=None):
     ap.add_argument("--tax-year", type=int, default=2026)
     ap.add_argument("--gross-receipts", type=float, default=0.0)
     ap.add_argument("--no-afs", action="store_true")
+    ap.add_argument("--ending-inventory", type=float, default=0.0)
+    ap.add_argument("--ape", type=float, default=0.0, help="accumulated production expenditures")
+    ap.add_argument("--avoided-rate", type=float, default=0.0)
+    ap.add_argument("--designated", action="store_true", help="has §263A(f) designated property")
+    ap.add_argument("--method", default="SPM", choices=["SPM", "MSPM", "SRM"])
     ap.add_argument("--out-dir", default="output/cap263a")
     args = ap.parse_args(argv)
 
     profile = EntityProfile(
         entity_name=args.entity, entity_type=args.entity_type,
         tax_year=args.tax_year, avg_gross_receipts=Decimal(str(args.gross_receipts)),
-        has_afs=not args.no_afs,
+        has_afs=not args.no_afs, method=args.method,
+        ending_inventory_471=Decimal(str(args.ending_inventory)),
+        accumulated_production_expenditures=Decimal(str(args.ape)),
+        avoided_cost_rate=Decimal(str(args.avoided_rate)),
+        has_designated_property=args.designated,
     )
     result = CapitalizationPipeline(args.out_dir).run(args.tb_path, profile,
                                                       company_tag=args.entity or None)

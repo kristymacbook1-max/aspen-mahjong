@@ -39,3 +39,24 @@ def test_small_business_exemption_turns_off_unicap():
     assert b["Inventory §471"] == Decimal("0")
     assert b["§263A Additional"] == Decimal("0")
     assert b["Deductible"] >= Decimal("1800000")
+
+
+def test_unicap_absorption_and_sscm():
+    from decimal import Decimal as D
+    lines = _tb()
+    p = EntityProfile(avg_gross_receipts=D("75000000"), ending_inventory_471=D("1000000"))
+    r = analyze(lines, p)
+    u = r["unicap"]
+    assert not u["exempt"]
+    # SSCM ratio = production labor / total labor; officer comp is mixed (not labor)
+    assert D("0") < u["mixed_alloc_ratio"] <= D("1")
+    # absorption ratio = additional pool / §471 pool; capitalized = ending inv * ratio
+    expected = (u["ending_inventory_471"] * u["absorption_ratio"]).quantize(D("0.01"))
+    assert u["additional_capitalized_to_inventory"] == expected
+
+
+def test_unicap_exempt_when_small():
+    from decimal import Decimal as D
+    r = analyze(_tb(), EntityProfile(avg_gross_receipts=D("1000000")))
+    assert r["unicap"]["exempt"] is True
+    assert r["unicap"]["additional_capitalized_to_inventory"] == D("0")
