@@ -166,10 +166,10 @@
 - keyword: vacant land
   zone: land
   zone_tier1: §266 Carrying Charges
-- keyword: held for development
+- keyword: idle land
   zone: land
   zone_tier1: §266 Carrying Charges
-- keyword: idle land
+- keyword: held for development
   zone: land
   zone_tier1: §266 Carrying Charges
 - keyword: land held

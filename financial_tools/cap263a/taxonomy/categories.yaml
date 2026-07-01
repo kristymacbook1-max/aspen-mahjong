@@ -30,6 +30,9 @@
   - rou asset
   - investment
   - fixed assets
+  - a/r trade
+  - accumulated depreciation
+  - allowance for doubtful
   cc_clues: []
   is_labor: false
   labor_type: ''
@@ -61,6 +64,9 @@
   - current portion
   - long term debt
   - bonds payable
+  - a/p trade
+  - accrued liability
+  - accrued payroll
   cc_clues: []
   is_labor: false
   labor_type: ''
@@ -278,6 +284,10 @@
   - transportation in
   - freight inbound
   - inbound transportation
+  - freight-in
+  - frt in
+  - freight in on resale
+  - inbound frt
   cc_clues:
   - logistics
   - receiving
@@ -1131,12 +1141,12 @@
   designated_property: false
   election_required: false
 - code: ADD-FRTOUT
-  tier1: Additional §263A
+  tier1: Excluded
   tier2: Distribution
   tier3: Outbound Shipping
   treatment:
-    mspm: I
-    resale: S
+    mspm: E
+    resale: E
     self_const: N/A
     interest: N/A
   priority: 0
@@ -1149,13 +1159,15 @@
   - outbound shipping
   - distribution cost
   - freight outbound
+  - frt out
+  - distribution outbound
   cc_clues:
   - shipping
   - distribution
   - logistics
   is_labor: false
   labor_type: ''
-  authority: ''
+  authority: §1.263A-1(e)(3)(iii) — post-sale distribution (non-capitalizable)
   cap_vs_deduct: null
   allows_negative_adj: false
   designated_property: false
@@ -3546,6 +3558,10 @@
   - tbd
   - pending classification
   - general expense
+  - misc
+  - miscellaneous
+  - other operating
+  - unspecified
   cc_clues: []
   is_labor: false
   labor_type: ''
@@ -3640,7 +3656,7 @@
     resale: N/A
     self_const: N/A
     interest: N/A
-  priority: 5
+  priority: 6
   keywords:
   - transaction cost
   - facilitative
@@ -3650,6 +3666,11 @@
   - due diligence
   - merger cost
   - investment banking fee
+  - loan origination
+  - underwriting
+  - investment banking
+  - merger
+  - underwriting fee
   cc_clues: []
   is_labor: false
   labor_type: ''
@@ -3667,7 +3688,7 @@
     resale: N/A
     self_const: N/A
     interest: N/A
-  priority: 5
+  priority: 6
   keywords:
   - intangible
   - customer list
@@ -3676,6 +3697,10 @@
   - trademark
   - license acquired
   - goodwill
+  - patent application
+  - patent cost
+  - permit and impact
+  - impact fee
   cc_clues: []
   is_labor: false
   labor_type: ''
@@ -3727,6 +3752,12 @@
   - capital improvement
   - building improvement
   - unit of property
+  - land clearing
+  - grading
+  - site preparation
+  - architect fee
+  - engineering fee construction
+  - construction management
   cc_clues: []
   is_labor: false
   labor_type: ''

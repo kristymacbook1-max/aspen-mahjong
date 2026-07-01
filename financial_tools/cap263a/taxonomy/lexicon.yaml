@@ -245,6 +245,11 @@ abbreviations:
   wip: work in process
   wms: warehouse management system
   wrty: warranty
+  deprec: depreciation
+  wh: warehouse
+  mtls: materials
+  ofc: office
+  engr: engineering
 account_synonyms:
   401k expense: employee benefits
   absorption: overhead

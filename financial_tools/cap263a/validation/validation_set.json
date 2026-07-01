@@ -1,0 +1,2252 @@
+[
+  {
+    "acct_num": "7100",
+    "acct_desc": "Rent expense - Plant 1",
+    "cc_desc": "Manufacturing",
+    "amount": 480000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "factory rent is a \u00a7471 production cost"
+  },
+  {
+    "acct_num": "7100",
+    "acct_desc": "Ofc rent - corp",
+    "cc_desc": "Corporate HQ",
+    "amount": 320000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "HQ rent - mixed service dept, partly allocable under \u00a7263A"
+  },
+  {
+    "acct_num": "7100",
+    "acct_desc": "Rent - sales office",
+    "cc_desc": "Sales & Marketing",
+    "amount": 145000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "selling function rent, not capitalizable"
+  },
+  {
+    "acct_num": "7100",
+    "acct_desc": "Rent - distribution whse",
+    "cc_desc": "Warehouse/Distribution",
+    "amount": 260000,
+    "expected_tier1": "Additional \u00a7263A",
+    "expected_bucket": "\u00a7263A Additional",
+    "note": "off-site storage - reseller storage cost capitalizable"
+  },
+  {
+    "acct_num": "7100",
+    "acct_desc": "Rent - retail store #14",
+    "cc_desc": "Retail Store Ops",
+    "amount": 210000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "on-site retail store space is deductible selling cost"
+  },
+  {
+    "acct_num": "7100",
+    "acct_desc": "Ground rent - land held for dev",
+    "cc_desc": "Land Held for Development",
+    "amount": 95000,
+    "expected_tier1": "\u00a7266 Carrying Charges",
+    "expected_bucket": "\u00a7266 Carrying",
+    "note": "unimproved land held for development - electable \u00a7266 carrying charge"
+  },
+  {
+    "acct_num": "7110",
+    "acct_desc": "Utilities - Plant 2",
+    "cc_desc": "Manufacturing",
+    "amount": 215000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "factory utilities are production overhead"
+  },
+  {
+    "acct_num": "7110",
+    "acct_desc": "Utilities - corp HQ",
+    "cc_desc": "Corporate HQ",
+    "amount": 88000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "HQ utilities mixed service"
+  },
+  {
+    "acct_num": "7110",
+    "acct_desc": "Utilities - sales ofc",
+    "cc_desc": "Sales & Marketing",
+    "amount": 34000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "sales office utilities deductible"
+  },
+  {
+    "acct_num": "7110",
+    "acct_desc": "Utilities - warehouse",
+    "cc_desc": "Warehouse/Distribution",
+    "amount": 62000,
+    "expected_tier1": "Additional \u00a7263A",
+    "expected_bucket": "\u00a7263A Additional",
+    "note": "storage facility utilities capitalizable to inventory"
+  },
+  {
+    "acct_num": "7110",
+    "acct_desc": "Utils - R&D lab",
+    "cc_desc": "Research & Development",
+    "amount": 71000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "\u00a7174 R&D facility utilities excluded from 263A"
+  },
+  {
+    "acct_num": "7200",
+    "acct_desc": "R&M \u2014 Plant machinery",
+    "cc_desc": "Manufacturing",
+    "amount": 340000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "routine machinery repairs are production overhead; deductible under repair regs but 471 cost"
+  },
+  {
+    "acct_num": "7200",
+    "acct_desc": "Repairs & maintenance - corp bldg",
+    "cc_desc": "Corporate HQ",
+    "amount": 45000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "HQ building repairs mixed service"
+  },
+  {
+    "acct_num": "7200",
+    "acct_desc": "R&M - sales office",
+    "cc_desc": "Sales & Marketing",
+    "amount": 18000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "sales office repairs deductible"
+  },
+  {
+    "acct_num": "7200",
+    "acct_desc": "R&M - warehouse racking",
+    "cc_desc": "Warehouse/Distribution",
+    "amount": 27000,
+    "expected_tier1": "Additional \u00a7263A",
+    "expected_bucket": "\u00a7263A Additional",
+    "note": "storage facility maintenance"
+  },
+  {
+    "acct_num": "7200",
+    "acct_desc": "Building improvement - new roof Plant 3",
+    "cc_desc": "Manufacturing",
+    "amount": 620000,
+    "expected_tier1": "\u00a7263(a) Tangible",
+    "expected_bucket": "\u00a7263(a) Mandatory",
+    "note": "roof replacement is a betterment/restoration - capitalize under \u00a71.263(a)-3"
+  },
+  {
+    "acct_num": "7200",
+    "acct_desc": "HVAC unit replacement - HQ",
+    "cc_desc": "Corporate HQ",
+    "amount": 190000,
+    "expected_tier1": "\u00a7263(a) Tangible",
+    "expected_bucket": "\u00a7263(a) Mandatory",
+    "note": "building system replacement capitalized under repair regs"
+  },
+  {
+    "acct_num": "6100",
+    "acct_desc": "Depreciation - Plant 2 machinery",
+    "cc_desc": "Manufacturing",
+    "amount": 1250000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "production equipment depreciation"
+  },
+  {
+    "acct_num": "6100",
+    "acct_desc": "Deprec-Mfg tooling",
+    "cc_desc": "Manufacturing",
+    "amount": 430000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "tooling depreciation is production cost"
+  },
+  {
+    "acct_num": "6100",
+    "acct_desc": "Depreciation - corp IT equipment",
+    "cc_desc": "Information Technology",
+    "amount": 210000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "IT dept depreciation mixed service"
+  },
+  {
+    "acct_num": "6100",
+    "acct_desc": "Depreciation - sales vehicles",
+    "cc_desc": "Sales & Marketing",
+    "amount": 76000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "sales fleet depreciation is selling expense"
+  },
+  {
+    "acct_num": "6100",
+    "acct_desc": "Deprec - warehouse forklifts",
+    "cc_desc": "Warehouse/Distribution",
+    "amount": 54000,
+    "expected_tier1": "Additional \u00a7263A",
+    "expected_bucket": "\u00a7263A Additional",
+    "note": "handling equipment depreciation capitalizable"
+  },
+  {
+    "acct_num": "6100",
+    "acct_desc": "Depreciation - HQ furniture & fixtures",
+    "cc_desc": "Corporate HQ",
+    "amount": 39000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "corporate F&F depreciation mixed service"
+  },
+  {
+    "acct_num": "6100",
+    "acct_desc": "Depr - R&D lab equipment",
+    "cc_desc": "Research & Development",
+    "amount": 165000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "R&D equipment depreciation excluded"
+  },
+  {
+    "acct_num": "7300",
+    "acct_desc": "Insurance - plant property",
+    "cc_desc": "Manufacturing",
+    "amount": 96000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "factory property insurance is production overhead"
+  },
+  {
+    "acct_num": "7300",
+    "acct_desc": "Insurance - corp D&O",
+    "cc_desc": "Corporate HQ",
+    "amount": 130000,
+    "expected_tier1": "Non-Operating",
+    "expected_bucket": "Non-Operating",
+    "note": "directors & officers insurance non-operating"
+  },
+  {
+    "acct_num": "7300",
+    "acct_desc": "Insurance - product liability",
+    "cc_desc": "Manufacturing",
+    "amount": 84000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "product liability insurance allocable to production"
+  },
+  {
+    "acct_num": "7300",
+    "acct_desc": "Insurance - sales office",
+    "cc_desc": "Sales & Marketing",
+    "amount": 22000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "sales office insurance deductible"
+  },
+  {
+    "acct_num": "7300",
+    "acct_desc": "Insurance - warehouse inventory",
+    "cc_desc": "Warehouse/Distribution",
+    "amount": 41000,
+    "expected_tier1": "Additional \u00a7263A",
+    "expected_bucket": "\u00a7263A Additional",
+    "note": "storage insurance on inventory capitalizable"
+  },
+  {
+    "acct_num": "7300",
+    "acct_desc": "Insurance - land held for dev",
+    "cc_desc": "Land Held for Development",
+    "amount": 12000,
+    "expected_tier1": "\u00a7266 Carrying Charges",
+    "expected_bucket": "\u00a7266 Carrying",
+    "note": "insurance on undeveloped land - electable \u00a7266 carrying charge"
+  },
+  {
+    "acct_num": "7400",
+    "acct_desc": "Property tax - plant real estate",
+    "cc_desc": "Manufacturing",
+    "amount": 175000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "factory real property tax is production overhead"
+  },
+  {
+    "acct_num": "7400",
+    "acct_desc": "Property tax - corp HQ",
+    "cc_desc": "Corporate HQ",
+    "amount": 62000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "HQ property tax mixed service"
+  },
+  {
+    "acct_num": "7400",
+    "acct_desc": "RE tax - land held for development",
+    "cc_desc": "Land Held for Development",
+    "amount": 88000,
+    "expected_tier1": "\u00a7266 Carrying Charges",
+    "expected_bucket": "\u00a7266 Carrying",
+    "note": "property tax on unimproved land held for dev - \u00a7266 election"
+  },
+  {
+    "acct_num": "7400",
+    "acct_desc": "Property tax - warehouse",
+    "cc_desc": "Warehouse/Distribution",
+    "amount": 33000,
+    "expected_tier1": "Additional \u00a7263A",
+    "expected_bucket": "\u00a7263A Additional",
+    "note": "storage facility property tax"
+  },
+  {
+    "acct_num": "7400",
+    "acct_desc": "Personal property tax - sales fleet",
+    "cc_desc": "Sales & Marketing",
+    "amount": 9000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "sales vehicle PP tax deductible"
+  },
+  {
+    "acct_num": "5000",
+    "acct_desc": "Direct labor - assembly",
+    "cc_desc": "Manufacturing",
+    "amount": 2400000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "direct production labor"
+  },
+  {
+    "acct_num": "5000",
+    "acct_desc": "Whse labor",
+    "cc_desc": "Warehouse/Distribution",
+    "amount": 310000,
+    "expected_tier1": "Additional \u00a7263A",
+    "expected_bucket": "\u00a7263A Additional",
+    "note": "warehouse handling labor - reseller storage/handling cost"
+  },
+  {
+    "acct_num": "5000",
+    "acct_desc": "Payroll - corp finance dept",
+    "cc_desc": "Finance & Accounting",
+    "amount": 540000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "finance dept salaries mixed service"
+  },
+  {
+    "acct_num": "5000",
+    "acct_desc": "Salaries - sales team",
+    "cc_desc": "Sales & Marketing",
+    "amount": 890000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "sales salaries are selling expense"
+  },
+  {
+    "acct_num": "5000",
+    "acct_desc": "Wages - QC inspectors",
+    "cc_desc": "Quality Control",
+    "amount": 220000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "quality control labor is production cost"
+  },
+  {
+    "acct_num": "5000",
+    "acct_desc": "Production supervisor salaries",
+    "cc_desc": "Manufacturing",
+    "amount": 380000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "production supervision"
+  },
+  {
+    "acct_num": "5000",
+    "acct_desc": "Salaries - purchasing dept",
+    "cc_desc": "Purchasing/Procurement",
+    "amount": 260000,
+    "expected_tier1": "Additional \u00a7263A",
+    "expected_bucket": "\u00a7263A Additional",
+    "note": "reseller purchasing/buying office costs capitalizable"
+  },
+  {
+    "acct_num": "5000",
+    "acct_desc": "Salaries - HR dept",
+    "cc_desc": "Human Resources",
+    "amount": 320000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "HR mixed service dept"
+  },
+  {
+    "acct_num": "5000",
+    "acct_desc": "Salaries - legal dept",
+    "cc_desc": "Legal",
+    "amount": 410000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "legal mixed service dept"
+  },
+  {
+    "acct_num": "5000",
+    "acct_desc": "Salaries - IT dept",
+    "cc_desc": "Information Technology",
+    "amount": 470000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "IT mixed service dept"
+  },
+  {
+    "acct_num": "5000",
+    "acct_desc": "Wages - R&D engineers",
+    "cc_desc": "Research & Development",
+    "amount": 1100000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "\u00a7174 R&D wages excluded from 263A"
+  },
+  {
+    "acct_num": "5000",
+    "acct_desc": "Officer compensation - CEO",
+    "cc_desc": "Corporate HQ",
+    "amount": 950000,
+    "expected_tier1": "Non-Operating",
+    "expected_bucket": "Non-Operating",
+    "note": "officer comp - non-operating, but note some allocable; treated non-op here"
+  },
+  {
+    "acct_num": "5100",
+    "acct_desc": "Payroll tax - prod",
+    "cc_desc": "Manufacturing",
+    "amount": 195000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "employer payroll tax on direct labor"
+  },
+  {
+    "acct_num": "5100",
+    "acct_desc": "Payroll tax - warehouse",
+    "cc_desc": "Warehouse/Distribution",
+    "amount": 26000,
+    "expected_tier1": "Additional \u00a7263A",
+    "expected_bucket": "\u00a7263A Additional",
+    "note": "payroll tax on storage labor"
+  },
+  {
+    "acct_num": "5100",
+    "acct_desc": "Payroll tax - sales",
+    "cc_desc": "Sales & Marketing",
+    "amount": 71000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "payroll tax on sales staff deductible"
+  },
+  {
+    "acct_num": "5100",
+    "acct_desc": "Payroll tax - corp",
+    "cc_desc": "Corporate HQ",
+    "amount": 88000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "corporate payroll tax mixed"
+  },
+  {
+    "acct_num": "5200",
+    "acct_desc": "Fringe benefits - production",
+    "cc_desc": "Manufacturing",
+    "amount": 340000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "production labor fringe benefits"
+  },
+  {
+    "acct_num": "5200",
+    "acct_desc": "Pension - warehouse staff",
+    "cc_desc": "Warehouse/Distribution",
+    "amount": 44000,
+    "expected_tier1": "Additional \u00a7263A",
+    "expected_bucket": "\u00a7263A Additional",
+    "note": "storage labor benefits capitalizable"
+  },
+  {
+    "acct_num": "5200",
+    "acct_desc": "Benefits - corp admin",
+    "cc_desc": "Corporate HQ",
+    "amount": 120000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "admin benefits mixed service"
+  },
+  {
+    "acct_num": "5200",
+    "acct_desc": "Benefits - sales staff",
+    "cc_desc": "Sales & Marketing",
+    "amount": 98000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "sales benefits deductible"
+  },
+  {
+    "acct_num": "4000",
+    "acct_desc": "Raw materials - steel",
+    "cc_desc": "Manufacturing",
+    "amount": 3200000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "direct materials"
+  },
+  {
+    "acct_num": "4000",
+    "acct_desc": "Mtls & supplies",
+    "cc_desc": "Manufacturing",
+    "amount": 145000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "production materials & supplies"
+  },
+  {
+    "acct_num": "4010",
+    "acct_desc": "Factory supplies - consumables",
+    "cc_desc": "Manufacturing",
+    "amount": 78000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "indirect production supplies"
+  },
+  {
+    "acct_num": "4020",
+    "acct_desc": "Freight-in",
+    "cc_desc": "Purchasing/Procurement",
+    "amount": 210000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "freight-in on materials is a \u00a7471 inventoriable cost"
+  },
+  {
+    "acct_num": "4020",
+    "acct_desc": "Frt out",
+    "cc_desc": "Shipping",
+    "amount": 165000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "freight-out to customers is a selling/distribution cost, deductible"
+  },
+  {
+    "acct_num": "4030",
+    "acct_desc": "PPV variance",
+    "cc_desc": "Purchasing/Procurement",
+    "amount": 42000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "purchase price variance allocable to inventory"
+  },
+  {
+    "acct_num": "4040",
+    "acct_desc": "Small tools expense - shop floor",
+    "cc_desc": "Manufacturing",
+    "amount": 33000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "production small tools"
+  },
+  {
+    "acct_num": "4050",
+    "acct_desc": "Scrap & spoilage - normal",
+    "cc_desc": "Manufacturing",
+    "amount": 55000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "normal spoilage included in inventory cost"
+  },
+  {
+    "acct_num": "4051",
+    "acct_desc": "Abnormal spoilage writeoff",
+    "cc_desc": "Manufacturing",
+    "amount": 28000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "abnormal spoilage is deductible, not inventoried"
+  },
+  {
+    "acct_num": "6200",
+    "acct_desc": "Depreciation - Plant 1 building",
+    "cc_desc": "Manufacturing",
+    "amount": 480000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "factory building depreciation"
+  },
+  {
+    "acct_num": "6210",
+    "acct_desc": "Deprec - HQ building",
+    "cc_desc": "Corporate HQ",
+    "amount": 220000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "HQ building depreciation mixed"
+  },
+  {
+    "acct_num": "4060",
+    "acct_desc": "Utilities - production line power",
+    "cc_desc": "Manufacturing",
+    "amount": 260000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "line power is production overhead"
+  },
+  {
+    "acct_num": "4070",
+    "acct_desc": "Eng svcs - process engineering",
+    "cc_desc": "Manufacturing",
+    "amount": 190000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "production process engineering is a \u00a7471 cost"
+  },
+  {
+    "acct_num": "4071",
+    "acct_desc": "Eng svcs - product design R&D",
+    "cc_desc": "Research & Development",
+    "amount": 240000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "product design R&D excluded from 263A"
+  },
+  {
+    "acct_num": "4080",
+    "acct_desc": "Quality control lab supplies",
+    "cc_desc": "Quality Control",
+    "amount": 47000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "QC supplies production cost"
+  },
+  {
+    "acct_num": "4081",
+    "acct_desc": "QC testing services - outside",
+    "cc_desc": "Quality Control",
+    "amount": 62000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "outside QC testing allocable to production"
+  },
+  {
+    "acct_num": "4090",
+    "acct_desc": "Plant security services",
+    "cc_desc": "Manufacturing",
+    "amount": 71000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "factory security is indirect production cost"
+  },
+  {
+    "acct_num": "4091",
+    "acct_desc": "Plant janitorial",
+    "cc_desc": "Manufacturing",
+    "amount": 58000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "factory cleaning indirect production cost"
+  },
+  {
+    "acct_num": "4100",
+    "acct_desc": "Production planning dept salaries",
+    "cc_desc": "Manufacturing",
+    "amount": 165000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "production planning is 263A production support"
+  },
+  {
+    "acct_num": "4110",
+    "acct_desc": "Rework labor",
+    "cc_desc": "Manufacturing",
+    "amount": 39000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "rework is a production cost"
+  },
+  {
+    "acct_num": "4120",
+    "acct_desc": "Machine setup labor",
+    "cc_desc": "Manufacturing",
+    "amount": 84000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "setup labor production cost"
+  },
+  {
+    "acct_num": "4130",
+    "acct_desc": "Indirect labor - materials handling",
+    "cc_desc": "Manufacturing",
+    "amount": 118000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "in-plant materials handling"
+  },
+  {
+    "acct_num": "4140",
+    "acct_desc": "Tooling amortization",
+    "cc_desc": "Manufacturing",
+    "amount": 96000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "tooling amortization production cost"
+  },
+  {
+    "acct_num": "8000",
+    "acct_desc": "Purchasing dept - buyer salaries",
+    "cc_desc": "Purchasing/Procurement",
+    "amount": 380000,
+    "expected_tier1": "Additional \u00a7263A",
+    "expected_bucket": "\u00a7263A Additional",
+    "note": "reseller buying office costs are additional 263A"
+  },
+  {
+    "acct_num": "8010",
+    "acct_desc": "Buying office rent - overseas",
+    "cc_desc": "Purchasing/Procurement",
+    "amount": 120000,
+    "expected_tier1": "Additional \u00a7263A",
+    "expected_bucket": "\u00a7263A Additional",
+    "note": "off-site buying office capitalizable"
+  },
+  {
+    "acct_num": "8020",
+    "acct_desc": "Whse storage costs",
+    "cc_desc": "Warehouse/Distribution",
+    "amount": 290000,
+    "expected_tier1": "Additional \u00a7263A",
+    "expected_bucket": "\u00a7263A Additional",
+    "note": "off-site storage capitalizable for reseller"
+  },
+  {
+    "acct_num": "8021",
+    "acct_desc": "Handling labor - receiving dock",
+    "cc_desc": "Warehouse/Distribution",
+    "amount": 140000,
+    "expected_tier1": "Additional \u00a7263A",
+    "expected_bucket": "\u00a7263A Additional",
+    "note": "handling costs at storage facility"
+  },
+  {
+    "acct_num": "8030",
+    "acct_desc": "Store ops - retail store labor",
+    "cc_desc": "Retail Store Ops",
+    "amount": 620000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "on-site retail store labor is deductible; not storage"
+  },
+  {
+    "acct_num": "8031",
+    "acct_desc": "Store display & merchandising",
+    "cc_desc": "Retail Store Ops",
+    "amount": 88000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "in-store merchandising deductible selling"
+  },
+  {
+    "acct_num": "8040",
+    "acct_desc": "Inventory shrinkage - retail",
+    "cc_desc": "Retail Store Ops",
+    "amount": 45000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "shrinkage deductible"
+  },
+  {
+    "acct_num": "8050",
+    "acct_desc": "Vendor rebates received",
+    "cc_desc": "Purchasing/Procurement",
+    "amount": 130000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "vendor rebates reduce inventory cost (negative 471)"
+  },
+  {
+    "acct_num": "8060",
+    "acct_desc": "Cost of goods purchased for resale",
+    "cc_desc": "Purchasing/Procurement",
+    "amount": 4500000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "resale merchandise cost"
+  },
+  {
+    "acct_num": "8070",
+    "acct_desc": "Warehouse insurance & utilities",
+    "cc_desc": "Warehouse/Distribution",
+    "amount": 52000,
+    "expected_tier1": "Additional \u00a7263A",
+    "expected_bucket": "\u00a7263A Additional",
+    "note": "storage facility overhead"
+  },
+  {
+    "acct_num": "8080",
+    "acct_desc": "Repackaging labor - DC",
+    "cc_desc": "Warehouse/Distribution",
+    "amount": 36000,
+    "expected_tier1": "Additional \u00a7263A",
+    "expected_bucket": "\u00a7263A Additional",
+    "note": "repackaging at distribution center capitalizable"
+  },
+  {
+    "acct_num": "8090",
+    "acct_desc": "Freight-in on resale goods",
+    "cc_desc": "Purchasing/Procurement",
+    "amount": 175000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "freight-in on purchased inventory"
+  },
+  {
+    "acct_num": "9000",
+    "acct_desc": "Consulting staff salaries - billable",
+    "cc_desc": "Professional Services",
+    "amount": 1200000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "direct service labor - if capitalized to WIP; service inventory"
+  },
+  {
+    "acct_num": "9010",
+    "acct_desc": "Project supplies - service jobs",
+    "cc_desc": "Professional Services",
+    "amount": 68000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "direct project costs"
+  },
+  {
+    "acct_num": "9020",
+    "acct_desc": "Subcontractor costs - client projects",
+    "cc_desc": "Professional Services",
+    "amount": 340000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "direct subcontract on client work"
+  },
+  {
+    "acct_num": "9030",
+    "acct_desc": "Practice mgr salaries",
+    "cc_desc": "Professional Services",
+    "amount": 210000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "practice management mixed service"
+  },
+  {
+    "acct_num": "3000",
+    "acct_desc": "Intangible drilling costs - Well 12",
+    "cc_desc": "Oil & Gas E&P",
+    "amount": 2800000,
+    "expected_tier1": "\u00a7263(a) Transaction/Intangible",
+    "expected_bucket": "\u00a7263(a) Elective",
+    "note": "IDC - electable expense or capitalize under \u00a7263(c)"
+  },
+  {
+    "acct_num": "3001",
+    "acct_desc": "IDC - dry hole Well 8",
+    "cc_desc": "Oil & Gas E&P",
+    "amount": 950000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "dry hole IDC deductible"
+  },
+  {
+    "acct_num": "3010",
+    "acct_desc": "Depletion - producing properties",
+    "cc_desc": "Oil & Gas E&P",
+    "amount": 1400000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "cost depletion allocable to produced product"
+  },
+  {
+    "acct_num": "3020",
+    "acct_desc": "Lease operating expense - LOE",
+    "cc_desc": "Oil & Gas E&P",
+    "amount": 620000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "lifting costs allocable to production"
+  },
+  {
+    "acct_num": "3030",
+    "acct_desc": "Geological & geophysical costs",
+    "cc_desc": "Oil & Gas E&P",
+    "amount": 480000,
+    "expected_tier1": "\u00a7263(a) Transaction/Intangible",
+    "expected_bucket": "\u00a7263(a) Mandatory",
+    "note": "G&G costs capitalized and amortized under \u00a7167(h)"
+  },
+  {
+    "acct_num": "3040",
+    "acct_desc": "Lease bonus - mineral rights",
+    "cc_desc": "Oil & Gas E&P",
+    "amount": 700000,
+    "expected_tier1": "Balance Sheet",
+    "expected_bucket": "",
+    "note": "leasehold acquisition - capitalized depletable basis"
+  },
+  {
+    "acct_num": "3050",
+    "acct_desc": "Tangible well equipment - casing",
+    "cc_desc": "Oil & Gas E&P",
+    "amount": 540000,
+    "expected_tier1": "\u00a7263(a) Tangible",
+    "expected_bucket": "\u00a7263(a) Mandatory",
+    "note": "tangible drilling equipment capitalized"
+  },
+  {
+    "acct_num": "2000",
+    "acct_desc": "Loan origination costs - direct",
+    "cc_desc": "Consumer Lending",
+    "amount": 380000,
+    "expected_tier1": "\u00a7263(a) Transaction/Intangible",
+    "expected_bucket": "\u00a7263(a) Mandatory",
+    "note": "direct loan origination costs capitalized under \u00a71.263(a)-4/\u00a71272"
+  },
+  {
+    "acct_num": "2010",
+    "acct_desc": "Loan servicing dept salaries",
+    "cc_desc": "Loan Servicing",
+    "amount": 260000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "loan servicing costs generally deductible"
+  },
+  {
+    "acct_num": "2020",
+    "acct_desc": "Provision for loan losses",
+    "cc_desc": "Consumer Lending",
+    "amount": 850000,
+    "expected_tier1": "Non-Operating",
+    "expected_bucket": "Non-Operating",
+    "note": "loan loss provision - not a 263A cost"
+  },
+  {
+    "acct_num": "2030",
+    "acct_desc": "Trading desk compensation",
+    "cc_desc": "Trading & Markets",
+    "amount": 1900000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "trading comp deductible; securities dealer"
+  },
+  {
+    "acct_num": "2040",
+    "acct_desc": "Securities inventory - trading book",
+    "cc_desc": "Trading & Markets",
+    "amount": 5000000,
+    "expected_tier1": "Balance Sheet",
+    "expected_bucket": "",
+    "note": "trading securities held - balance sheet"
+  },
+  {
+    "acct_num": "2050",
+    "acct_desc": "Underwriting fees - debt issuance",
+    "cc_desc": "Treasury",
+    "amount": 220000,
+    "expected_tier1": "\u00a7263(a) Transaction/Intangible",
+    "expected_bucket": "\u00a7263(a) Mandatory",
+    "note": "debt issuance costs capitalized/amortized"
+  },
+  {
+    "acct_num": "2060",
+    "acct_desc": "Branch operating costs",
+    "cc_desc": "Retail Banking",
+    "amount": 340000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "branch operations deductible"
+  },
+  {
+    "acct_num": "1500",
+    "acct_desc": "Property tax - dev parcel A",
+    "cc_desc": "Land Held for Development",
+    "amount": 130000,
+    "expected_tier1": "\u00a7266 Carrying Charges",
+    "expected_bucket": "\u00a7266 Carrying",
+    "note": "unimproved land carrying charge - \u00a7266 election"
+  },
+  {
+    "acct_num": "1501",
+    "acct_desc": "Interest - land acquisition loan",
+    "cc_desc": "Land Held for Development",
+    "amount": 240000,
+    "expected_tier1": "\u00a7266 Carrying Charges",
+    "expected_bucket": "\u00a7266 Carrying",
+    "note": "interest on unimproved land held for dev - \u00a7266 electable"
+  },
+  {
+    "acct_num": "1510",
+    "acct_desc": "Construction period interest - Bldg A",
+    "cc_desc": "Real Estate Development",
+    "amount": 620000,
+    "expected_tier1": "\u00a7263A(f) Interest",
+    "expected_bucket": "\u00a7263A(f) Interest",
+    "note": "production period interest on real property - mandatory \u00a7263A(f)"
+  },
+  {
+    "acct_num": "1511",
+    "acct_desc": "Interest - self-constructed asset",
+    "cc_desc": "Real Estate Development",
+    "amount": 310000,
+    "expected_tier1": "\u00a7263A(f) Interest",
+    "expected_bucket": "\u00a7263A(f) Interest",
+    "note": "avoided-cost interest capitalization"
+  },
+  {
+    "acct_num": "1520",
+    "acct_desc": "Architect & engineering fees - project",
+    "cc_desc": "Real Estate Development",
+    "amount": 480000,
+    "expected_tier1": "\u00a7263(a) Tangible",
+    "expected_bucket": "\u00a7263(a) Mandatory",
+    "note": "direct construction costs capitalized"
+  },
+  {
+    "acct_num": "1530",
+    "acct_desc": "Land clearing & grading",
+    "cc_desc": "Land Held for Development",
+    "amount": 175000,
+    "expected_tier1": "\u00a7263(a) Tangible",
+    "expected_bucket": "\u00a7263(a) Mandatory",
+    "note": "land preparation capitalized to land/improvements"
+  },
+  {
+    "acct_num": "1540",
+    "acct_desc": "Permit & impact fees - development",
+    "cc_desc": "Real Estate Development",
+    "amount": 92000,
+    "expected_tier1": "\u00a7263(a) Tangible",
+    "expected_bucket": "\u00a7263(a) Mandatory",
+    "note": "development permits capitalized"
+  },
+  {
+    "acct_num": "1550",
+    "acct_desc": "Insurance during construction",
+    "cc_desc": "Real Estate Development",
+    "amount": 44000,
+    "expected_tier1": "Additional \u00a7263A",
+    "expected_bucket": "\u00a7263A Additional",
+    "note": "construction period insurance capitalizable"
+  },
+  {
+    "acct_num": "1560",
+    "acct_desc": "Interest - completed rental property loan",
+    "cc_desc": "Real Estate Rental",
+    "amount": 280000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "interest after placed in service is deductible"
+  },
+  {
+    "acct_num": "6000",
+    "acct_desc": "Prof fees - audit",
+    "cc_desc": "Finance & Accounting",
+    "amount": 190000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "audit fees - mixed service, partly allocable"
+  },
+  {
+    "acct_num": "6001",
+    "acct_desc": "Prof fees - tax compliance",
+    "cc_desc": "Finance & Accounting",
+    "amount": 85000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "tax prep fees mixed service"
+  },
+  {
+    "acct_num": "6002",
+    "acct_desc": "Legal fees - general corporate",
+    "cc_desc": "Legal",
+    "amount": 140000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "general legal mixed service"
+  },
+  {
+    "acct_num": "6003",
+    "acct_desc": "Legal fees - acquisition due diligence",
+    "cc_desc": "Legal",
+    "amount": 260000,
+    "expected_tier1": "\u00a7263(a) Transaction/Intangible",
+    "expected_bucket": "\u00a7263(a) Mandatory",
+    "note": "acquisition transaction costs capitalized under \u00a71.263(a)-5"
+  },
+  {
+    "acct_num": "6004",
+    "acct_desc": "Legal fees - patent application",
+    "cc_desc": "Legal",
+    "amount": 55000,
+    "expected_tier1": "\u00a7263(a) Transaction/Intangible",
+    "expected_bucket": "\u00a7263(a) Mandatory",
+    "note": "patent costs capitalized intangible"
+  },
+  {
+    "acct_num": "6010",
+    "acct_desc": "IT software subscriptions - enterprise",
+    "cc_desc": "Information Technology",
+    "amount": 175000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "enterprise SaaS mixed service"
+  },
+  {
+    "acct_num": "6011",
+    "acct_desc": "IT helpdesk labor",
+    "cc_desc": "Information Technology",
+    "amount": 120000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "IT support mixed service"
+  },
+  {
+    "acct_num": "6020",
+    "acct_desc": "HR recruiting costs",
+    "cc_desc": "Human Resources",
+    "amount": 78000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "recruiting mixed service"
+  },
+  {
+    "acct_num": "6021",
+    "acct_desc": "HR training & development",
+    "cc_desc": "Human Resources",
+    "amount": 64000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "training mixed service"
+  },
+  {
+    "acct_num": "6030",
+    "acct_desc": "Finance dept - controller salaries",
+    "cc_desc": "Finance & Accounting",
+    "amount": 290000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "controllership mixed service"
+  },
+  {
+    "acct_num": "6040",
+    "acct_desc": "Corporate management salaries",
+    "cc_desc": "Corporate HQ",
+    "amount": 720000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "executive mgmt - portion allocable to production support"
+  },
+  {
+    "acct_num": "6050",
+    "acct_desc": "allocation - corp",
+    "cc_desc": "Corporate HQ",
+    "amount": 410000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "corporate cost allocation - mixed service allocable"
+  },
+  {
+    "acct_num": "6060",
+    "acct_desc": "Board of directors fees",
+    "cc_desc": "Corporate HQ",
+    "amount": 180000,
+    "expected_tier1": "Non-Operating",
+    "expected_bucket": "Non-Operating",
+    "note": "board fees non-operating"
+  },
+  {
+    "acct_num": "7500",
+    "acct_desc": "Advertising - national campaign",
+    "cc_desc": "Sales & Marketing",
+    "amount": 640000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "advertising deductible, excluded from 263A"
+  },
+  {
+    "acct_num": "7501",
+    "acct_desc": "Marketing - trade shows",
+    "cc_desc": "Sales & Marketing",
+    "amount": 88000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "trade show costs deductible selling"
+  },
+  {
+    "acct_num": "7502",
+    "acct_desc": "Sales commissions",
+    "cc_desc": "Sales & Marketing",
+    "amount": 420000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "commissions are selling expense"
+  },
+  {
+    "acct_num": "7503",
+    "acct_desc": "Sales travel & entertainment",
+    "cc_desc": "Sales & Marketing",
+    "amount": 130000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "sales T&E deductible"
+  },
+  {
+    "acct_num": "7504",
+    "acct_desc": "Distribution - outbound freight",
+    "cc_desc": "Shipping",
+    "amount": 210000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "outbound distribution deductible"
+  },
+  {
+    "acct_num": "7510",
+    "acct_desc": "R&D - basic research salaries",
+    "cc_desc": "Research & Development",
+    "amount": 980000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "\u00a7174 research excluded from 263A (but note \u00a7174 amort)"
+  },
+  {
+    "acct_num": "7511",
+    "acct_desc": "R&D - lab consumables",
+    "cc_desc": "Research & Development",
+    "amount": 76000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "R&D supplies excluded"
+  },
+  {
+    "acct_num": "7512",
+    "acct_desc": "R&D - prototype materials",
+    "cc_desc": "Research & Development",
+    "amount": 145000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "prototype/experimental excluded"
+  },
+  {
+    "acct_num": "7520",
+    "acct_desc": "Warranty expense - accrual",
+    "cc_desc": "Sales & Marketing",
+    "amount": 92000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "warranty accrual deductible"
+  },
+  {
+    "acct_num": "7530",
+    "acct_desc": "Customer service dept salaries",
+    "cc_desc": "Customer Service",
+    "amount": 210000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "post-sale customer service deductible"
+  },
+  {
+    "acct_num": "9500",
+    "acct_desc": "Federal income tax expense",
+    "cc_desc": "Corporate HQ",
+    "amount": 1300000,
+    "expected_tier1": "Non-Operating",
+    "expected_bucket": "Non-Operating",
+    "note": "income tax not deductible/not 263A"
+  },
+  {
+    "acct_num": "9501",
+    "acct_desc": "State income tax expense",
+    "cc_desc": "Corporate HQ",
+    "amount": 240000,
+    "expected_tier1": "Non-Operating",
+    "expected_bucket": "Non-Operating",
+    "note": "state income tax non-operating"
+  },
+  {
+    "acct_num": "9510",
+    "acct_desc": "Interest expense - corp revolver",
+    "cc_desc": "Treasury",
+    "amount": 380000,
+    "expected_tier1": "Non-Operating",
+    "expected_bucket": "Non-Operating",
+    "note": "general corporate interest non-operating (not 263A(f))"
+  },
+  {
+    "acct_num": "9520",
+    "acct_desc": "Fines & penalties - regulatory",
+    "cc_desc": "Corporate HQ",
+    "amount": 65000,
+    "expected_tier1": "Non-Operating",
+    "expected_bucket": "Non-Operating",
+    "note": "fines nondeductible non-operating"
+  },
+  {
+    "acct_num": "9530",
+    "acct_desc": "Charitable contributions",
+    "cc_desc": "Corporate HQ",
+    "amount": 90000,
+    "expected_tier1": "Non-Operating",
+    "expected_bucket": "Non-Operating",
+    "note": "charity non-operating"
+  },
+  {
+    "acct_num": "9540",
+    "acct_desc": "FX loss - remeasurement",
+    "cc_desc": "Treasury",
+    "amount": 55000,
+    "expected_tier1": "Non-Operating",
+    "expected_bucket": "Non-Operating",
+    "note": "foreign exchange loss non-operating"
+  },
+  {
+    "acct_num": "9541",
+    "acct_desc": "FX gain - hedging",
+    "cc_desc": "Treasury",
+    "amount": 47000,
+    "expected_tier1": "Non-Operating",
+    "expected_bucket": "Non-Operating",
+    "note": "FX gain non-operating"
+  },
+  {
+    "acct_num": "9550",
+    "acct_desc": "Loss on disposal of equipment",
+    "cc_desc": "Corporate HQ",
+    "amount": 38000,
+    "expected_tier1": "Non-Operating",
+    "expected_bucket": "Non-Operating",
+    "note": "asset disposal loss non-operating"
+  },
+  {
+    "acct_num": "9560",
+    "acct_desc": "Investment income - dividends",
+    "cc_desc": "Treasury",
+    "amount": 120000,
+    "expected_tier1": "Non-Operating",
+    "expected_bucket": "Non-Operating",
+    "note": "investment income non-operating"
+  },
+  {
+    "acct_num": "9570",
+    "acct_desc": "Impairment - goodwill",
+    "cc_desc": "Corporate HQ",
+    "amount": 500000,
+    "expected_tier1": "Non-Operating",
+    "expected_bucket": "Non-Operating",
+    "note": "goodwill impairment non-operating"
+  },
+  {
+    "acct_num": "1000",
+    "acct_desc": "Cash - operating account",
+    "cc_desc": "Treasury",
+    "amount": 2500000,
+    "expected_tier1": "Balance Sheet",
+    "expected_bucket": "",
+    "note": "cash balance sheet"
+  },
+  {
+    "acct_num": "1100",
+    "acct_desc": "Accounts receivable - trade",
+    "cc_desc": "Finance & Accounting",
+    "amount": 1800000,
+    "expected_tier1": "Balance Sheet",
+    "expected_bucket": "",
+    "note": "AR balance sheet"
+  },
+  {
+    "acct_num": "1200",
+    "acct_desc": "Inventory - finished goods",
+    "cc_desc": "Warehouse/Distribution",
+    "amount": 3400000,
+    "expected_tier1": "Balance Sheet",
+    "expected_bucket": "",
+    "note": "FG inventory balance sheet"
+  },
+  {
+    "acct_num": "1210",
+    "acct_desc": "Inventory - work in process",
+    "cc_desc": "Manufacturing",
+    "amount": 1200000,
+    "expected_tier1": "Balance Sheet",
+    "expected_bucket": "",
+    "note": "WIP balance sheet"
+  },
+  {
+    "acct_num": "1220",
+    "acct_desc": "Inventory - raw materials",
+    "cc_desc": "Warehouse/Distribution",
+    "amount": 900000,
+    "expected_tier1": "Balance Sheet",
+    "expected_bucket": "",
+    "note": "RM inventory balance sheet"
+  },
+  {
+    "acct_num": "1300",
+    "acct_desc": "Prepaid expenses",
+    "cc_desc": "Finance & Accounting",
+    "amount": 240000,
+    "expected_tier1": "Balance Sheet",
+    "expected_bucket": "",
+    "note": "prepaids balance sheet"
+  },
+  {
+    "acct_num": "1400",
+    "acct_desc": "PP&E - machinery at cost",
+    "cc_desc": "Manufacturing",
+    "amount": 8500000,
+    "expected_tier1": "Balance Sheet",
+    "expected_bucket": "",
+    "note": "gross PPE balance sheet"
+  },
+  {
+    "acct_num": "1410",
+    "acct_desc": "Accumulated depreciation",
+    "cc_desc": "Finance & Accounting",
+    "amount": 3200000,
+    "expected_tier1": "Balance Sheet",
+    "expected_bucket": "",
+    "note": "accum deprec contra asset"
+  },
+  {
+    "acct_num": "2100",
+    "acct_desc": "Accounts payable - trade",
+    "cc_desc": "Finance & Accounting",
+    "amount": 1500000,
+    "expected_tier1": "Balance Sheet",
+    "expected_bucket": "",
+    "note": "AP balance sheet"
+  },
+  {
+    "acct_num": "2200",
+    "acct_desc": "Accrued liabilities",
+    "cc_desc": "Finance & Accounting",
+    "amount": 620000,
+    "expected_tier1": "Balance Sheet",
+    "expected_bucket": "",
+    "note": "accruals balance sheet"
+  },
+  {
+    "acct_num": "2300",
+    "acct_desc": "Long-term debt",
+    "cc_desc": "Treasury",
+    "amount": 5000000,
+    "expected_tier1": "Balance Sheet",
+    "expected_bucket": "",
+    "note": "LTD balance sheet"
+  },
+  {
+    "acct_num": "3100",
+    "acct_desc": "Common stock",
+    "cc_desc": "Corporate HQ",
+    "amount": 1000000,
+    "expected_tier1": "Balance Sheet",
+    "expected_bucket": "",
+    "note": "equity balance sheet"
+  },
+  {
+    "acct_num": "3200",
+    "acct_desc": "Retained earnings",
+    "cc_desc": "Corporate HQ",
+    "amount": 4200000,
+    "expected_tier1": "Balance Sheet",
+    "expected_bucket": "",
+    "note": "RE balance sheet"
+  },
+  {
+    "acct_num": "4500",
+    "acct_desc": "Sales revenue - product",
+    "cc_desc": "Sales & Marketing",
+    "amount": 25000000,
+    "expected_tier1": "Revenue",
+    "expected_bucket": "",
+    "note": "product sales revenue"
+  },
+  {
+    "acct_num": "4510",
+    "acct_desc": "Service revenue",
+    "cc_desc": "Professional Services",
+    "amount": 4200000,
+    "expected_tier1": "Revenue",
+    "expected_bucket": "",
+    "note": "service revenue"
+  },
+  {
+    "acct_num": "4520",
+    "acct_desc": "Interest income - loans",
+    "cc_desc": "Consumer Lending",
+    "amount": 1800000,
+    "expected_tier1": "Revenue",
+    "expected_bucket": "",
+    "note": "loan interest income"
+  },
+  {
+    "acct_num": "4530",
+    "acct_desc": "Rental income",
+    "cc_desc": "Real Estate Rental",
+    "amount": 960000,
+    "expected_tier1": "Revenue",
+    "expected_bucket": "",
+    "note": "rental revenue"
+  },
+  {
+    "acct_num": "4540",
+    "acct_desc": "Sales returns & allowances",
+    "cc_desc": "Sales & Marketing",
+    "amount": 340000,
+    "expected_tier1": "Revenue",
+    "expected_bucket": "",
+    "note": "contra revenue"
+  },
+  {
+    "acct_num": "4550",
+    "acct_desc": "Trading revenue - net",
+    "cc_desc": "Trading & Markets",
+    "amount": 2100000,
+    "expected_tier1": "Revenue",
+    "expected_bucket": "",
+    "note": "trading gains revenue"
+  },
+  {
+    "acct_num": "9900",
+    "acct_desc": "misc expense",
+    "cc_desc": "Corporate HQ",
+    "amount": 47000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "vague miscellaneous - low confidence, treat as mixed allocable"
+  },
+  {
+    "acct_num": "9901",
+    "acct_desc": "clearing acct",
+    "cc_desc": "Finance & Accounting",
+    "amount": 12000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "clearing account - ambiguous, needs reclass"
+  },
+  {
+    "acct_num": "9902",
+    "acct_desc": "other - unclassified",
+    "cc_desc": "Corporate HQ",
+    "amount": 33000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "unclassified - low confidence"
+  },
+  {
+    "acct_num": "9903",
+    "acct_desc": "variance - unallocated",
+    "cc_desc": "Manufacturing",
+    "amount": 58000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "unallocated variance - ambiguous"
+  },
+  {
+    "acct_num": "9904",
+    "acct_desc": "suspense account",
+    "cc_desc": "Finance & Accounting",
+    "amount": 9000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Deductible",
+    "note": "suspense - ambiguous low confidence"
+  },
+  {
+    "acct_num": "9905",
+    "acct_desc": "misc plant costs",
+    "cc_desc": "Manufacturing",
+    "amount": 41000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "misc production-adjacent - ambiguous"
+  },
+  {
+    "acct_num": "9906",
+    "acct_desc": "other admin",
+    "cc_desc": "Corporate HQ",
+    "amount": 27000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "other admin ambiguous"
+  },
+  {
+    "acct_num": "9907",
+    "acct_desc": "reclass entry - Q4",
+    "cc_desc": "Finance & Accounting",
+    "amount": 15000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Deductible",
+    "note": "reclass entry ambiguous"
+  },
+  {
+    "acct_num": "9908",
+    "acct_desc": "rounding & adjustments",
+    "cc_desc": "Finance & Accounting",
+    "amount": 5000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Deductible",
+    "note": "adjustments ambiguous low confidence"
+  },
+  {
+    "acct_num": "9909",
+    "acct_desc": "intercompany allocation - unspecified",
+    "cc_desc": "Corporate HQ",
+    "amount": 88000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "unspecified IC allocation ambiguous"
+  },
+  {
+    "acct_num": "9910",
+    "acct_desc": "misc - other operating",
+    "cc_desc": "Manufacturing",
+    "amount": 36000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "misc operating ambiguous"
+  },
+  {
+    "acct_num": "9911",
+    "acct_desc": "cost variance - net",
+    "cc_desc": "Manufacturing",
+    "amount": 62000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "net cost variance ambiguous"
+  },
+  {
+    "acct_num": "9912",
+    "acct_desc": "general expense pool",
+    "cc_desc": "Corporate HQ",
+    "amount": 110000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "expense pool ambiguous allocable"
+  },
+  {
+    "acct_num": "9913",
+    "acct_desc": "sundry expenses",
+    "cc_desc": "Corporate HQ",
+    "amount": 18000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Deductible",
+    "note": "sundry ambiguous"
+  },
+  {
+    "acct_num": "9914",
+    "acct_desc": "unallocated overhead",
+    "cc_desc": "Manufacturing",
+    "amount": 95000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "unallocated OH ambiguous - likely production allocable"
+  },
+  {
+    "acct_num": "7100",
+    "acct_desc": "Rent - QC lab",
+    "cc_desc": "Quality Control",
+    "amount": 48000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "QC lab rent production cost"
+  },
+  {
+    "acct_num": "7100",
+    "acct_desc": "Ofc rent - purchasing",
+    "cc_desc": "Purchasing/Procurement",
+    "amount": 55000,
+    "expected_tier1": "Additional \u00a7263A",
+    "expected_bucket": "\u00a7263A Additional",
+    "note": "buying office rent capitalizable"
+  },
+  {
+    "acct_num": "7110",
+    "acct_desc": "Utils - plant compressed air",
+    "cc_desc": "Manufacturing",
+    "amount": 44000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "plant utility production cost"
+  },
+  {
+    "acct_num": "7110",
+    "acct_desc": "Utilities - retail store",
+    "cc_desc": "Retail Store Ops",
+    "amount": 29000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "retail store utilities deductible"
+  },
+  {
+    "acct_num": "6100",
+    "acct_desc": "Deprec - plant HVAC",
+    "cc_desc": "Manufacturing",
+    "amount": 67000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "plant HVAC depreciation production cost"
+  },
+  {
+    "acct_num": "6100",
+    "acct_desc": "Depreciation - purchasing office equip",
+    "cc_desc": "Purchasing/Procurement",
+    "amount": 14000,
+    "expected_tier1": "Additional \u00a7263A",
+    "expected_bucket": "\u00a7263A Additional",
+    "note": "buying office equip depreciation"
+  },
+  {
+    "acct_num": "7300",
+    "acct_desc": "Insurance - workers comp production",
+    "cc_desc": "Manufacturing",
+    "amount": 130000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "WC on production labor is production cost"
+  },
+  {
+    "acct_num": "7300",
+    "acct_desc": "Insurance - workers comp sales",
+    "cc_desc": "Sales & Marketing",
+    "amount": 34000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "WC on sales staff deductible"
+  },
+  {
+    "acct_num": "7200",
+    "acct_desc": "R&M - QC equipment",
+    "cc_desc": "Quality Control",
+    "amount": 22000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "QC equipment repairs production cost"
+  },
+  {
+    "acct_num": "7200",
+    "acct_desc": "R&M - retail store fixtures",
+    "cc_desc": "Retail Store Ops",
+    "amount": 16000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "store fixture repairs deductible"
+  },
+  {
+    "acct_num": "7400",
+    "acct_desc": "Property tax - QC building",
+    "cc_desc": "Quality Control",
+    "amount": 19000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "QC facility property tax production cost"
+  },
+  {
+    "acct_num": "5000",
+    "acct_desc": "Wages - maintenance dept plant",
+    "cc_desc": "Manufacturing",
+    "amount": 175000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "plant maintenance labor production cost"
+  },
+  {
+    "acct_num": "5000",
+    "acct_desc": "Salaries - shipping dept",
+    "cc_desc": "Shipping",
+    "amount": 130000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "outbound shipping labor deductible distribution"
+  },
+  {
+    "acct_num": "5000",
+    "acct_desc": "Salaries - receiving dept",
+    "cc_desc": "Warehouse/Distribution",
+    "amount": 96000,
+    "expected_tier1": "Additional \u00a7263A",
+    "expected_bucket": "\u00a7263A Additional",
+    "note": "inbound receiving labor capitalizable"
+  },
+  {
+    "acct_num": "4020",
+    "acct_desc": "Freight-in - RM (net)",
+    "cc_desc": "Purchasing/Procurement",
+    "amount": 88000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "inbound freight inventoriable"
+  },
+  {
+    "acct_num": "4020",
+    "acct_desc": "Frt out - LTL carriers",
+    "cc_desc": "Shipping",
+    "amount": 72000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "outbound freight deductible"
+  },
+  {
+    "acct_num": "4010",
+    "acct_desc": "Mtls & supplies - indirect prod",
+    "cc_desc": "Manufacturing",
+    "amount": 52000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "indirect production supplies"
+  },
+  {
+    "acct_num": "4010",
+    "acct_desc": "Office supplies - corp",
+    "cc_desc": "Corporate HQ",
+    "amount": 14000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "corp office supplies mixed"
+  },
+  {
+    "acct_num": "4010",
+    "acct_desc": "Office supplies - sales",
+    "cc_desc": "Sales & Marketing",
+    "amount": 8000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "sales office supplies deductible"
+  },
+  {
+    "acct_num": "9510",
+    "acct_desc": "Interest - production period plant expansion",
+    "cc_desc": "Manufacturing",
+    "amount": 210000,
+    "expected_tier1": "\u00a7263A(f) Interest",
+    "expected_bucket": "\u00a7263A(f) Interest",
+    "note": "production period interest on self-constructed plant asset"
+  },
+  {
+    "acct_num": "9510",
+    "acct_desc": "Interest - inventory financing floor plan",
+    "cc_desc": "Warehouse/Distribution",
+    "amount": 95000,
+    "expected_tier1": "Additional \u00a7263A",
+    "expected_bucket": "\u00a7263A Additional",
+    "note": "note: generally not 263A(f) unless long production period; treat as additional"
+  },
+  {
+    "acct_num": "3010",
+    "acct_desc": "Percentage depletion - statutory",
+    "cc_desc": "Oil & Gas E&P",
+    "amount": 380000,
+    "expected_tier1": "Non-Operating",
+    "expected_bucket": "Non-Operating",
+    "note": "percentage depletion excess over basis - non-op adjustment"
+  },
+  {
+    "acct_num": "6070",
+    "acct_desc": "Data center costs - shared",
+    "cc_desc": "Information Technology",
+    "amount": 145000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "shared data center mixed service"
+  },
+  {
+    "acct_num": "6071",
+    "acct_desc": "Telephone & communications - corp",
+    "cc_desc": "Corporate HQ",
+    "amount": 42000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "corp comms mixed service"
+  },
+  {
+    "acct_num": "6072",
+    "acct_desc": "Insurance - general liability corp",
+    "cc_desc": "Corporate HQ",
+    "amount": 88000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "GL insurance mixed service allocable"
+  },
+  {
+    "acct_num": "6080",
+    "acct_desc": "IT allocation to production",
+    "cc_desc": "Information Technology",
+    "amount": 78000,
+    "expected_tier1": "Capitalizable (MSPM)",
+    "expected_bucket": "\u00a7263A Additional",
+    "note": "IT mixed service cost allocated to production via MSPM"
+  },
+  {
+    "acct_num": "6081",
+    "acct_desc": "HR allocation - production headcount",
+    "cc_desc": "Human Resources",
+    "amount": 64000,
+    "expected_tier1": "Capitalizable (MSPM)",
+    "expected_bucket": "\u00a7263A Additional",
+    "note": "HR mixed service allocated to production via labor-based MSPM"
+  },
+  {
+    "acct_num": "6082",
+    "acct_desc": "Finance allocation - plant support",
+    "cc_desc": "Finance & Accounting",
+    "amount": 55000,
+    "expected_tier1": "Capitalizable (MSPM)",
+    "expected_bucket": "\u00a7263A Additional",
+    "note": "finance mixed service allocated to production"
+  },
+  {
+    "acct_num": "6083",
+    "acct_desc": "Legal allocation - production contracts",
+    "cc_desc": "Legal",
+    "amount": 40000,
+    "expected_tier1": "Capitalizable (MSPM)",
+    "expected_bucket": "\u00a7263A Additional",
+    "note": "legal support to production allocated via MSPM"
+  },
+  {
+    "acct_num": "6084",
+    "acct_desc": "Facilities mgmt allocation - plant share",
+    "cc_desc": "Corporate HQ",
+    "amount": 92000,
+    "expected_tier1": "Capitalizable (MSPM)",
+    "expected_bucket": "\u00a7263A Additional",
+    "note": "facilities mixed service allocated to plant"
+  },
+  {
+    "acct_num": "1570",
+    "acct_desc": "De minimis expensing election items",
+    "cc_desc": "Manufacturing",
+    "amount": 24000,
+    "expected_tier1": "\u00a7263(a) Elective",
+    "expected_bucket": "\u00a7263(a) Elective",
+    "note": "de minimis safe harbor election - deductible via election"
+  },
+  {
+    "acct_num": "1571",
+    "acct_desc": "Routine maintenance safe harbor - plant",
+    "cc_desc": "Manufacturing",
+    "amount": 46000,
+    "expected_tier1": "\u00a7263(a) Elective",
+    "expected_bucket": "\u00a7263(a) Elective",
+    "note": "RMSH - deductible under election, not capitalized"
+  },
+  {
+    "acct_num": "1580",
+    "acct_desc": "Leasehold improvements - HQ buildout",
+    "cc_desc": "Corporate HQ",
+    "amount": 320000,
+    "expected_tier1": "\u00a7263(a) Tangible",
+    "expected_bucket": "\u00a7263(a) Mandatory",
+    "note": "leasehold improvement capitalized"
+  },
+  {
+    "acct_num": "1581",
+    "acct_desc": "New production line installation",
+    "cc_desc": "Manufacturing",
+    "amount": 780000,
+    "expected_tier1": "\u00a7263(a) Tangible",
+    "expected_bucket": "\u00a7263(a) Mandatory",
+    "note": "new UOP - capitalize; production asset"
+  },
+  {
+    "acct_num": "1590",
+    "acct_desc": "Software development - internal use capitalized",
+    "cc_desc": "Information Technology",
+    "amount": 260000,
+    "expected_tier1": "\u00a7263(a) Transaction/Intangible",
+    "expected_bucket": "\u00a7263(a) Mandatory",
+    "note": "capitalized internal-use software"
+  },
+  {
+    "acct_num": "1591",
+    "acct_desc": "Franchise fee - initial",
+    "cc_desc": "Corporate HQ",
+    "amount": 150000,
+    "expected_tier1": "\u00a7263(a) Transaction/Intangible",
+    "expected_bucket": "\u00a7263(a) Mandatory",
+    "note": "franchise acquisition intangible capitalized"
+  },
+  {
+    "acct_num": "1592",
+    "acct_desc": "Trademark registration costs",
+    "cc_desc": "Legal",
+    "amount": 28000,
+    "expected_tier1": "\u00a7263(a) Transaction/Intangible",
+    "expected_bucket": "\u00a7263(a) Mandatory",
+    "note": "trademark intangible capitalized"
+  },
+  {
+    "acct_num": "1502",
+    "acct_desc": "HOA & assessments - land held for dev",
+    "cc_desc": "Land Held for Development",
+    "amount": 22000,
+    "expected_tier1": "\u00a7266 Carrying Charges",
+    "expected_bucket": "\u00a7266 Carrying",
+    "note": "carrying charges on idle land - \u00a7266 election"
+  },
+  {
+    "acct_num": "1503",
+    "acct_desc": "Interest - vacant lot mortgage",
+    "cc_desc": "Land Held for Development",
+    "amount": 68000,
+    "expected_tier1": "\u00a7266 Carrying Charges",
+    "expected_bucket": "\u00a7266 Carrying",
+    "note": "interest on unproductive land \u00a7266"
+  },
+  {
+    "acct_num": "1504",
+    "acct_desc": "Property tax - idle mineral acreage",
+    "cc_desc": "Land Held for Development",
+    "amount": 31000,
+    "expected_tier1": "\u00a7266 Carrying Charges",
+    "expected_bucket": "\u00a7266 Carrying",
+    "note": "carrying charge on idle mineral land \u00a7266"
+  },
+  {
+    "acct_num": "4560",
+    "acct_desc": "Royalty income",
+    "cc_desc": "Corporate HQ",
+    "amount": 210000,
+    "expected_tier1": "Revenue",
+    "expected_bucket": "",
+    "note": "royalty revenue"
+  },
+  {
+    "acct_num": "1230",
+    "acct_desc": "Inventory reserve - obsolescence",
+    "cc_desc": "Warehouse/Distribution",
+    "amount": 140000,
+    "expected_tier1": "Balance Sheet",
+    "expected_bucket": "",
+    "note": "inventory reserve contra - balance sheet"
+  },
+  {
+    "acct_num": "2400",
+    "acct_desc": "Deferred revenue",
+    "cc_desc": "Finance & Accounting",
+    "amount": 380000,
+    "expected_tier1": "Balance Sheet",
+    "expected_bucket": "",
+    "note": "deferred revenue liability"
+  },
+  {
+    "acct_num": "1600",
+    "acct_desc": "Goodwill",
+    "cc_desc": "Corporate HQ",
+    "amount": 2000000,
+    "expected_tier1": "Balance Sheet",
+    "expected_bucket": "",
+    "note": "goodwill balance sheet"
+  },
+  {
+    "acct_num": "1610",
+    "acct_desc": "Intangible assets - patents net",
+    "cc_desc": "Legal",
+    "amount": 450000,
+    "expected_tier1": "Balance Sheet",
+    "expected_bucket": "",
+    "note": "intangibles balance sheet"
+  },
+  {
+    "acct_num": "4150",
+    "acct_desc": "Deprec-Mfg conveyor systems",
+    "cc_desc": "Manufacturing",
+    "amount": 88000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "conveyor depreciation production cost"
+  },
+  {
+    "acct_num": "4160",
+    "acct_desc": "Prof fees - production efficiency consult",
+    "cc_desc": "Manufacturing",
+    "amount": 62000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "production consulting allocable to inventory"
+  },
+  {
+    "acct_num": "4170",
+    "acct_desc": "Utilities allocation - plant portion",
+    "cc_desc": "Manufacturing",
+    "amount": 130000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "allocated plant utilities production cost"
+  },
+  {
+    "acct_num": "4180",
+    "acct_desc": "Warehouse labor - raw material staging",
+    "cc_desc": "Warehouse/Distribution",
+    "amount": 74000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "pre-production RM staging labor - 471 for manufacturer"
+  },
+  {
+    "acct_num": "4190",
+    "acct_desc": "Storage - in-process WIP",
+    "cc_desc": "Manufacturing",
+    "amount": 43000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "on-site WIP storage production cost"
+  },
+  {
+    "acct_num": "8100",
+    "acct_desc": "Whse deprec - building",
+    "cc_desc": "Warehouse/Distribution",
+    "amount": 96000,
+    "expected_tier1": "Additional \u00a7263A",
+    "expected_bucket": "\u00a7263A Additional",
+    "note": "storage building depreciation capitalizable"
+  },
+  {
+    "acct_num": "8110",
+    "acct_desc": "Purchasing - travel to suppliers",
+    "cc_desc": "Purchasing/Procurement",
+    "amount": 34000,
+    "expected_tier1": "Additional \u00a7263A",
+    "expected_bucket": "\u00a7263A Additional",
+    "note": "buyer travel capitalizable"
+  },
+  {
+    "acct_num": "8120",
+    "acct_desc": "Import duties & customs",
+    "cc_desc": "Purchasing/Procurement",
+    "amount": 180000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "duties are inventoriable acquisition cost"
+  },
+  {
+    "acct_num": "8130",
+    "acct_desc": "Demurrage & detention charges",
+    "cc_desc": "Warehouse/Distribution",
+    "amount": 28000,
+    "expected_tier1": "Additional \u00a7263A",
+    "expected_bucket": "\u00a7263A Additional",
+    "note": "handling/storage related charges capitalizable"
+  },
+  {
+    "acct_num": "9040",
+    "acct_desc": "Project travel - billable engagements",
+    "cc_desc": "Professional Services",
+    "amount": 92000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "direct project travel capitalizable to WIP"
+  },
+  {
+    "acct_num": "2070",
+    "acct_desc": "Loan processing supplies",
+    "cc_desc": "Consumer Lending",
+    "amount": 18000,
+    "expected_tier1": "\u00a7263(a) Transaction/Intangible",
+    "expected_bucket": "\u00a7263(a) Mandatory",
+    "note": "direct origination supplies capitalized"
+  },
+  {
+    "acct_num": "2080",
+    "acct_desc": "Appraisal fees - loan collateral",
+    "cc_desc": "Consumer Lending",
+    "amount": 45000,
+    "expected_tier1": "\u00a7263(a) Transaction/Intangible",
+    "expected_bucket": "\u00a7263(a) Mandatory",
+    "note": "direct origination cost capitalized"
+  },
+  {
+    "acct_num": "3060",
+    "acct_desc": "Workover costs - producing well",
+    "cc_desc": "Oil & Gas E&P",
+    "amount": 210000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "workover lifting cost allocable to production"
+  },
+  {
+    "acct_num": "3070",
+    "acct_desc": "Severance tax - production",
+    "cc_desc": "Oil & Gas E&P",
+    "amount": 160000,
+    "expected_tier1": "\u00a7471 Cost",
+    "expected_bucket": "Inventory \u00a7471",
+    "note": "production severance tax allocable to product"
+  },
+  {
+    "acct_num": "7540",
+    "acct_desc": "Marketing salaries - brand team",
+    "cc_desc": "Sales & Marketing",
+    "amount": 260000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "brand marketing selling expense"
+  },
+  {
+    "acct_num": "7550",
+    "acct_desc": "Bad debt expense",
+    "cc_desc": "Finance & Accounting",
+    "amount": 74000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "bad debt deductible non-production"
+  },
+  {
+    "acct_num": "7560",
+    "acct_desc": "Trade show booth fabrication",
+    "cc_desc": "Sales & Marketing",
+    "amount": 38000,
+    "expected_tier1": "Excluded",
+    "expected_bucket": "Deductible",
+    "note": "marketing asset deductible selling"
+  },
+  {
+    "acct_num": "9580",
+    "acct_desc": "Restructuring charges",
+    "cc_desc": "Corporate HQ",
+    "amount": 320000,
+    "expected_tier1": "Non-Operating",
+    "expected_bucket": "Non-Operating",
+    "note": "restructuring non-operating"
+  },
+  {
+    "acct_num": "9590",
+    "acct_desc": "Interest income - short term",
+    "cc_desc": "Treasury",
+    "amount": 55000,
+    "expected_tier1": "Non-Operating",
+    "expected_bucket": "Non-Operating",
+    "note": "interest income non-operating"
+  },
+  {
+    "acct_num": "6090",
+    "acct_desc": "Audit committee fees",
+    "cc_desc": "Corporate HQ",
+    "amount": 45000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "audit committee mixed service"
+  },
+  {
+    "acct_num": "6091",
+    "acct_desc": "Corporate insurance - umbrella",
+    "cc_desc": "Corporate HQ",
+    "amount": 68000,
+    "expected_tier1": "Mixed Service",
+    "expected_bucket": "Mixed (allocable)",
+    "note": "umbrella insurance mixed allocable"
+  }
+]

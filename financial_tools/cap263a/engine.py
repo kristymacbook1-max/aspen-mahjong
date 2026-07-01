@@ -94,12 +94,19 @@ def classify(acct_num="", acct_desc="", cc_num="", cc_desc="", tax=None):
         method = []
 
         # Layer 1: keyword
-        kw_hit = False
+        kw_hit = False; desc_hit = False
         kws = c.get("keywords", [])
         if any(k.lower() in desc for k in kws):
-            score += 50; method.append("kw:desc"); kw_hit = True
+            score += 50; method.append("kw:desc"); kw_hit = True; desc_hit = True
         elif any(k.lower() in combined for k in kws):
             score += 35; method.append("kw:comb"); kw_hit = True
+
+        # Balance-Sheet / Revenue / Non-Operating accounts are inherent to the
+        # account, not the department: a direct description hit beats any
+        # cost-center reclassification (prevents AR/AP/accrued/etc. being pulled
+        # into a department's Mixed-Service default).
+        if desc_hit and c["tier1"] in IMMUNE_TIERS:
+            score += 25; method.append("immune")
 
         # cost-center clues
         clue_hits = sum(1 for clue in c.get("cc_clues", [])
@@ -107,11 +114,15 @@ def classify(acct_num="", acct_desc="", cc_num="", cc_desc="", tax=None):
         if clue_hits:
             score += min(20 + (clue_hits - 1) * 10, 40); method.append("cc")
 
-        # zone alignment (not for generic / immune tiers)
+        # zone alignment (not for generic / immune tiers). Requires a direct
+        # signal (keyword or cost-center clue) so a bare in-zone code cannot win
+        # on department membership alone — that phantom-win pulled balance-sheet
+        # and specific accounts into a department's Mixed-Service default.
         if (zone_tier1 and c["tier1"] == zone_tier1
+                and (kw_hit or clue_hits)
                 and code not in tax.generic_codes
                 and c["tier1"] not in IMMUNE_TIERS):
-            score += 25; method.append("zone")
+            score += 20; method.append("zone")
 
         # Layer 2: fuzzy (only when no exact keyword hit and still weak)
         if HAS_FUZZY and not kw_hit and score < 40 and kws:
@@ -165,6 +176,13 @@ def classify(acct_num="", acct_desc="", cc_num="", cc_desc="", tax=None):
 
     c = tax.by_code[best]
     conf = _confidence(best_score)
+    # Calibration: a win with no direct account-description keyword hit is a weaker
+    # signal than the raw score implies. Zone-only / cost-center-only matches must
+    # not report high confidence (so the review queue is meaningful).
+    has_desc_kw = "kw:desc" in best_method
+    if not has_desc_kw and not reclassed and not suspense:
+        conf = min(conf, 55 if "kw" in best_method else 40)
+
     flags = []
     if suspense:
         flags.append("REVIEW")

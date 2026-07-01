@@ -52,6 +52,22 @@ from financial_tools.cap263a.build_pyexcel import build_pyexcel_workbook
 build_pyexcel_workbook("263A_PyInExcel.xlsx")
 ```
 
+## Validation & accuracy
+
+`python -m financial_tools.cap263a.validation.validate` runs the classifier over
+a bundled 250-line labeled trial balance (6 industries, deliberately messy GL
+abbreviations, many same-account-different-department pairs). Current measure:
+
+- Tier-1 agreement **~66% raw / ~71% incl. documented judgment differences**
+- High-confidence **precision ~78%**, with a **~28% review queue** (confidence is
+  calibrated so weak/zone-only matches are flagged, not auto-accepted)
+
+A regression test pins these as a floor. The number is honest, not aspirational:
+a keyword+cost-center heuristic on maximally-diverse data will misroute edge
+cases — the point is that it *says when it's unsure*. See
+`docs/TAX_DECISIONS.md` for the SME sign-off memo (7 bug fixes, 10 new codes,
+4 decisions flagged for human judgment).
+
 ## Tax fixes applied (verified against the IRS §263A Practice Units)
 
 - Officer compensation → mixed-service allocable (was Non-Operating — the #1
