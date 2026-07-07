@@ -6,7 +6,7 @@ from financial_tools.cap263a import classify
 
 def test_accuracy_floor():
     r = accuracy_report()
-    # current: raw ~66%, +defensible ~71%, high-conf precision ~72%, review ~28%
+    # current: raw ~65.6%, +defensible ~71.2%, high-conf precision ~75.0%, review ~39%
     assert r["raw_agreement"] >= 0.63, f"raw agreement regressed to {r['raw_agreement']:.1%}"
     assert r["high_conf_precision"] >= 0.68, \
         f"high-conf precision regressed to {r['high_conf_precision']:.1%}"
