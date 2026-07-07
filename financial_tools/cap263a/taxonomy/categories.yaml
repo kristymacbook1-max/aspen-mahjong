@@ -19,6 +19,7 @@
   - prepaid
   - other assets
   - intangible asset
+  - intangible assets
   - fixed asset
   - land account
   - land at cost
@@ -214,7 +215,10 @@
   - purchase discount
   - purchase discounts
   - vendor rebate
+  - vendor rebates
   - purchase rebate
+  - purchase price variance
+  - ppv
   cc_clues:
   - material
   - purchasing
@@ -305,6 +309,8 @@
   cc_clues:
   - logistics
   - receiving
+  - purchasing
+  - procurement
   is_labor: false
   labor_type: ''
   authority: ''
@@ -330,10 +336,13 @@
   - import tax
   - customs broker
   - landed cost
+  - import duties
   cc_clues:
   - logistics
   - import
   - trade
+  - purchasing
+  - procurement
   is_labor: false
   labor_type: ''
   authority: ''
@@ -361,6 +370,15 @@
   - production wages
   - manufacturing wages
   - shop labor
+  - billable staff
+  - staff compensation billable
+  - compensation billable
+  - billable engagement
+  - billable engagements
+  - billable client
+  - subcontractor costs client
+  - subcontractor labor
+  - subcontract labor
   cc_clues:
   - production
   - manufacturing
@@ -601,6 +619,8 @@
   - manufacturing property tax
   - property tax factory
   - property tax plant
+  - severance tax
+  - production tax
   cc_clues:
   - production
   - plant
@@ -635,6 +655,8 @@
   - repairs plant
   - maintenance factory
   - maintenance plant
+  - workover
+  - lease operating expense
   cc_clues:
   - production
   - plant
@@ -665,6 +687,7 @@
   - supplies plant
   - supplies manufacturing
   - supplies production
+  - project supplies
   cc_clues:
   - production
   - plant
@@ -897,10 +920,13 @@
   - product cost
   - cost of revenue
   - cost of merchandise
+  - purchased for resale
   cc_clues:
   - merchandising
   - retail
   - wholesale
+  - purchasing
+  - procurement
   is_labor: false
   labor_type: ''
   authority: ''
@@ -919,8 +945,10 @@
     interest: I
   priority: 0
   keywords:
-  - purchasing
-  - procurement
+  - purchasing department
+  - procurement department
+  - purchasing office
+  - purchasing staff
   - buyer salary
   - purchasing agent
   - procurement cost
@@ -1501,7 +1529,7 @@
   priority: 0
   keywords:
   - corporate rent
-  - office rent
+  - corporate office rent
   - headquarters rent
   - hq rent
   - corporate lease
@@ -1917,6 +1945,7 @@
   - commission expense
   - sales bonus
   - sales award
+  - sales fleet
   cc_clues:
   - sales
   is_labor: true
@@ -2461,11 +2490,10 @@
     interest: N
   priority: 0
   keywords:
-  - miscellaneous
+  - miscellaneous non-operating
   - other non-operating
-  - sundry
+  - sundry non-operating
   - extraordinary
-  - other expense
   - non-recurring
   cc_clues: []
   is_labor: false
@@ -2486,12 +2514,12 @@
     interest: N
   priority: 0
   keywords:
-  - intercompany
   - management fee intercompany
+  - intercompany interest
+  - intercompany dividend
   - affiliate charge
   - related party
   - transfer price
-  - ic allocation
   cc_clues:
   - intercompany
   - corporate
@@ -3630,6 +3658,8 @@
   - loan interest land
   - mortgage interest land
   - idle land interest
+  - vacant lot mortgage
+  - vacant land mortgage
   cc_clues:
   - land
   - development
@@ -3719,6 +3749,8 @@
   - patent cost
   - permit and impact
   - impact fee
+  - geological
+  - geophysical
   cc_clues: []
   is_labor: false
   labor_type: ''
@@ -3776,6 +3808,7 @@
   - architect fee
   - engineering fee construction
   - construction management
+  - well equipment
   cc_clues: []
   is_labor: false
   labor_type: ''

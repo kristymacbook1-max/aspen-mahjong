@@ -34,6 +34,21 @@
 - zone: production
   expense_type: prof_fees
   target: FO-IE
+- zone: purchasing
+  expense_type: compensation
+  target: PP-PURCH
+- zone: purchasing
+  expense_type: rent
+  target: PP-PURCH
+- zone: purchasing
+  expense_type: depreciation
+  target: PP-PURCH
+- zone: purchasing
+  expense_type: travel
+  target: PP-PURCH
+- zone: purchasing
+  expense_type: supplies
+  target: PP-PURCH
 - zone: warehouse
   expense_type: depreciation
   target: ADD-WHDEP

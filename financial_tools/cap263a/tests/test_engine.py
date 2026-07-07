@@ -167,6 +167,22 @@ def test_construction_loan_interest_reaches_263af_layer():
     assert r2.tier1 == "Non-Operating"
 
 
+def test_subcontractor_billable_require_client_project_context():
+    """Bare "subcontractor"/"billable" keywords on DL-PROD over-capitalized:
+    "Subcontractor fees" in a Corporate/IT department hit §471 at conf 70.
+    Only client-project/billable-engagement phrasing (or a production cost
+    center) may capitalize."""
+    r = classify(acct_desc="Subcontractor fees", cc_desc="Corporate")
+    assert r.tier1 != "§471 Cost"
+    r = classify(acct_desc="Billable hours", cc_desc="Legal")
+    assert r.tier1 != "§471 Cost"
+    # the legitimate cases keep working
+    r = classify(acct_desc="Subcontractor costs - client projects", cc_desc="Professional Services")
+    assert r.tier1 == "§471 Cost"
+    r = classify(acct_desc="Consulting staff salaries - billable", cc_desc="Professional Services")
+    assert r.tier1 == "§471 Cost"
+
+
 def test_inventory_charges_stay_in_waterfall_but_balances_do_not():
     """Re-tiering INV-BOOK to Balance Sheet initially swallowed IS-side
     inventory CHARGES (adjustment/variance/write-off/shrinkage) — costs

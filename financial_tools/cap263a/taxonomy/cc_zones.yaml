@@ -58,6 +58,12 @@
 - keyword: molding
   zone: production
   zone_tier1: §471 Cost
+- keyword: purchasing
+  zone: purchasing
+  zone_tier1: Additional §263A
+- keyword: procurement
+  zone: purchasing
+  zone_tier1: Additional §263A
 - keyword: warehouse
   zone: warehouse
   zone_tier1: Additional §263A
