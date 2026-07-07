@@ -167,6 +167,26 @@ def test_construction_loan_interest_reaches_263af_layer():
     assert r2.tier1 == "Non-Operating"
 
 
+def test_inventory_charges_stay_in_waterfall_but_balances_do_not():
+    """Re-tiering INV-BOOK to Balance Sheet initially swallowed IS-side
+    inventory CHARGES (adjustment/variance/write-off/shrinkage) — costs
+    silently vanished from the waterfall at conf 85. Charge-event language
+    routes to NEG-263A (Additional §263A, negative-adjustment scaffold),
+    whose explicit keywords suppress the balance-sheet immune bonus; pure
+    balances stay Balance Sheet."""
+    charges = [("Inventory adjustment", "Warehouse"), ("WIP variance", "Production"),
+               ("Finished goods write-off", "Warehouse"), ("Inventory shrinkage", "Warehouse"),
+               ("Inventory obsolescence charge", "Corporate")]
+    for desc, cc in charges:
+        r = classify(acct_desc=desc, cc_desc=cc)
+        assert r.tier1 not in ("Balance Sheet", "Revenue"), f"{desc} dropped from waterfall"
+    balances = [("Inventory - finished goods", "Warehouse"),
+                ("Raw materials inventory", "Plant"), ("Inventory", "")]
+    for desc, cc in balances:
+        r = classify(acct_desc=desc, cc_desc=cc)
+        assert r.tier1 == "Balance Sheet", f"{desc} should be a balance-sheet line"
+
+
 def test_balance_sheet_asset_and_contra_lines():
     """From the end-to-end audit: M&E balances were pulled into §471 labor by
     cost-center clues; book-inventory balances were treated as current-period

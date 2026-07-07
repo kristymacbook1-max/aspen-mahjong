@@ -117,17 +117,23 @@ def classify(acct_num="", acct_desc="", cc_num="", cc_desc="", tax=None):
     runner = None; runner_score = -1
     gen_kw_code = None; gen_kw_score = -1     # best generic code with a keyword hit
 
-    # Pre-pass: does any specialized capitalization-regime code (§263A(f)
-    # interest / §266 carrying charges) have a direct description-keyword hit?
-    # The immune-tier bonus below protects BS/Revenue/Non-Operating accounts
-    # from *department* pull — it must not outvote an explicit regime keyword
-    # ("construction loan" interest must not lose to plain "interest expense"
-    # + immune, or the §263A(f)/§266 layer never sees the line).
+    # Pre-pass: does any specialized code have a direct description-keyword
+    # hit? Specialized = the capitalization-regime tiers (§263A(f) interest /
+    # §266 carrying charges) plus negative-adjustment scaffold codes
+    # (allows_negative_adj, e.g. NEG-263A for inventory shrinkage/write-off/
+    # variance charges). The immune-tier bonus below protects BS/Revenue/
+    # Non-Operating accounts from *department* pull — it must not outvote an
+    # explicit regime keyword ("construction loan" interest must not lose to
+    # plain "interest expense" + immune, and an "inventory shrinkage" IS
+    # charge must not vanish into the Balance Sheet tier).
     _SPECIALIZED_TIERS = ("§263A(f) Interest", "§266 Carrying Charges")
+    specialized_codes = set()
+    for t1 in _SPECIALIZED_TIERS:
+        specialized_codes |= tax.codes_by_tier1.get(t1, set())
+    specialized_codes |= {c["code"] for c in tax.categories if c.get("allows_negative_adj")}
     specialized_desc_hit = any(
         any(_phrase_in(k.lower(), desc) for k in tax.by_code[sc].get("keywords", []))
-        for t1 in _SPECIALIZED_TIERS
-        for sc in (tax.codes_by_tier1.get(t1, set()) & cand))
+        for sc in (specialized_codes & cand))
 
     for code in sorted(cand):                       # deterministic order
         c = tax.by_code[code]

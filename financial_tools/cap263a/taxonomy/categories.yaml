@@ -3827,6 +3827,18 @@
   - inventory obsolescence
   - obsolescence reserve
   - shrink reserve
+  - inventory adjustment
+  - inventory shrinkage
+  - inventory write-off
+  - inventory write-down
+  - inventory variance
+  - inventory provision
+  - wip variance
+  - work in process variance
+  - inventory scrap
+  - finished goods write-off
+  - obsolescence charge
+  - physical count adjustment
   cc_clues: []
   is_labor: false
   labor_type: ''
