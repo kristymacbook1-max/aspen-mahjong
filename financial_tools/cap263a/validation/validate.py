@@ -22,21 +22,17 @@ from ..analysis import analyze, EntityProfile
 _DATA = os.path.join(os.path.dirname(__file__), "validation_set.json")
 
 
-def _defensible(expected, got, desc):
-    """Documented judgment-call differences that are not classifier errors."""
-    dl = desc.lower()
-    if {expected, got} == {"Mixed Service", "Non-Operating"} and \
-            any(k in dl for k in ("officer", "director", "d&o")):
-        return True   # officer comp allocable to production (COR-P-020) vs Non-Op
-    if expected == "Balance Sheet" and got == "§471 Cost" and \
-            ("inventory" in dl or "securities" in dl):
-        return True   # inventory is both a BS account and a §471 cost pool
-    if expected == "Capitalizable (MSPM)" and got == "Mixed Service" and "allocation" in dl:
-        return True   # MSC-to-production is properly mixed-service (SSCM)
-    if expected == "§471 Cost" and got == "Mixed Service" and \
-            ("security" in dl or "janitorial" in dl):
-        return True   # plant facility services — known reclass gap
-    return False
+def _defensible(line_data, got):
+    """Documented judgment-call differences that are not classifier errors.
+
+    Data-driven: each validation line that has a defensible alternative carries
+    an explicit `acceptable_alt_tier1` + `alt_reason` in validation_set.json.
+    (Previously this was a set of keyword heuristics in code — which meant new
+    validation rows could silently pick up exemptions nobody decided on, and a
+    new permissive branch could inflate the +defensible number with no data
+    trail. Now every exemption is a reviewable, diffable label on a specific
+    line.)"""
+    return got == line_data.get("acceptable_alt_tier1")
 
 
 def accuracy_report(data=None) -> dict:
@@ -57,7 +53,7 @@ def accuracy_report(data=None) -> dict:
         conf[band] += 1
         if gt == et:
             raw_ok += 1; correct[band] += 1
-        elif _defensible(et, gt, d["acct_desc"]):
+        elif _defensible(d, gt):
             defensible += 1; correct[band] += 1
         else:
             wrong[band] += 1
@@ -76,7 +72,8 @@ def accuracy_report(data=None) -> dict:
 
 def main():
     r = accuracy_report()
-    print(f"Validation set: {r['n']} labeled lines (6 industries, messy GL, dept pairs)")
+    print(f"Validation set: {r['n']} labeled lines "
+          f"(messy GL, same-account/different-department pairs)")
     print(f"Tier1 agreement (raw):          {r['raw_agreement']:.1%}")
     print(f"Tier1 agreement (+defensible):  {r['agreement_incl_defensible']:.1%}  "
           f"({r['defensible']} documented judgment diffs)")

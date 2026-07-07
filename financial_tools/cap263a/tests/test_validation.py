@@ -25,3 +25,20 @@ def test_validation_fixes_locked():
     ]
     for acct, cc, tier1 in cases:
         assert classify(acct_desc=acct, cc_desc=cc).tier1 == tier1, f"{acct}/{cc}"
+
+
+def test_defensible_exemptions_are_data_driven():
+    """The +defensible carve-out must come from explicit per-line labels in
+    validation_set.json (acceptable_alt_tier1 + alt_reason), not from keyword
+    heuristics in code — so every exemption is a reviewable, diffable decision
+    on a specific line and new rows can't silently pick up exemptions."""
+    import json, os
+    from financial_tools.cap263a.validation import validate as v
+    with open(v._DATA) as fh:
+        data = json.load(fh)
+    stamped = [d for d in data if "acceptable_alt_tier1" in d]
+    assert stamped, "expected explicit defensible labels in validation_set.json"
+    for d in stamped:
+        assert d.get("alt_reason"), f"{d['acct_desc']}: labeled defensible without a reason"
+        assert d["acceptable_alt_tier1"] != d["expected_tier1"], \
+            f"{d['acct_desc']}: alt tier1 must differ from expected"
