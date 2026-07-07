@@ -79,3 +79,21 @@ def test_accounting_negative_with_dollar_sign_and_space():
     negative, not silently zero out."""
     assert _to_decimal("$ (1,234.00)") == Decimal("-1234.00")
     assert _to_decimal("$(1,234,567.89)") == Decimal("-1234567.89")
+
+
+def test_title_sheet_plus_one_tb_sheet_is_not_ambiguous(tmp_path):
+    """A cover/title sheet with no TB-shaped columns must not count toward
+    ambiguity — only raise when 2+ candidates actually look like a trial
+    balance. A prior fix for the ambiguous-sheet guard regressed this exact
+    common workflow (title page + one real TB sheet whose name doesn't match
+    a known hint)."""
+    wb = Workbook()
+    ws1 = wb.active; ws1.title = "Cover Page"
+    ws1.append(["Prepared for:", "Acme Inc"])
+    ws2 = wb.create_sheet("TB Detail")
+    ws2.append(["Account Number", "Account Description", "Amount"])
+    ws2.append(["5000", "Direct labor", 300000])
+    p = os.path.join(tmp_path, "cover.xlsx"); wb.save(p)
+    lines = read_trial_balance(p)
+    assert len(lines) == 1
+    assert lines[0].acct_desc == "Direct labor"

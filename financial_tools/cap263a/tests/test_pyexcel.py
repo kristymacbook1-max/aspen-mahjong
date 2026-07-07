@@ -26,6 +26,40 @@ def test_exported_reference_roundtrips():
         assert r.code == code, f"roundtrip {acct}/{cc}: {r.code} != {code}"
 
 
+def test_roundtrip_preserves_empty_lists_and_empty_strings():
+    """A blank Excel cell reads back as None, not ''/[] — str(None) == "None"
+    used to survive the "|"-split and truthy-filter, corrupting every
+    originally-empty keywords/cc_clues list into ["None"] and polluting the
+    keyword/clue index for every category that legitimately has none."""
+    wb = Workbook()
+    wb.remove(wb.active)
+    export_reference_sheets(wb, hidden=False)
+    rebuilt = taxonomy_from_workbook(wb)
+    canon = get_taxonomy()
+    for c in rebuilt.categories:
+        assert "none" not in [k.lower() for k in c["cc_clues"]], c["code"]
+        assert "none" not in [k.lower() for k in c["keywords"]], c["code"]
+    canon_by_code = {c["code"]: c for c in canon.categories}
+    for c in rebuilt.categories:
+        orig = canon_by_code[c["code"]]
+        if orig.get("tier3", "") == "":
+            assert c["tier3"] == "", f"{c['code']}: tier3 lost empty-string identity"
+        if orig.get("tier2", "") == "":
+            assert c["tier2"] == "", f"{c['code']}: tier2 lost empty-string identity"
+
+
+def test_roundtrip_preserves_note_field():
+    """The category `note` audit-trail field (documents prior tax-fix
+    rationale on EX-BID/NO-INTCAP/NO-OFFICER) used to be silently dropped
+    on every export/reload round-trip — not read into _CAT_COLS at all."""
+    wb = Workbook()
+    wb.remove(wb.active)
+    export_reference_sheets(wb, hidden=False)
+    rebuilt = taxonomy_from_workbook(wb)
+    officer = next(c for c in rebuilt.categories if c["code"] == "NO-OFFICER")
+    assert officer.get("note")
+
+
 def test_assembled_engine_source_is_valid_and_matches():
     src = build_engine_source(with_bootstrap=False)
     compile(src, "<pyexcel>", "exec")          # must be valid Python

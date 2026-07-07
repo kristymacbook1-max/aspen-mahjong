@@ -18,17 +18,21 @@
   - notes receivable
   - prepaid
   - other assets
-  - goodwill
   - intangible asset
   - fixed asset
-  - land
+  - land account
+  - land at cost
+  - land held for use
   - machinery and equipment
   - leasehold improvement
   - construction in progress
   - capital lease
   - right of use
   - rou asset
-  - investment
+  - investment account
+  - marketable securities
+  - short-term investment
+  - long-term investment
   - fixed assets
   - a/r trade
   - accumulated depreciation
@@ -113,12 +117,12 @@
     interest: N/A
   priority: 0
   keywords:
-  - revenue
   - sales revenue
   - service revenue
   - product sales
   - net revenue
   - gross revenue
+  - total revenue
   cc_clues:
   - sales
   - revenue

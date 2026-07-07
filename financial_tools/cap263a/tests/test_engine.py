@@ -128,6 +128,20 @@ def test_zone_only_reclass_is_calibrated_not_overconfident():
     assert "LOW-CONF" in r.flags or "REVIEW" in r.flags
 
 
+def test_bare_generic_keywords_no_longer_drop_costs_from_the_analysis():
+    """BS-ASSET/REV-OPER bare single-word keywords ("land", "investment",
+    "goodwill", "revenue") used to match plain expense lines and route them
+    to Balance-Sheet/Revenue tiers, which are excluded from every waterfall
+    bucket entirely — silently vanishing the cost, not just mis-bucketing it."""
+    r = classify(acct_desc="Cost of Revenue - Materials")
+    assert r.tier1 not in ("Revenue",)
+    r = classify(acct_desc="Marketing Investment Expense")
+    assert r.tier1 not in ("Balance Sheet",)
+    r = classify(acct_desc="Goodwill Amortization")
+    assert r.code == "SEC263A-INTANG"   # capitalizable, not a dropped BS line
+    assert r.tier1 != "Balance Sheet"
+
+
 def test_zero_signal_code_cannot_win_on_priority_alone():
     """A code with zero real signal (no keyword/clue/zone/fuzzy hit) could
     still "win" purely because a nonnegative `priority` default outscored

@@ -30,7 +30,7 @@ def test_normal_trial_balance_generates_five_tabs(tmp_path):
     path = os.path.join(tmp_path, "tb.xlsx")
     out = CapitalizationReport().generate(r, path)
     wb = load_workbook(out)
-    expected = {"Summary Dashboard", "Classified TB", "Asset Basis Schedule",
-                "Adjusted IS", "Method Changes"}
-    assert expected.issubset(set(wb.sheetnames))
-    assert wb.sheetnames[0] == "Summary Dashboard"
+    # Full ordered list, not just a subset/index-0 check — a set-based
+    # assertion here wouldn't catch tabs 2-5 silently reordering.
+    assert wb.sheetnames == ["Summary Dashboard", "Classified TB", "Asset Basis Schedule",
+                             "Adjusted IS", "Method Changes"]

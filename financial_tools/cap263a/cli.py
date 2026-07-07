@@ -6,6 +6,7 @@
 
 import argparse
 import sys
+import zipfile
 from decimal import Decimal
 
 from .analysis import EntityProfile
@@ -28,6 +29,13 @@ def main(argv=None):
     ap.add_argument("--out-dir", default="output/cap263a")
     args = ap.parse_args(argv)
 
+    for flag, val in [("--gross-receipts", args.gross_receipts),
+                      ("--ending-inventory", args.ending_inventory),
+                      ("--ape", args.ape), ("--avoided-rate", args.avoided_rate)]:
+        if val < 0:
+            print(f"error: {flag} must be >= 0 (got {val})", file=sys.stderr)
+            return 1
+
     profile = EntityProfile(
         entity_name=args.entity, entity_type=args.entity_type,
         tax_year=args.tax_year, avg_gross_receipts=Decimal(str(args.gross_receipts)),
@@ -37,8 +45,12 @@ def main(argv=None):
         avoided_cost_rate=Decimal(str(args.avoided_rate)),
         has_designated_property=args.designated,
     )
-    result = CapitalizationPipeline(args.out_dir).run(args.tb_path, profile,
-                                                      company_tag=args.entity or None)
+    try:
+        result = CapitalizationPipeline(args.out_dir).run(args.tb_path, profile,
+                                                          company_tag=args.entity or None)
+    except (FileNotFoundError, ValueError, zipfile.BadZipFile) as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 1
     b = result["bucket_totals"]
     print(f"Workbook: {result['_output_path']}")
     print(f"Lines: {len(result['rows'])}  |  IS total: ${result['is_total']:,.0f}  "

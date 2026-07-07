@@ -62,6 +62,15 @@ def _to_decimal(v):
     return -d if neg else d
 
 
+def _looks_like_tb(ws):
+    """True if this sheet has the minimum columns a trial balance needs
+    (an account-description column plus an amount or debit/credit column) —
+    used to rule out title/cover/notes sheets before the ambiguity check."""
+    header_row = _detect_header(ws)
+    cols = _map_columns(ws, header_row)
+    return "acct_desc" in cols and ("amount" in cols or "debit" in cols or "credit" in cols)
+
+
 def _pick_sheet(wb):
     for hint in _TB_SHEET_HINTS:
         for ws in wb.worksheets:
@@ -70,11 +79,16 @@ def _pick_sheet(wb):
     candidates = [ws for ws in wb.worksheets
                   if ws.sheet_state == "visible" and not ws.title.startswith("_")
                   and ws.title.lower() not in _EXCLUDED_SHEET_TITLES]
-    if len(candidates) > 1:
-        titles = ", ".join(repr(ws.title) for ws in candidates)
+    # A title/cover/notes sheet with no TB-shaped columns shouldn't count toward
+    # ambiguity — only raise when 2+ candidates actually look like a trial balance.
+    tb_shaped = [ws for ws in candidates if _looks_like_tb(ws)]
+    if len(tb_shaped) > 1:
+        titles = ", ".join(repr(ws.title) for ws in tb_shaped)
         raise ValueError(
             f"Multiple candidate sheets ({titles}) and none matches a known trial-balance "
             f"sheet name — pass sheet=<name> explicitly to avoid picking the wrong one.")
+    if tb_shaped:
+        return tb_shaped[0]
     if candidates:
         return candidates[0]
     return wb.worksheets[0]

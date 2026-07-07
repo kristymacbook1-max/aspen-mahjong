@@ -12,7 +12,7 @@ from .taxonomy import get_taxonomy, Taxonomy
 _CAT_COLS = ["code", "tier1", "tier2", "tier3", "mspm", "resale", "self_const",
              "interest", "priority", "keywords", "cc_clues", "is_labor",
              "labor_type", "cap_vs_deduct", "allows_negative_adj",
-             "designated_property", "election_required", "authority"]
+             "designated_property", "election_required", "authority", "note"]
 
 
 def _cat_row(c):
@@ -23,24 +23,33 @@ def _cat_row(c):
             "|".join(c.get("cc_clues", [])), bool(c.get("is_labor")),
             c.get("labor_type", ""), c.get("cap_vs_deduct") or "",
             bool(c.get("allows_negative_adj")), bool(c.get("designated_property")),
-            bool(c.get("election_required")), c.get("authority", "")]
+            bool(c.get("election_required")), c.get("authority", ""),
+            c.get("note", "")]
 
 
 def _row_to_cat(row):
     d = dict(zip(_CAT_COLS, row))
+    # A blank Excel cell reads back as None, not "" — str(None) == "None" would
+    # otherwise survive the "|" split and truthy-filter below, corrupting every
+    # originally-empty keywords/cc_clues list into ["None"] and polluting the
+    # keyword/clue index for every category that legitimately has none.
+    def _list(v):
+        return [k for k in str(v or "").split("|") if k]
     return {
-        "code": d["code"], "tier1": d["tier1"], "tier2": d["tier2"], "tier3": d["tier3"],
+        "code": d["code"], "tier1": d["tier1"],
+        "tier2": d["tier2"] or "", "tier3": d["tier3"] or "",
         "treatment": {"mspm": d["mspm"], "resale": d["resale"],
                       "self_const": d["self_const"], "interest": d["interest"]},
         "priority": int(d["priority"] or 0),
-        "keywords": [k for k in str(d["keywords"]).split("|") if k],
-        "cc_clues": [k for k in str(d["cc_clues"]).split("|") if k],
+        "keywords": _list(d["keywords"]),
+        "cc_clues": _list(d["cc_clues"]),
         "is_labor": bool(d["is_labor"]), "labor_type": d["labor_type"] or "",
         "cap_vs_deduct": d["cap_vs_deduct"] or None,
         "allows_negative_adj": bool(d["allows_negative_adj"]),
         "designated_property": bool(d["designated_property"]),
         "election_required": bool(d["election_required"]),
         "authority": d["authority"] or "",
+        "note": d.get("note") or "",
     }
 
 

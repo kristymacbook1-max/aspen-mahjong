@@ -16,6 +16,14 @@ class TBLine:
     statement_type: str = ""     # "IS" / "BS" (set during classification)
     row_index: int = 0
 
+    def __post_init__(self):
+        # reader.py always hands a Decimal, but any other constructor (tests,
+        # future readers, direct API use) could pass None/float/str/int and
+        # fail confusingly deep inside analyze()'s Decimal arithmetic instead
+        # of here, at the actual mistake.
+        if not isinstance(self.amount, Decimal):
+            self.amount = Decimal(str(self.amount)) if self.amount is not None else Decimal("0")
+
 
 @dataclass
 class Classification:
