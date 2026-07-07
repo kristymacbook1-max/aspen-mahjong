@@ -62,6 +62,20 @@ def test_unicap_exempt_when_small():
     assert r["unicap"]["additional_capitalized_to_inventory"] == D("0")
 
 
+def test_small_business_exemption_covers_263af_interest():
+    """§263A(i) exempts from ALL of §263A including (f) — a §263A(f)-coded
+    interest line must fall to Deductible for an exempt entity, not stay in
+    the capitalized bucket while the Summary says 'UNICAP off'. §266 (a
+    non-§263A provision) is deliberately NOT gated."""
+    lines = [TBLine("7100", "Construction period interest", "300", "Plant Construction",
+                    amount=Decimal("12000"))]
+    exempt = analyze(lines, EntityProfile(avg_gross_receipts=Decimal("1000000")))
+    assert exempt["bucket_totals"]["§263A(f) Interest"] == Decimal("0")
+    assert exempt["bucket_totals"]["Deductible"] == Decimal("12000")
+    large = analyze(lines, EntityProfile(avg_gross_receipts=Decimal("75000000")))
+    assert large["bucket_totals"]["§263A(f) Interest"] == Decimal("12000")
+
+
 def test_negative_additional_pool_is_warned_with_td9843_rule():
     """A negative additional §263A pool used to flow silently into a negative
     absorption ratio and a negative 'capitalized' amount. It must carry

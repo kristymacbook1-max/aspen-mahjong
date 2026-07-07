@@ -98,7 +98,9 @@ def bucket_of(cl: Classification, profile: EntityProfile) -> str:
     if t == "§263(a) Transaction/Intangible":
         return "§263(a) Mandatory"
     if t == "§263A(f) Interest":
-        return "§263A(f) Interest"
+        # §263A(i)/§448(c) exempts from ALL of §263A, including (f) interest.
+        # (§263(a) mandatory and §266 are NOT §263A provisions — no gate there.)
+        return "Deductible" if profile.small_business_exempt else "§263A(f) Interest"
     if t == "§266 Carrying Charges":
         return "§266 Carrying"
     if t == "Mixed Service":
@@ -117,6 +119,10 @@ class ClassifiedLine:
 
 
 def analyze(lines: List[TBLine], profile: Optional[EntityProfile] = None) -> dict:
+    """Classify + bucket every line, compute totals and UNICAP.
+
+    Note: sets `statement_type` on the INPUT TBLine objects (idempotent, but a
+    visible side effect on caller data — pass copies if that matters)."""
     profile = profile or EntityProfile()
     tax = get_taxonomy()
     rows: List[ClassifiedLine] = []

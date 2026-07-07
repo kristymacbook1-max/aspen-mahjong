@@ -19,10 +19,14 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from revenue_recognition.utils.excel_styles import (
     FONT_BODY, FONT_BODY_BOLD, FILL_HIGHLIGHT_BLUE, FILL_HIGHLIGHT_GREEN,
     FILL_HIGHLIGHT_ORANGE, FILL_HIGHLIGHT_RED, THIN_BORDER, ALIGN_LEFT, ALIGN_RIGHT,
-    FMT_CURRENCY, FMT_PERCENT,
+    FMT_PERCENT,
     apply_title, apply_section_header, apply_header_row,
 )
 from .analysis import BUCKETS, CAPITALIZED_BUCKETS
+
+# Accounting-style negatives for a tax workpaper: ($1,234), not -$1,234.
+# (The shared style module's format has no negative section.)
+FMT_CURRENCY = '"$"#,##0;("$"#,##0)'
 
 TB_SHEET = "Classified TB"
 _TB_HEADERS = [
@@ -56,6 +60,15 @@ class CapitalizationReport:
         return output_path
 
     # ------------------------------------------------------------------
+    def _interest_stub(self) -> float:
+        """Legacy scalar §263A(f) stub: APE × avoided-cost rate. §263A(i)
+        exempts a small business from ALL of §263A including (f), so the
+        exemption zeroes this too. (The real per-unit engine is Phase D.)"""
+        p = self._r["profile"]
+        if p.small_business_exempt or not p.has_designated_property:
+            return 0.0
+        return float(p.accumulated_production_expenditures) * float(p.avoided_cost_rate)
+
     def _money(self, ws, r, c, v, fill=None, bold=False):
         cell = ws.cell(r, c, v)
         cell.number_format = FMT_CURRENCY
@@ -302,7 +315,9 @@ class CapitalizationReport:
              "Reg §1.263(a)-1(f)/-3(h)(i)(n)"),
             ("§263A additional cost to ending inventory",
              u.get("additional_capitalized_to_inventory", 0), "SPM Reg §1.263A-2(b)"),
-            ("§263A(f) interest (see Method Changes tab)", 0, "Reg §1.263A-9"),
+            ("§263A(f) interest (avoided-cost stub — see Method Changes tab)",
+             self._interest_stub(), "Reg §1.263A-9"),
+            ("§266 carrying charges (elective)", b["§266 Carrying"], "Reg §1.266-1"),
         ]
         first = row
         for lbl, val, auth in items:
@@ -364,17 +379,22 @@ class CapitalizationReport:
             "§481(a) = catch-up on adopting the proper method.")
         p = self._r["profile"]
         u = self._r["unicap"]
+        b0 = self._r["bucket_totals"]
         row = 5
         apply_section_header(ws, row, 1, 4, "§263A(f) interest capitalization (avoided cost)")
         row += 1
         ape = float(p.accumulated_production_expenditures)
         rate = float(p.avoided_cost_rate)
-        interest = ape * rate if p.has_designated_property else 0.0
+        interest = self._interest_stub()
+        exempt_note = " (n/a — §263A(i) small-business exempt)" if p.small_business_exempt else ""
         for lbl, val, pct in [
-            ("Designated property?", "Yes" if p.has_designated_property else "No", None),
+            ("Designated property?",
+             ("Yes" if p.has_designated_property else "No") + exempt_note, None),
             ("Accumulated production expenditures", ape, False),
             ("Avoided-cost rate", rate, True),
             ("Interest capitalized (§263A(f))", interest, False),
+            ("§263A(f)-coded lines on classified TB (reference — reconcile before filing)",
+             float(b0["§263A(f) Interest"]), False),
         ]:
             self._label(ws, row, 1, lbl, bold=True)
             if pct is None:

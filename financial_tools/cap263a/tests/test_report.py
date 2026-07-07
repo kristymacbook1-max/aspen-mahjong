@@ -70,6 +70,37 @@ def test_no_label_stored_as_broken_formula(tmp_path):
                     assert not str(c.value).startswith("= "), (ws.title, c.coordinate)
 
 
+def test_asset_basis_includes_interest_and_266_and_exempt_stub_is_zero(tmp_path):
+    """The Asset Basis 'Total basis additions' hardcoded §263A(f) to 0 and had
+    no §266 row at all — understating total additions while Method Changes
+    showed the amounts. And the APE×rate interest stub ignored the §263A(i)
+    exemption entirely."""
+    lines = [TBLine("5000", "Direct labor", "100", "Production", amount=Decimal("100000"))]
+    p = EntityProfile(avg_gross_receipts=Decimal("75000000"),
+                      accumulated_production_expenditures=Decimal("1000000"),
+                      avoided_cost_rate=Decimal("0.05"), has_designated_property=True)
+    r = analyze(lines, p)
+    wb = load_workbook(CapitalizationReport().generate(r, os.path.join(tmp_path, "a.xlsx")))
+    ab = wb["Asset Basis Schedule"]
+    labels = {str(ab.cell(row, 1).value or ""): ab.cell(row, 2).value
+              for row in range(5, 15)}
+    interest_rows = [v for k, v in labels.items() if "§263A(f)" in k]
+    sec266_rows = [v for k, v in labels.items() if "§266" in k]
+    assert interest_rows and interest_rows[0] == 50000.0     # APE 1M × 5%
+    assert sec266_rows != []                                 # §266 row exists
+
+    # exempt entity: the stub must be zero even with designated property
+    p2 = EntityProfile(avg_gross_receipts=Decimal("1000000"),
+                       accumulated_production_expenditures=Decimal("1000000"),
+                       avoided_cost_rate=Decimal("0.05"), has_designated_property=True)
+    r2 = analyze(lines, p2)
+    wb2 = load_workbook(CapitalizationReport().generate(r2, os.path.join(tmp_path, "b.xlsx")))
+    mc = wb2["Method Changes"]
+    vals = {str(mc.cell(row, 1).value or ""): mc.cell(row, 3).value for row in range(5, 14)}
+    stub = [v for k, v in vals.items() if k.startswith("Interest capitalized")]
+    assert stub and stub[0] == 0.0
+
+
 def test_warnings_render_on_summary(tmp_path):
     """UNICAP computation warnings (unimplemented method, stale threshold,
     negative pools) must be visible in the workpaper itself, not just stderr."""
