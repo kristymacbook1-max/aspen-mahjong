@@ -13,6 +13,7 @@ import os
 import sys
 
 from openpyxl import Workbook
+from openpyxl.utils import get_column_letter
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from revenue_recognition.utils.excel_styles import (
@@ -27,7 +28,7 @@ TB_SHEET = "Classified TB"
 _TB_HEADERS = [
     "Account #", "Account Description", "Cost Center", "Amount", "Bucket",
     "Cap %", "Cap Amount", "Code", "Tier 1", "MSPM", "Resale", "Self-Const",
-    "Interest", "Authority", "Conf", "Flags",
+    "Interest", "Authority", "Conf", "Flags", "Method (why)", "Zone",
 ]
 _TB_FIRST = 4  # first data row on Classified TB
 
@@ -110,17 +111,37 @@ class CapitalizationReport:
             cf.alignment = ALIGN_RIGHT
             cf.border = THIN_BORDER
             self._label(ws, r, 16, ", ".join(cl.flags))
+            # provenance: which rules fired + the detected cost-center zone —
+            # the audit trail a reviewer needs to defend the coding on exam
+            self._label(ws, r, 17, cl.method)
+            self._label(ws, r, 18, cl.notes.replace("zone=", ""))
         self._tb_last = max(_TB_FIRST + len(rows) - 1, _TB_FIRST)
 
-        # conditional flag: low-confidence rows (skip on an empty TB — an
-        # inverted O4:O3 range crashes openpyxl's ConditionalFormatting)
+        last_col = get_column_letter(len(_TB_HEADERS))
         if rows:
+            # review workflow: filterable, frozen header, red = review (<40),
+            # orange = low-confidence (<70)
+            ws.auto_filter.ref = f"A3:{last_col}{self._tb_last}"
+            ws.freeze_panes = "A4"
             from openpyxl.formatting.rule import CellIsRule
             ws.conditional_formatting.add(
                 f"O{_TB_FIRST}:O{self._tb_last}",
-                CellIsRule(operator="lessThan", formula=["40"], fill=FILL_HIGHLIGHT_ORANGE))
+                CellIsRule(operator="lessThan", formula=["40"], fill=FILL_HIGHLIGHT_RED))
+            ws.conditional_formatting.add(
+                f"O{_TB_FIRST}:O{self._tb_last}",
+                CellIsRule(operator="lessThan", formula=["70"], fill=FILL_HIGHLIGHT_ORANGE))
+            # guard the live SUMIFS: Bucket must be one of the known bucket names
+            # (a typo silently drops the line from the Summary waterfall)
+            from openpyxl.worksheet.datavalidation import DataValidation
+            dv = DataValidation(
+                type="list", formula1='"' + ",".join(BUCKETS) + '"', allow_blank=True,
+                errorTitle="Unknown bucket",
+                error="Bucket must match one of the waterfall bucket names exactly, "
+                      "or the line silently drops out of the Summary SUMIFS.")
+            ws.add_data_validation(dv)
+            dv.add(f"E{_TB_FIRST}:E{self._tb_last}")
         widths = {"B": 34, "C": 22, "D": 15, "E": 18, "N": 40, "P": 8}
-        for col, w in {"A": 12, **widths, "H": 14, "I": 20}.items():
+        for col, w in {"A": 12, **widths, "H": 14, "I": 20, "Q": 24, "R": 12}.items():
             ws.column_dimensions[col].width = w
 
     def _sumifs(self, bucket, col="G"):
@@ -136,10 +157,13 @@ class CapitalizationReport:
         row = 3
         apply_section_header(ws, row, 1, 4, "Entity & exemption")
         row += 1
+        threshold_label = f"${p.sec448_threshold:,.0f}"
+        if p.sec448_threshold_is_estimate:
+            threshold_label += f"  (2026 figure — VERIFY, TY {p.tax_year} not on file)"
         for lbl, val in [
             ("Entity type", p.entity_type),
             ("§448(c) 3-yr avg gross receipts", f"${p.avg_gross_receipts:,.0f}"),
-            ("§448(c) threshold", f"${p.sec448_threshold:,.0f}"),
+            ("§448(c) threshold", threshold_label),
             ("Small-business exempt (§263A(i))",
              "YES — UNICAP off" if p.small_business_exempt else "No"),
             ("De minimis ceiling", f"${p.de_minimis_ceiling:,.0f}"),
@@ -175,9 +199,18 @@ class CapitalizationReport:
         mc.value = self._sumifs("Mixed (allocable)", "D")
         mixed_row = row
         row += 1
-        self._label(ws, row, 1, "= Adjusted currently-deductible", bold=True)
+        # No leading "=" in the label: openpyxl stores any "="-prefixed string
+        # as a formula, which Excel then renders as #NAME?.
+        self._label(ws, row, 1, "Adjusted currently-deductible", bold=True)
         adj = self._money(ws, row, 3, None, bold=True, fill=FILL_HIGHLIGHT_GREEN)
         adj.value = f"=C{start_row}-C{cap_total_row}-C{mixed_row}"
+        adjusted_row = row
+        row += 1
+        note = self._label(
+            ws, row, 1,
+            "Bucket/Cap % edits recompute this waterfall live; the UNICAP block below "
+            "and tabs 3-5 are computed at generation — re-run the CLI after overrides.")
+        note.font = FONT_BODY
         row += 2
 
         apply_section_header(ws, row, 1, 4, "Checks")
@@ -187,11 +220,27 @@ class CapitalizationReport:
         # adjusted deductible should equal Deductible + Non-Operating buckets when
         # no Cap % has been overridden; a non-zero value flags analyst overrides.
         ded = self._sumifs("Deductible", "D")[1:] + "+" + self._sumifs("Non-Operating", "D")[1:]
-        tie.value = f"=C{row-3}-(" + ded + ")"
+        tie.value = f"=C{adjusted_row}-(" + ded + ")"
         row += 1
-        self._label(ws, row, 1, "Lines flagged for review", bold=True)
+        self._label(ws, row, 1, "Lines needing review (REVIEW flag / conf < 40)", bold=True)
         self._label(ws, row, 3, str(self._r["review_count"]))
+        row += 1
+        self._label(ws, row, 1, "Lines with any flag (incl. LOW-CONF / AMBIGUOUS / CC-*)", bold=True)
+        self._label(ws, row, 3, str(self._r.get("flagged_count", "")))
         row += 2
+
+        # --- warnings the workpaper must document (computation + data quality) ---
+        cautions = list(self._r["unicap"].get("warnings", []) or [])
+        cautions += list(self._r.get("data_quality", []) or [])
+        if cautions:
+            apply_section_header(ws, row, 1, 4, "Cautions — resolve before signing")
+            row += 1
+            for w in cautions:
+                cell = self._label(ws, row, 1, "⚠ " + str(w))
+                cell.fill = FILL_HIGHLIGHT_ORANGE
+                ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=6)
+                row += 1
+            row += 1
 
         # --- §263A UNICAP computation ---
         u = self._r["unicap"]

@@ -26,6 +26,8 @@ def main(argv=None):
     ap.add_argument("--avoided-rate", type=float, default=0.0)
     ap.add_argument("--designated", action="store_true", help="has §263A(f) designated property")
     ap.add_argument("--method", default="SPM", choices=["SPM", "MSPM", "SRM"])
+    ap.add_argument("--sheet", default=None,
+                    help="worksheet name when the workbook has several TB-shaped sheets")
     ap.add_argument("--out-dir", default="output/cap263a")
     args = ap.parse_args(argv)
 
@@ -47,10 +49,13 @@ def main(argv=None):
     )
     try:
         result = CapitalizationPipeline(args.out_dir).run(args.tb_path, profile,
-                                                          company_tag=args.entity or None)
+                                                          company_tag=args.entity or None,
+                                                          sheet=args.sheet)
     except (FileNotFoundError, ValueError, zipfile.BadZipFile) as e:
         print(f"error: {e}", file=sys.stderr)
         return 1
+    for w in (result["unicap"].get("warnings") or []) + (result.get("data_quality") or []):
+        print(f"WARNING: {w}", file=sys.stderr)
     b = result["bucket_totals"]
     print(f"Workbook: {result['_output_path']}")
     print(f"Lines: {len(result['rows'])}  |  IS total: ${result['is_total']:,.0f}  "

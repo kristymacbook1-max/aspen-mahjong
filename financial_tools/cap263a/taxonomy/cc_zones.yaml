@@ -166,6 +166,12 @@
 - keyword: unimproved
   zone: land
   zone_tier1: §266 Carrying Charges
+- keyword: land
+  zone: land
+  zone_tier1: §266 Carrying Charges
+- keyword: land holdings
+  zone: land
+  zone_tier1: §266 Carrying Charges
 - keyword: vacant land
   zone: land
   zone_tier1: §266 Carrying Charges

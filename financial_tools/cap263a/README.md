@@ -34,10 +34,13 @@ tests/              33 tests: validation, golden classifications, tax-fix regres
 
 ## Usage
 
+Run from the repo root (the package is not pip-installed; `python -m` resolves
+`financial_tools` relative to the working directory).
+
 ```bash
 pip install -r financial_tools/cap263a/requirements.txt
 
-# CLI (authoritative)
+# CLI (authoritative). --sheet picks a worksheet when several look like a TB.
 python -m financial_tools.cap263a.cli TB.xlsx --entity "Acme Inc" \
     --gross-receipts 75000000 --ending-inventory 6000000 \
     --ape 2000000 --avoided-rate 0.06 --designated
@@ -59,8 +62,8 @@ a bundled 250-line labeled trial balance (deliberately messy GL abbreviations,
 many same-account-different-department pairs, cost centers spanning production,
 warehouse, sales, R&D, corporate, banking, and land contexts). Current measure:
 
-- Tier-1 agreement **~67% raw / ~72% incl. documented judgment differences**
-- High-confidence **precision ~77%**, with a **~42% review queue** (confidence is
+- Tier-1 agreement **~69% raw / ~73% incl. documented judgment differences**
+- High-confidence **precision ~77%**, with a **~38% review queue** (confidence is
   calibrated so weak/zone-only matches — including cost-center reclassifications
   driven only by department context, with no direct keyword hit — are flagged,
   not auto-accepted)

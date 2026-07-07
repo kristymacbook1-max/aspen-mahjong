@@ -39,6 +39,10 @@ class EntityProfile:
 
     THRESHOLDS = {2024: Decimal("30000000"), 2025: Decimal("31000000"),
                   2026: Decimal("32000000")}
+    # Reg §1.263A-1(d)(3)(ii)(C) (T.D. 9843): a producer with 3-yr average
+    # gross receipts over $50M may not include negative adjustments in
+    # additional §263A costs under the SPM (MSPM required).
+    LARGE_PRODUCER_THRESHOLD = Decimal("50000000")
 
     def __post_init__(self):
         self.avg_gross_receipts = Decimal(str(self.avg_gross_receipts or 0))
@@ -51,6 +55,14 @@ class EntityProfile:
     @property
     def sec448_threshold(self) -> Decimal:
         return self.THRESHOLDS.get(self.tax_year, Decimal("32000000"))
+
+    @property
+    def sec448_threshold_is_estimate(self) -> bool:
+        """True when tax_year has no published figure in THRESHOLDS — the 2026
+        amount is used as a stand-in and must be verified (the threshold is
+        inflation-indexed; a stale figure can flip the small-business
+        exemption, which turns UNICAP entirely on or off)."""
+        return self.tax_year not in self.THRESHOLDS
 
     @property
     def small_business_exempt(self) -> bool:
@@ -135,6 +147,7 @@ def analyze(lines: List[TBLine], profile: Optional[EntityProfile] = None) -> dic
         "mixed_total": mixed,
         "deductible_total": deductible,
         "review_count": sum(1 for r in rows if r.cls.review),
+        "flagged_count": sum(1 for r in rows if r.cls.flags),
         "tie_check": is_total - (capitalized + mixed + deductible),
     }
     result["unicap"] = compute_unicap(result, profile)
@@ -155,7 +168,14 @@ def compute_unicap(result: dict, profile: EntityProfile) -> dict:
     capitalized to ending inventory.
     """
     if profile.small_business_exempt:
+        w = []
+        if profile.sec448_threshold_is_estimate:
+            w.append(f"§448(c) threshold for TY {profile.tax_year} is not on file — the "
+                     f"2026 figure (${profile.sec448_threshold:,.0f}) was used to determine "
+                     f"the exemption. VERIFY: a higher indexed threshold cannot change this "
+                     f"result, but relying on it should be documented.")
         return {"exempt": True, "note": "§263A(i)/§448(c) small-business exception — UNICAP off.",
+                "warnings": w,
                 "mixed_capitalized": Decimal("0"), "mixed_deductible": result["mixed_total"],
                 "absorption_ratio": Decimal("0"), "additional_capitalized_to_inventory": Decimal("0")}
 
@@ -183,8 +203,38 @@ def compute_unicap(result: dict, profile: EntityProfile) -> dict:
     absorption = _q(additional_pool / sec471_pool) if sec471_pool else Decimal("0")
     add_to_inv = _q(profile.ending_inventory_471 * absorption)
 
+    warnings_ = []
+    if profile.method != "SPM":
+        warnings_.append(
+            f"METHOD: profile.method={profile.method!r} is not implemented — this "
+            f"computation is SPM. Do not sign an {profile.method} workpaper off these "
+            f"numbers (MSPM/SRM are Phase B of the build plan).")
+    if additional_pool < 0:
+        warnings_.append(
+            "NEGATIVE ADDITIONAL §263A POOL: the absorption ratio and the amount "
+            "capitalized to ending inventory are negative. Verify the negative "
+            "adjustments driving this are permissible in the pool.")
+        if profile.method == "SPM" and \
+                profile.avg_gross_receipts > profile.LARGE_PRODUCER_THRESHOLD:
+            warnings_.append(
+                "T.D. 9843 / Reg §1.263A-1(d)(3)(ii)(C): a producer with >$50M "
+                "average gross receipts may NOT include negative adjustments in "
+                "additional §263A costs under the SPM — use the MSPM.")
+    if sec471_pool <= 0 and additional_pool:
+        warnings_.append(
+            f"§471 POOL IS {'ZERO' if sec471_pool == 0 else 'NEGATIVE'} while the "
+            f"additional §263A pool is nonzero — the absorption ratio is not "
+            f"meaningful; check classification of §471 lines.")
+    if profile.sec448_threshold_is_estimate:
+        warnings_.append(
+            f"§448(c) threshold for TY {profile.tax_year} is not on file — the 2026 "
+            f"figure (${profile.sec448_threshold:,.0f}) was used. The threshold is "
+            f"inflation-indexed; VERIFY before relying on the small-business "
+            f"exemption determination.")
+
     return {
         "exempt": False,
+        "warnings": warnings_,
         "mixed_alloc_ratio": ratio,
         "production_labor": prod_labor, "total_labor": total_labor,
         "mixed_capitalized": mixed_cap, "mixed_deductible": mixed_ded,

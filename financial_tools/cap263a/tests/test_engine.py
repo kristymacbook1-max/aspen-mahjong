@@ -128,6 +128,60 @@ def test_zone_only_reclass_is_calibrated_not_overconfident():
     assert "LOW-CONF" in r.flags or "REVIEW" in r.flags
 
 
+def test_phrase_level_lexicon_no_longer_corrupts_text():
+    """Word-by-word substitution let 2-letter abbreviation keys that are also
+    real words ("or"->operating room, "oh"->overhead, "pr"->payroll) corrupt
+    ordinary descriptions and state abbreviations, and made every multi-word
+    lexicon key silently dead. Phrase-level replacement + pruning fixes both."""
+    # Ohio is not the corporate zone
+    r = classify(acct_desc="Depreciation expense", cc_desc="Machine Shop - Toledo OH")
+    assert r.code != "MSC-CORPDEP"
+    # PR firm retainer is not payroll
+    r = classify(acct_desc="PR agency retainer", cc_desc="Marketing")
+    assert r.code != "GEN-COMP"
+    # a communications/PR department is not production labor
+    r = classify(acct_desc="Salaries", cc_desc="Press Office")
+    assert r.tier1 != "§471 Cost"
+    # revived multi-word cc synonym: inventory management is a warehouse function
+    r = classify(acct_desc="Rent", cc_desc="Inventory Management")
+    assert r.tier1 == "Additional §263A"
+
+
+def test_hyphenated_abbreviations_expand():
+    """"Deprec-Mfg equip" tokenized as one word, so deprec/mfg never expanded
+    and the line missed FO-DEP entirely."""
+    r = classify(acct_desc="Deprec-Mfg equip", cc_desc="Production - Plant 1")
+    assert r.code == "FO-DEP"
+    assert r.tier1 == "§471 Cost"
+
+
+def test_construction_loan_interest_reaches_263af_layer():
+    """"Interest expense - construction loan" classified as plain Non-Operating
+    interest at conf 85 — the immune-tier bonus outvoted the §263A(f) keyword,
+    so the interest-capitalization layer never saw the line."""
+    r = classify(acct_desc="Interest expense - construction loan", cc_desc="Land Holdings")
+    assert r.code == "NO-INTCAP"
+    assert r.tier1 == "§263A(f) Interest"
+    # plain interest expense is untouched
+    r2 = classify(acct_desc="Interest expense", cc_desc="Corporate")
+    assert r2.tier1 == "Non-Operating"
+
+
+def test_balance_sheet_asset_and_contra_lines():
+    """From the end-to-end audit: M&E balances were pulled into §471 labor by
+    cost-center clues; book-inventory balances were treated as current-period
+    §471 cost; contra-revenue landed as deductible expense; purchase discounts
+    became production labor."""
+    r = classify(acct_desc="Machinery & equipment", cc_desc="Production - Plant 1")
+    assert r.tier1 == "Balance Sheet"
+    r = classify(acct_desc="Inventory - finished goods", cc_desc="Warehouse")
+    assert r.tier1 == "Balance Sheet"
+    r = classify(acct_desc="Sales returns and allowances", cc_desc="Sales")
+    assert r.tier1 == "Revenue"
+    r = classify(acct_desc="Purchase discounts", cc_desc="Purchasing")
+    assert r.code == "DM-RAW"       # §471 contra (credit) line stays in the pool
+
+
 def test_bare_generic_keywords_no_longer_drop_costs_from_the_analysis():
     """BS-ASSET/REV-OPER bare single-word keywords ("land", "investment",
     "goodwill", "revenue") used to match plain expense lines and route them

@@ -30,6 +30,29 @@ class TaxonomyError(ValueError):
     pass
 
 
+def _canon(s):
+    """Same canonical form engine.normalize produces: lowercase, hyphens and
+    slashes as spaces, collapsed whitespace."""
+    return re.sub(r"\s+", " ", str(s).lower().replace("-", " ").replace("/", " ")).strip()
+
+
+def _phrase_replacer(mapping):
+    """Longest-first, word-boundary, single-pass phrase substitution.
+
+    The original implementation substituted word-by-word, which (a) made every
+    multi-word key silently dead and (b) let short keys that are also real
+    words ("or", "oh", "pr") fire unconditionally inside ordinary text. Phrase-
+    level with longest-first ordering lets "er dept" beat "er" and multi-word
+    entries like "inventory management" actually work. Single-pass: the
+    replacement value is never re-scanned, so chains can't loop."""
+    mapping = {_canon(k): _canon(v) for k, v in mapping.items()}
+    if not mapping:
+        return lambda t: t
+    keys = sorted(mapping, key=len, reverse=True)
+    pat = re.compile(r"\b(?:" + "|".join(re.escape(k) for k in keys) + r")\b")
+    return lambda t: pat.sub(lambda m: mapping[m.group(0)], t)
+
+
 class Taxonomy:
     def __init__(self, data=None):
         """Load from the YAML files, or from an in-memory `data` dict (used by
@@ -56,6 +79,10 @@ class Taxonomy:
                                for r in self.cc_reclass}
         # cost-center zone keywords, longest first (specific beats generic)
         self._zone_rules = sorted(self.cc_zones, key=lambda z: -len(z["keyword"]))
+        # phrase-level lexicon replacers (see _phrase_replacer)
+        self.expand_abbrev = _phrase_replacer(self.abbreviations)
+        self.apply_account_syn = _phrase_replacer(self.account_synonyms)
+        self.apply_cc_syn = _phrase_replacer(self.cc_synonyms)
         self._build_keyword_index()
         self.validate()
 

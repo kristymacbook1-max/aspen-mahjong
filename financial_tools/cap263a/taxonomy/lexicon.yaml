@@ -23,7 +23,6 @@ abbreviations:
   boe: barrel of oil equivalent
   bopis: buy online pick up in store
   cam: common area maintenance
-  cap: capital
   capa: corrective and preventive action
   capex: capital expenditure
   cdmo: contract development manufacturing organization
@@ -33,7 +32,6 @@ abbreviations:
   cip: clean in place
   clng: cleaning
   cmo: contract manufacturing organization
-  co: company
   comm: commission
   comp: compensation
   con: consulting
@@ -64,7 +62,6 @@ abbreviations:
   dlr: dealer
   dom: domestic
   dsm: demand side management
-  ed: emergency department
   edc: electronic data capture
   edi: electronic data interchange
   ee: employee
@@ -75,7 +72,6 @@ abbreviations:
   ent: entertainment
   env: environmental
   equip: equipment
-  er: employer
   er dept: emergency department
   esp: electric submersible pump
   espp: employee stock purchase plan
@@ -155,12 +151,10 @@ abbreviations:
   noc: network operations center
   nri: net revenue interest
   offc: office
-  oh: overhead
   oms: order management system
   opeb: other post employment benefits
   oper: operating
   ops: operations
-  or: operating room
   orig: origination
   orri: overriding royalty interest
   ot: overtime
@@ -176,7 +170,6 @@ abbreviations:
   pos: point of sale
   ppd: prepaid
   ppty: property
-  pr: payroll
   prem: premium
   proc: processing
   prod: production
@@ -218,7 +211,6 @@ abbreviations:
   sls: sales
   sre: site reliability engineering
   stk: stock
-  sub: subscription
   supp: supplies
   suppl: supplies
   svc: service
@@ -241,7 +233,6 @@ abbreviations:
   wfi: water for injection
   whs: warehouse
   whse: warehouse
-  wi: working interest
   wip: work in process
   wms: warehouse management system
   wrty: warranty
@@ -251,13 +242,11 @@ abbreviations:
   ofc: office
   engr: engineering
 account_synonyms:
-  401k expense: employee benefits
-  absorption: overhead
+  401k expense: 401k benefit
   advisory fee: professional fee
   amortization: depreciation
   borrowing cost: interest expense
   branding expense: advertising expense
-  burden: overhead
   cartage: freight
   cellular expense: telephone expense
   certification expense: training expense
@@ -271,7 +260,7 @@ account_synonyms:
   custodial: janitorial
   data line expense: telephone expense
   debt service: interest expense
-  dental expense: employee benefits
+  dental expense: dental benefit
   depletion: depreciation
   drayage: freight
   expendables: supplies
@@ -279,26 +268,30 @@ account_synonyms:
   finance cost: interest expense
   guard service: security service
   hauling: freight
-  health insurance: employee benefits
+  health insurance: health insurance benefit
   housekeeping: janitorial
-  indirect cost: overhead
-  indirect expense: overhead
+  indirect cost: factory overhead
+  indirect expense: factory overhead
   internet expense: telephone expense
   lease cost: rent cost
   lease expense: rent expense
   leasing expense: rent expense
+  benefits: benefit
   levy: tax
-  medical insurance: employee benefits
+  rental: rent
+  taxation: tax
+  taxes: tax
+  medical insurance: health insurance benefit
   occupancy: rent
   outside services: professional fee
-  pension expense: employee benefits
+  pension expense: pension benefit
   phone expense: telephone expense
   professional services: professional fee
   promotional expense: advertising expense
   public relations expense: advertising expense
   remuneration: compensation
   rental expense: rent expense
-  retirement expense: employee benefits
+  retirement expense: retirement benefit
   salaries: compensation
   sanitation: janitorial
   seminar expense: training expense
@@ -307,8 +300,6 @@ account_synonyms:
   sponsorship expense: advertising expense
   sundries: supplies
   surveillance expense: security expense
-  taxation: tax
-  taxes: tax
   trucking: freight
   tuition expense: training expense
   voip expense: telephone expense
@@ -326,7 +317,6 @@ cc_synonyms:
   assembly: production
   audit: corporate
   back office: corporate
-  batch: production
   blending: production
   bottling: production
   business development: sales
@@ -388,7 +378,6 @@ cc_synonyms:
   logistics: warehouse
   machining: production
   main office: corporate
-  management: corporate
   manufacturing: production
   manufacturing operations: production
   marketing: sales
@@ -404,7 +393,6 @@ cc_synonyms:
   plant: production
   plant operations: production
   plating: production
-  press: production
   product development: r&d
   production operations: production
   prototype: r&d

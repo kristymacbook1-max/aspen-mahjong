@@ -9,6 +9,8 @@ opt-in plugin.
 """
 
 import re
+from functools import lru_cache
+
 from .taxonomy import get_taxonomy, IMMUNE_TIERS, _WORD_RE
 from .model import Classification
 
@@ -26,11 +28,22 @@ _PARENS = re.compile(r"\([^)]*\)")
 _IRC_PAREN = re.compile(r"(\d)\s*\(\s*([a-z]{1,3})\s*\)")
 
 
+@lru_cache(maxsize=None)
+def _pattern(phrase):
+    # The taxonomy has ~1,000 distinct keyword/clue phrases; compiling per call
+    # thrashed re's tiny internal cache and dominated runtime (~90% of a large
+    # TB's classify time was re.compile). Cached, the set compiles once.
+    # Phrases are canonicalized the same way normalize() canonicalizes text
+    # (hyphens/slashes -> spaces) so "freight-in"/"a/r trade" keywords match.
+    phrase = re.sub(r"\s+", " ", phrase.replace("-", " ").replace("/", " ")).strip()
+    return re.compile(rf"\b{re.escape(phrase)}\b")
+
+
 def _phrase_in(phrase, text):
     """Word-boundary containment, not raw substring: a bare `in` check let short
     keywords/clues like "it" match inside unrelated words ("credit", "capital"),
     silently mis-tagging unrelated cost centers/accounts."""
-    return re.search(rf"\b{re.escape(phrase)}\b", text) is not None
+    return _pattern(phrase).search(text) is not None
 
 
 def normalize(text: str) -> str:
@@ -38,21 +51,19 @@ def normalize(text: str) -> str:
     t = _LEADING_ACCT.sub("", t)        # strip "6100-20 · " style prefixes
     t = _IRC_PAREN.sub(r"\1\2", t)       # "401(k)" -> "401k" before the parens strip below
     t = _PARENS.sub(" ", t)
-    t = re.sub(r"[^a-z0-9&\s\-/]", " ", t)
+    # Hyphens/slashes become spaces so "Deprec-Mfg" tokenizes as two words the
+    # lexicon can expand and "A/R trade" matches the "a/r trade"-style keywords
+    # (which _pattern canonicalizes the same way).
+    t = re.sub(r"[^a-z0-9&\s]", " ", t)
     return re.sub(r"\s+", " ", t).strip()
 
 
-def _expand(text, abbreviations):
-    return " ".join(abbreviations.get(w, w) for w in text.split())
-
-
-def _apply_synonyms(text, syn):
-    words = text.split()
-    return " ".join(syn.get(w, w) for w in words)
-
-
-def _prep(text, tax, syn):
-    return _apply_synonyms(_expand(normalize(text), tax.abbreviations), syn)
+def _prep(text, expand, apply_syn):
+    """normalize -> abbreviation expansion -> synonym mapping, all phrase-level
+    (longest-first, word-boundary). The original word-by-word substitution made
+    every multi-word lexicon key silently dead (76 of 425 entries) and let
+    2-letter abbreviations ("or", "oh", "pr") corrupt ordinary text."""
+    return apply_syn(expand(normalize(text)))
 
 
 def detect_cc_zone(cc_text, tax):
@@ -66,7 +77,7 @@ def detect_cc_zone(cc_text, tax):
         return "", ""
     for rule in tax.zone_rules():
         kw = rule["keyword"]
-        if kw and re.search(rf"\b{re.escape(kw)}\b", cc_text):
+        if kw and _pattern(kw).search(cc_text):
             return rule["zone"], rule["zone_tier1"]
     return "", ""
 
@@ -82,8 +93,8 @@ def _confidence(score):
 
 def classify(acct_num="", acct_desc="", cc_num="", cc_desc="", tax=None):
     tax = tax or get_taxonomy()
-    desc = _prep(acct_desc, tax, tax.account_synonyms)
-    cc = _prep(f"{cc_desc} {cc_num}", tax, tax.cc_synonyms)
+    desc = _prep(acct_desc, tax.expand_abbrev, tax.apply_account_syn)
+    cc = _prep(f"{cc_desc} {cc_num}", tax.expand_abbrev, tax.apply_cc_syn)
     combined = f"{desc} {cc}".strip()
     desc_words = set(_WORD_RE.findall(desc))
     cc_words = set(_WORD_RE.findall(cc))
@@ -106,6 +117,18 @@ def classify(acct_num="", acct_desc="", cc_num="", cc_desc="", tax=None):
     runner = None; runner_score = -1
     gen_kw_code = None; gen_kw_score = -1     # best generic code with a keyword hit
 
+    # Pre-pass: does any specialized capitalization-regime code (§263A(f)
+    # interest / §266 carrying charges) have a direct description-keyword hit?
+    # The immune-tier bonus below protects BS/Revenue/Non-Operating accounts
+    # from *department* pull — it must not outvote an explicit regime keyword
+    # ("construction loan" interest must not lose to plain "interest expense"
+    # + immune, or the §263A(f)/§266 layer never sees the line).
+    _SPECIALIZED_TIERS = ("§263A(f) Interest", "§266 Carrying Charges")
+    specialized_desc_hit = any(
+        any(_phrase_in(k.lower(), desc) for k in tax.by_code[sc].get("keywords", []))
+        for t1 in _SPECIALIZED_TIERS
+        for sc in (tax.codes_by_tier1.get(t1, set()) & cand))
+
     for code in sorted(cand):                       # deterministic order
         c = tax.by_code[code]
         score = 0
@@ -123,7 +146,7 @@ def classify(acct_num="", acct_desc="", cc_num="", cc_desc="", tax=None):
         # account, not the department: a direct description hit beats any
         # cost-center reclassification (prevents AR/AP/accrued/etc. being pulled
         # into a department's Mixed-Service default).
-        if desc_hit and c["tier1"] in IMMUNE_TIERS:
+        if desc_hit and c["tier1"] in IMMUNE_TIERS and not specialized_desc_hit:
             score += 25; method.append("immune")
 
         # cost-center clues
@@ -208,7 +231,10 @@ def classify(acct_num="", acct_desc="", cc_num="", cc_desc="", tax=None):
     # not report high confidence (so the review queue is meaningful).
     has_desc_kw = "kw:desc" in best_method
     if not has_desc_kw and not suspense:
-        conf = min(conf, 55 if "kw" in best_method else 40)
+        # 35, not 40: the review flag fires at conf < 40, so capping exactly AT
+        # the threshold left every clue/zone-only guess sitting one point above
+        # the review queue — flagged LOW-CONF but never REVIEW-counted.
+        conf = min(conf, 55 if "kw" in best_method else 35)
 
     flags = []
     if suspense:

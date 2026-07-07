@@ -24,6 +24,7 @@
   - land at cost
   - land held for use
   - machinery and equipment
+  - machinery & equipment
   - leasehold improvement
   - construction in progress
   - capital lease
@@ -123,6 +124,9 @@
   - net revenue
   - gross revenue
   - total revenue
+  - sales returns
+  - returns and allowances
+  - sales allowances
   cc_clues:
   - sales
   - revenue
@@ -159,14 +163,14 @@
   designated_property: false
   election_required: false
 - code: INV-BOOK
-  tier1: §471 Cost
-  tier2: Inventory
+  tier1: Balance Sheet
+  tier2: Asset
   tier3: Book Inventory
   treatment:
-    mspm: '471'
-    resale: '471'
-    self_const: '471'
-    interest: '471'
+    mspm: N/A
+    resale: N/A
+    self_const: N/A
+    interest: N/A
   priority: 0
   keywords:
   - inventory
@@ -176,8 +180,6 @@
   - raw materials inventory
   - merchandise inventory
   - inventory valuation
-  - inventory reserve
-  - inventory obsolescence
   cc_clues:
   - inventory
   - warehouse
@@ -188,6 +190,10 @@
   allows_negative_adj: false
   designated_property: false
   election_required: false
+  note: 'FIX: was tier1 §471 Cost/471x4 — a book-inventory BALANCE is a balance-sheet
+    account, not a current-period cost; the §471 cost pool is built from expense
+    lines and ending inventory comes from EntityProfile. Reserve/obsolescence
+    keywords moved to NEG-263A (those are IS charges, negative-adjustment scaffold).'
 - code: DM-RAW
   tier1: §471 Cost
   tier2: Direct Materials
@@ -205,6 +211,10 @@
   - raw materials
   - direct material
   - material purchases
+  - purchase discount
+  - purchase discounts
+  - vendor rebate
+  - purchase rebate
   cc_clues:
   - material
   - purchasing
@@ -2202,9 +2212,12 @@
   - interest capitalization
   - construction period interest
   - capitalized interest construction
+  - construction loan
+  - construction financing
   cc_clues:
   - treasury
   - construction
+  - land
   is_labor: false
   labor_type: ''
   authority: §263A(f) / Reg §1.263A-8..-15 — avoided-cost interest
@@ -3810,6 +3823,10 @@
   - excess book depreciation
   - 471 add-back
   - unfavorable m-1 reversal
+  - inventory reserve
+  - inventory obsolescence
+  - obsolescence reserve
+  - shrink reserve
   cc_clues: []
   is_labor: false
   labor_type: ''

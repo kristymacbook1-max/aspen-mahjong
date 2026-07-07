@@ -2,6 +2,7 @@
 
 import os
 import re
+import warnings as _warnings
 from datetime import datetime
 
 from .reader import read_trial_balance
@@ -17,9 +18,15 @@ class CapitalizationPipeline:
         os.makedirs(output_dir, exist_ok=True)
 
     def run(self, tb_path: str, profile: EntityProfile = None,
-            company_tag: str = None, timestamp: str = None) -> dict:
-        lines = read_trial_balance(tb_path)
+            company_tag: str = None, timestamp: str = None, sheet: str = None) -> dict:
+        # Reader warnings (missing columns etc.) are data-quality caveats the
+        # workpaper should document, not just ephemeral stderr text — capture
+        # them into the result so the Summary tab renders them.
+        with _warnings.catch_warnings(record=True) as caught:
+            _warnings.simplefilter("always")
+            lines = read_trial_balance(tb_path, sheet=sheet)
         result = analyze(lines, profile)
+        result["data_quality"] = [str(w.message) for w in caught]
         tag = company_tag or (profile.entity_name if profile else None) or "entity"
         # An unsanitized entity name (e.g. "Acme/Sub LLC" or "../../etc") could
         # otherwise create unintended subdirectories or write outside output_dir

@@ -62,6 +62,38 @@ def test_unicap_exempt_when_small():
     assert r["unicap"]["additional_capitalized_to_inventory"] == D("0")
 
 
+def test_negative_additional_pool_is_warned_with_td9843_rule():
+    """A negative additional §263A pool used to flow silently into a negative
+    absorption ratio and a negative 'capitalized' amount. It must carry
+    warnings — including the T.D. 9843 large-producer rule when method=SPM
+    and receipts exceed $50M."""
+    lines = [
+        TBLine("5000", "Raw materials", "100", "Production", amount=Decimal("1000000")),
+        TBLine("6000", "Warehouse rent", "200", "Warehouse", amount=Decimal("60000")),
+        TBLine("6100", "Excess book depreciation", "200", "Warehouse", amount=Decimal("-400000")),
+    ]
+    p = EntityProfile(avg_gross_receipts=Decimal("75000000"),
+                      ending_inventory_471=Decimal("500000"), method="SPM")
+    u = analyze(lines, p)["unicap"]
+    assert u["additional_263a_pool"] < 0
+    joined = " ".join(u["warnings"])
+    assert "NEGATIVE ADDITIONAL" in joined
+    assert "T.D. 9843" in joined
+
+
+def test_unimplemented_method_and_stale_threshold_are_warned():
+    """--method MSPM/SRM silently computed SPM with no indication; a tax year
+    with no published §448(c) threshold silently used the 2026 figure. Both
+    must surface as warnings."""
+    lines = [TBLine("5000", "Direct labor", "100", "Production", amount=Decimal("100000"))]
+    p = EntityProfile(avg_gross_receipts=Decimal("75000000"), method="MSPM", tax_year=2027)
+    assert p.sec448_threshold_is_estimate
+    u = analyze(lines, p)["unicap"]
+    joined = " ".join(u["warnings"])
+    assert "MSPM" in joined and "not implemented" in joined
+    assert "2027" in joined and "VERIFY" in joined
+
+
 def test_sscm_labor_ratio_excludes_excluded_tier_labor():
     """Reg §1.263A-1(h): the SSCM ratio denominator is production + mixed-service
     labor only. Sales-commission labor (Excluded tier, is_labor=True) must not
