@@ -135,7 +135,7 @@ total = min(Σ units, total_interest_incurred)       # cap; if binds, pro-rate +
   | 4 | 6,500,000 | 8,000,000 | 7,250,000 | 3,000,000 | 45,000.00 | 4,250,000 | 75,892.86 |
 
   Totals: traced **176,250.00** + avoided **147,321.43** = **323,571.43** capitalized (verified with exact `Decimal` arithmetic, not rounded intermediates). Cap (`total_interest_incurred`, assumed ≥ $500,000 across traced + nontraced debt in this example) doesn't bind. Q1's traced-applied equals its full APE (excess = 0) because the loan principal exceeds the APE that quarter — illustrates the "uncovered" case only starting Q2, once cumulative APE outgrows the $3M traced loan and the excess spills into the avoided-cost/nontraced-WAIR calculation. This table is the literal fixture for `test_interest.py` — encode the per-quarter APE_open/close pairs directly rather than re-deriving them.
-- **T.D. 10034 (Oct 2025) caveat, gated on `tax_year`:** associated-property rule eliminated (don't add land/existing structure to APE for TY≥2026); interest narrowed for improvements (`is_improvement` → only the improvement's own costs in APE). Flags `ASSOCIATED-PROPERTY-EXCLUDED`, `IMPROVEMENT-NARROWED-2025`; verify effective-date/mechanics against the published T.D. before locking.
+- **⚠ "T.D. 10034 (Oct 2025)" citation is UNVERIFIED and under active suspicion of fabrication** (flagged by a citation-accuracy audit — see `docs/TAX_DECISIONS.md` §7 — no Treasury Decision by this number is recognized). Do NOT gate any tax-year cutover logic on this T.D. number without first confirming, from a primary source (IRS.gov, a tax research service, or direct reg-text lookup), that it exists and says what's described below. If it does not check out, treat the associated-property-rule/improvement-interest change described here as unconfirmed and drop the `tax_year`-gated behavior entirely rather than shipping a citation-shaped guess. As specified (pending that verification): associated-property rule eliminated (don't add land/existing structure to APE for TY≥2026); interest narrowed for improvements (`is_improvement` → only the improvement's own costs in APE). Flags `ASSOCIATED-PROPERTY-EXCLUDED`, `IMPROVEMENT-NARROWED-2025`.
 - Outputs: a real **§263A(f) Interest tab** (per-unit 7-step APE worksheet in Practice-Unit format), the interest column of the Asset Basis Schedule, and the Summary `§263A(f) Interest` bucket (route *capitalized* interest to the bucket; incurred − capitalized stays deductible — document in the tie-check to avoid double count).
 
 ---
@@ -154,14 +154,14 @@ Each phase ships standalone value and keeps the waterfall tie-out.
 - **Extend:** `model.py` (schedule + SCA dataclasses, `EngagementData`, `ValidationReport`), `analysis.py` (EntityProfile fields, dispatcher, `compute_mspm/srm/sca`, call `compute_263Af`), `report.py` (per-asset Asset Basis, §263A(f) tab, MSPM/SRM tables, Data Quality tab, waterfall wiring).
 
 ## Verification
-- Unit tests from each worked example (MSPM 143,000; SRM 36,875; SCA 55k/asset + conservation + guardrail/degenerate; §263A(f) 261,023.69 + compounding + cap + mid-year proration).
+- Unit tests from each worked example (MSPM 143,000; SRM 36,875; SCA 55k/asset + conservation + guardrail/degenerate; §263A(f) 323,571.43 = traced 176,250.00 + avoided 147,321.43 + compounding + cap + mid-year proration).
 - FK/validation tests (unresolved links flagged; debit/credit netting already covered).
 - Method-conflict test (SRM chosen but production > de minimis).
 - End-to-end: `read_engagement` on a multi-sheet sample → all engines → workbook with zero formula errors, every tab ties, and `formulas`-library evaluation of the live cells (LibreOffice is blocked in this sandbox).
 - Extend `validation/validate.py` to report per-engine tie-outs alongside classification accuracy.
 
 ## Effort & risk
-Four phases, each comparable to the classifier rebuild. Highest risk: §263A(f) (compounding, traced/nontraced, mid-year proration, T.D. 10034 currency) and data ingestion quality (real TBs/asset registers are messy — the Data Quality tab is the mitigation). Classification accuracy (~66–71% on messy data) means asset/CIP inputs should be reviewed, not blindly trusted — the review-queue + Data Quality tab surface this.
+Four phases, each comparable to the classifier rebuild. Highest risk: §263A(f) (compounding, traced/nontraced, mid-year proration, and the unverified "T.D. 10034" currency — confirm it's a real citation before building tax-year-gated logic around it) and data ingestion quality (real TBs/asset registers are messy — the Data Quality tab is the mitigation). Classification accuracy (~66–71% on messy data) means asset/CIP inputs should be reviewed, not blindly trusted — the review-queue + Data Quality tab surface this.
 
 ## Deferred / out of scope
 Combined producer+reseller method; farming (§1.263A-4); interest on flow-through entities (§1.263A-15); live Form 3115 DCN mapping to the current Rev. Proc.; the EY-platform modules (§168(n), §163(j), §45X/§48D, cost seg).

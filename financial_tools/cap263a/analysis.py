@@ -39,7 +39,8 @@ class EntityProfile:
 
     THRESHOLDS = {2024: Decimal("30000000"), 2025: Decimal("31000000"),
                   2026: Decimal("32000000")}
-    # Reg §1.263A-1(d)(3)(ii)(C) (T.D. 9843): a producer with 3-yr average
+    # Reg §1.263A-1(d)(3)(ii)(C) (T.D. 9942, not T.D. 9843 as earlier cited here —
+    # UNVERIFIED, confirm vs primary source): a producer with 3-yr average
     # gross receipts over $50M may not include negative adjustments in
     # additional §263A costs under the SPM (MSPM required).
     LARGE_PRODUCER_THRESHOLD = Decimal("50000000")
@@ -278,7 +279,7 @@ def compute_unicap(result: dict, profile: EntityProfile) -> dict:
         if profile.method == "SPM" and \
                 profile.avg_gross_receipts > profile.LARGE_PRODUCER_THRESHOLD:
             warnings_.append(
-                "T.D. 9843 / Reg §1.263A-1(d)(3)(ii)(C): a producer with >$50M "
+                "T.D. 9942 (cite unverified) / Reg §1.263A-1(d)(3)(ii)(C): a producer with >$50M "
                 "average gross receipts may NOT include negative adjustments in "
                 "additional §263A costs under the SPM — use the MSPM.")
     if sec471_pool <= 0 and additional_pool:

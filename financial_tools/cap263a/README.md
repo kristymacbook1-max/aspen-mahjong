@@ -16,8 +16,9 @@ the FTA 5-tab workbook.
 ## Architecture (single source of truth)
 
 ```
-taxonomy/*.yaml     132 categories on a multi-method schema + CC zones/reclass + lexicon
+taxonomy/*.yaml     133 categories on a multi-method schema + CC zones/reclass + lexicon
 taxonomy.py         loader + validator (every cross-reference must resolve)
+model.py            core dataclasses (TBLine, Classification) shared by every module
 engine.py           one deterministic scored pass (L1 keyword/rule + CC-zone reclass
                     + optional L2 rapidfuzz); L3 semantic is an opt-in plugin
 reader.py           robust TB reader that carries dollar AMOUNTS through
@@ -28,8 +29,10 @@ report.py           FTA 5-tab workbook (Summary Dashboard waterfall, Classified 
 export_reference.py the ONE taxonomy->hidden-sheets exporter
 build_pyexcel.py    assembles the =PY() workbook from the real engine source
 pipeline.py / cli.py   trial balance in -> workbook out
-tests/              33 tests: validation, golden classifications, tax-fix regression,
-                    UNICAP math, and single-source parity (exported == CLI)
+tests/              93 tests: validation, golden classifications, tax-fix regression,
+                    UNICAP math, single-source parity (exported == CLI, incl. the
+                    pandas =PY() bootstrap path), CLI/pipeline error handling, report
+                    generation, and security (formula-injection) regression
 ```
 
 ## Usage
@@ -72,7 +75,8 @@ A regression test pins these as a floor. The number is honest, not aspirational:
 a keyword+cost-center heuristic on maximally-diverse data will misroute edge
 cases — the point is that it *says when it's unsure*. See
 `docs/TAX_DECISIONS.md` for the SME sign-off memo (7 bug fixes, 10 new codes,
-4 decisions flagged for human judgment).
+5 decisions flagged for human judgment, plus a hardening-pass and red-team
+change log).
 
 ## Tax fixes applied (verified against the IRS §263A Practice Units)
 
@@ -84,6 +88,9 @@ cases — the point is that it *says when it's unsure*. See
 - `VAGUE-*` accounts route to **suspense/review**, never to direct labor.
 - Added regimes: §266 carrying charges, §263(a) transaction/intangible, §263(a)
   tangible (repair vs improvement/BAR), §263A(f) interest, negative §263A.
+- Abnormal spoilage/rework/casualty (`EX-ABNORMAL`) excluded from §471 instead
+  of silently capitalized (Reg §1.263A-1(e)(3)(iii)) — raised validation
+  high-confidence precision from 82.8% to 84.0%.
 
 ## Deferred (data contracts defined; compute later)
 

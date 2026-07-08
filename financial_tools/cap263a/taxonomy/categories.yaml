@@ -2070,7 +2070,9 @@
   - manufacturing
   is_labor: false
   labor_type: ''
-  authority: 'Reg §1.263A-1(e)(3)(iii)(abnormal amounts excluded from §471/§263A)'
+  authority: 'Reg §1.471-11(d)(2)(iii) [corrected from §1.263A-1(e)(3)(iii), which is
+    the general non-capitalizable-costs list, not the abnormal-costs exclusion;
+    VERIFY vs primary source] — abnormal amounts excluded from §471/§263A'
   cap_vs_deduct: null
   allows_negative_adj: false
   designated_property: false
@@ -2167,7 +2169,9 @@
   - estimating
   is_labor: false
   labor_type: ''
-  authority: §1.263A-1(e)(3)(ii)(T) — bidding costs (successful bids)
+  authority: '§1.263A-1(e)(3)(ii) — bidding costs (successful bids) [pinpoint sub-letter
+    (T) UNVERIFIED — two other sub-letter cites in this list (officer comp, pension)
+    were found transposed; re-verify this one vs primary source before relying on it]'
   cap_vs_deduct: null
   allows_negative_adj: false
   designated_property: false
@@ -2368,7 +2372,7 @@
   - corporate
   is_labor: true
   labor_type: support
-  authority: §1.263A-1(e)(3)(ii)(A) — officers comp allocable to production
+  authority: §1.263A-1(e)(3)(ii)(B) — officers comp allocable to production [corrected from (A); VERIFY vs primary source]
   cap_vs_deduct: null
   allows_negative_adj: false
   designated_property: false
@@ -3723,7 +3727,9 @@
   - unimproved
   is_labor: false
   labor_type: ''
-  authority: §266 / Reg §1.266-1(b)(1)(iii)-(iv)
+  authority: '§266 / Reg §1.266-1(b)(1) [pinpoint (iii)-(iv) UNVERIFIED — the carrying-
+    charge list may only run (i)-(iii); confirm subpart count vs primary source
+    before relying on this cite]'
   cap_vs_deduct: elective
   allows_negative_adj: false
   designated_property: false
@@ -3791,7 +3797,10 @@
   cc_clues: []
   is_labor: false
   labor_type: ''
-  authority: Reg §1.263(a)-4 / §197
+  authority: 'Reg §1.263(a)-4 / §197 for the intangibles above; geological/geophysical
+    costs likely instead governed by §167(h) (24-month G&G amortization) — this
+    keyword pairing is probably mis-cited, flagged for SME to either move G&G to a
+    dedicated §167(h) code or confirm §1.263(a)-4/§197 applies on these facts'
   cap_vs_deduct: capitalize
   allows_negative_adj: false
   designated_property: false
@@ -3872,7 +3881,9 @@
   cc_clues: []
   is_labor: false
   labor_type: ''
-  authority: Reg §1.263(a)-3(i)/(h)/(f); §1.162-3
+  authority: 'Reg §1.263(a)-3(i) routine maintenance / §1.263(a)-3(h) small-taxpayer safe
+    harbor / §1.263(a)-1(f) de minimis safe harbor [de minimis cite corrected from
+    -3(f), which is the wrong section; §1.162-3 materials & supplies]'
   cap_vs_deduct: deduct
   allows_negative_adj: false
   designated_property: false
@@ -3912,7 +3923,8 @@
   cc_clues: []
   is_labor: false
   labor_type: ''
-  authority: §1.263A-1(d)(3); T.D. 9843 negatives
+  authority: '§1.263A-1(d)(3); T.D. 9942 negatives [corrected from T.D. 9843; UNVERIFIED,
+    confirm vs primary source]'
   cap_vs_deduct: null
   allows_negative_adj: true
   designated_property: false
@@ -3936,7 +3948,7 @@
   cc_clues: []
   is_labor: true
   labor_type: benefits
-  authority: §1.263A-1(e)(3)(ii)(B)-(C)
+  authority: '§1.263A-1(e)(3)(ii)(C)-(D) [corrected from (B)-(C); VERIFY vs primary source]'
   cap_vs_deduct: null
   allows_negative_adj: false
   designated_property: false

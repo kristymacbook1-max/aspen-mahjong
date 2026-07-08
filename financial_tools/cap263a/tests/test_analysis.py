@@ -113,11 +113,15 @@ def test_small_business_exemption_covers_263af_interest():
     assert large["bucket_totals"]["§263A(f) Interest"] == Decimal("12000")
 
 
-def test_negative_additional_pool_is_warned_with_td9843_rule():
+def test_negative_additional_pool_is_warned_with_large_producer_rule():
     """A negative additional §263A pool used to flow silently into a negative
     absorption ratio and a negative 'capitalized' amount. It must carry
-    warnings — including the T.D. 9843 large-producer rule when method=SPM
-    and receipts exceed $50M."""
+    warnings — including the large-producer (>$50M) negative-adjustment rule
+    when method=SPM. (The T.D. number in the warning text was corrected from
+    a mis-cited T.D. 9843 to T.D. 9942 during a citation-accuracy audit — see
+    docs/TAX_DECISIONS.md §7 — and is itself flagged unverified pending
+    primary-source confirmation, so this test checks the durable regulation
+    citation and the rule's substance, not the T.D. number.)"""
     lines = [
         TBLine("5000", "Raw materials", "100", "Production", amount=Decimal("1000000")),
         TBLine("6000", "Warehouse rent", "200", "Warehouse", amount=Decimal("60000")),
@@ -129,7 +133,8 @@ def test_negative_additional_pool_is_warned_with_td9843_rule():
     assert u["additional_263a_pool"] < 0
     joined = " ".join(u["warnings"])
     assert "NEGATIVE ADDITIONAL" in joined
-    assert "T.D. 9843" in joined
+    assert "§1.263A-1(d)(3)(ii)(C)" in joined
+    assert ">$50M" in joined
 
 
 def test_unimplemented_method_and_stale_threshold_are_warned():

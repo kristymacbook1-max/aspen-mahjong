@@ -2,10 +2,10 @@
 
 **To:** Tax SME (reviewer / approver)
 **From:** Tax Technical Review
-**Re:** Rebuilt taxonomy (`categories.yaml`, 132 categories) vs. original `_CategoryRef` (122 codes) plus CC-engine maps (`cc_reclass.yaml`, `generic_map.yaml`, `cc_zones.yaml`)
+**Re:** Rebuilt taxonomy (`categories.yaml`, 133 categories) vs. original `_CategoryRef` (122 codes) plus CC-engine maps (`cc_reclass.yaml`, `generic_map.yaml`, `cc_zones.yaml`)
 **Date:** 2026-07-01
 
-**Purpose.** Give the SME an item-by-item basis to *approve* or *overturn* every substantive change made in the rebuild. Sources: original workbook hidden sheets `_CategoryRef`, `_CCReclassMap`, `_GenericExpMap`; IRS Practice Units COR-P-020 (producers), COR-P-021 (resellers), COR-P-006 (interest), COR-C-023 (self-constructed). Net category count moved 122 → 132 (10 new codes); no codes were deleted.
+**Purpose.** Give the SME an item-by-item basis to *approve* or *overturn* every substantive change made in the rebuild. Sources: original workbook hidden sheets `_CategoryRef`, `_CCReclassMap`, `_GenericExpMap`; IRS Practice Units COR-P-020 (producers), COR-P-021 (resellers), COR-P-006 (interest), COR-C-023 (self-constructed) — **these Practice Unit IDs are themselves unverified, see §7**. Net category count moved 122 → 132 (10 new codes; §5 item #49 `EX-ABNORMAL` later brought the total to 133); no codes were deleted.
 
 ---
 
@@ -183,6 +183,76 @@ Validation after the red-team round: raw **78.4%**, +defensible **82.4%**, high-
 
 ---
 
+## §7 — Citation Accuracy Audit (read before relying on ANY authority/citation string in this tool)
+
+Every `authority` field in `categories.yaml`, and every reg/T.D./Rev. Proc./Practice-Unit
+citation elsewhere in these docs, was **written from model training knowledge, not looked up
+against a primary source** (IRS.gov, a reg-text database, Westlaw/CCH). The tool has always
+disclaimed this generally ("representative, not authoritative" — §4 item 3). A dedicated
+fact-checking pass fact-checked a sample against the auditing agent's own knowledge and found
+**multiple citations that were substantively wrong**, including a suspected fabricated
+Treasury Decision number. This is a materially more serious finding than a generic
+disclaimer conveys, so it gets its own section.
+
+**Corrected (moderate-to-high confidence; still not primary-source-verified):**
+- `NO-OFFICER` (officer comp): §1.263A-1(e)(3)(ii)(**A**) → **(B)**. The indirect-cost list
+  runs (A) indirect labor, (B) officers' comp, (C) pension/related costs, (D) benefits — the
+  original cite was off by one letter.
+- `DL-PENSION` (pension/benefits): §1.263A-1(e)(3)(ii)(**B)-(C**) → **(C)-(D)**. Same
+  off-by-one-letter pattern, same direction — this looks systematic, not two independent typos.
+- `SEC263A-REPAIR` de minimis safe harbor: cited to §1.263(a)-**3(f)** → corrected to
+  **§1.263(a)-1(f)** (the de minimis election lives in the general capitalization reg, not the
+  tangible-property BAR-test reg). The routine-maintenance (-3(i)) and small-taxpayer (-3(h))
+  cites in the same entry were already in the right section.
+- `EX-ABNORMAL` (abnormal spoilage): §1.263A-1(e)(3)(iii) → corrected to **§1.471-11(d)(2)(iii)**
+  (the abnormal-costs exclusion is in the full-absorption costing regs, not the general
+  non-capitalizable-costs list — a different provision from `BS-ASSET`'s §1.263A-1(e)(3)(iii)
+  citation two rows up, which IS the right section for ITS purpose and was left alone).
+- `NEG-263A` / the negative-pool warning (`analysis.py`, item #35/#48): **T.D. 9843 → T.D. 9942**.
+  The TCJA small-business simplified-methods final regs (including the >$50M-producer
+  negative-adjustment rule) were, to the auditing agent's recollection, finalized as T.D. 9942
+  (Jan. 2021), not T.D. 9843.
+
+**Flagged, deliberately NOT guess-corrected** (a wrong replacement citation is worse than an
+honest "unverified" label — these need a primary source, not a second guess):
+- **`docs/BUILD_PLAN.md` "T.D. 10034 (Oct 2025)"** — the auditing agent has *no recollection of
+  this T.D. number existing at all* and suspects outright fabrication. This is the single most
+  serious item in this section: it was driving a proposed `tax_year`-gated computation change
+  (eliminating the associated-property rule, narrowing improvement interest) in the still-unbuilt
+  §263A(f) engine. **Do not build tax-year cutover logic against this citation without first
+  confirming, from a primary source, that the T.D. exists and says what's described.** Flagged
+  prominently in BUILD_PLAN.md itself.
+- `EX-BID` bidding-cost sub-letter (T) in §1.263A-1(e)(3)(ii)(T) — given the confirmed
+  transposition pattern on two other sub-letters in this same list, this one should be
+  re-verified, not trusted, before relying on the "(T)" pinpoint.
+- `SEC266-INT`/`-OTHER` — §1.266-1(b)(1)(iii)-(iv): the carrying-charge list may only run
+  three items (taxes/interest/other), which would make "(iv)" nonexistent. Unconfirmed either way.
+- `SEC263A-INTANG` geological/geophysical keywords — likely mis-grouped under §1.263(a)-4/§197
+  (general intangibles); G&G costs may instead be governed by the dedicated **§167(h)** 24-month
+  amortization provision. Flagged for the SME to either split into a dedicated code or confirm
+  the current grouping applies on the relevant facts.
+- **IRS LB&I Practice Unit IDs** (COR-P-020, COR-P-021, COR-P-006, COR-C-023, cited throughout
+  `BUILD_PLAN.md` and this memo's §1 sources): the auditing agent does not recognize this ID
+  format/prefix as matching real Practice Unit numbering and cannot confirm these exist as
+  named. Treat as unverified placeholders — consistent with, but stronger than, the tool's
+  existing "representative, not authoritative" disclaimer.
+- **§448(c) $32,000,000 threshold for TY2026** — the $30M(2024)/$31M(2025) figures match the
+  auditing agent's recollection of the published inflation-adjusted amounts; the $32M/2026
+  figure is an unverified extrapolation of the pattern, not confirmed against the actual TY2026
+  Rev. Proc.
+
+**Also stale (doc-only, not a citation error):** `BUILD_PLAN.md`'s Phase D verification checklist
+cited the §263A(f) worked-example total as $261,023.69 — a number from a version of that example
+that was later found not to reconcile with its own formula and was corrected to $323,571.43
+elsewhere in the same document (Phase D worked table, item #43-area). The checklist line was
+never updated to match; corrected in this pass.
+
+**Bottom line for the SME/reviewer:** every citation in this tool should be treated as a
+starting point for research, not a verified filing position, until confirmed against a primary
+source — and the items above are the ones most likely to be wrong if spot-checked first.
+
+---
+
 ### Reviewer summary
 - **7 bug fixes (§1):** all recommended **approve**; items #3 (EX-BID) and the scope items carry a "revisit scope" caveat.
 - **8 new-code groups / 10 codes (§2):** all recommended **approve** (SEC195-STARTUP and the SEC263A-IMPROVE/REPAIR keyword set carry minor-revisit notes).
@@ -190,3 +260,4 @@ Validation after the red-team round: raw **78.4%**, +defensible **82.4%**, high-
 - **5 known limitations (§4):** computation layers (MSPM/SRM, §263A(f), negative adj., per-asset basis) are not yet built; classification-only at this stage.
 - **27 hardening-pass corrections (§5):** found across four independent multi-agent audit rounds (initial, adversarial re-verification, previously-unaudited files + deeper taxonomy data, and end-to-end/lexicon/practitioner review), all fixed and regression-tested; items #16, #28, #35, #36, and #37 change computed dollar output — re-run any workpaper generated before this pass.
 - **8 red-team corrections (§6):** three adversarial agents (hostile input / tax-wrongness / single-source divergence). Two are security-class (formula injection #44, the =PY() NaN divergence #43); five change or bound computed dollar output (#45–#49). All fixed and regression-tested (93 tests). Highlights: an unbounded absorption ratio could show a **$50 billion** capitalized figure unflagged (#46); a NaN amount silently defeated the integrity tie-check (#45). Nothing further should be relied on for filing without SME sign-off on §3/§3a.
+- **Citation accuracy audit (§7):** 5 citations corrected (moderate-high confidence, still unverified), 6 flagged unverified/possibly fabricated rather than guess-corrected — most notably a suspected-fabricated Treasury Decision ("T.D. 10034") in BUILD_PLAN.md. **No citation in this tool should be relied on for a filing position without independent primary-source verification.**
