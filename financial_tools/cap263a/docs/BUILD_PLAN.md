@@ -14,7 +14,7 @@
 
 Phase A below builds the ingestion for inputs 2-5. Phases B/C/D are the calculation engines those inputs feed. **Nothing in Phase B/C/D can run until Phase A exists** — that ordering is not optional.
 
-Synthesized from four design specs (grounded in Reg §§1.263A-1..-15 and IRS Practice Units COR-P-020/-021/-006/COR-C-023 — **these citations, and every citation in this plan, are unverified against a primary source; see `docs/TAX_DECISIONS.md` §7 before treating any of them as a filing position**). Each engine has a worked numeric example destined to become a unit test.
+Synthesized from four design specs (grounded in Reg §§1.263A-1..-15 and IRS Practice Units COR-P-020/-021/-006/COR-C-023). **Status as of 2026-07-08 (see `docs/TAX_DECISIONS.md` §7a-§7e for the full history): the core formulas for SSCM, MSPM, SRM, and §263A(f) designated-property/avoided-cost mechanics have since been verified directly against primary regulation text** (with real bugs found and fixed along the way — see the phase sections below, each individually marked VERIFIED/CONFIRMED/CORRECTED with a date). What remains genuinely unverified: pinpoint citations for `§1.263(a)-1/-3`, `§1.471-11`, `§1.266-1`; the current-year §448(c) small-business-taxpayer dollar threshold; and any Practice Unit document-ID/revision-date detail not independently cross-checked. Do not treat this plan as a finished filing position regardless of verification status — it is a build spec, not tax advice — but do not read the blanket "unverified" framing that appeared in earlier drafts of this paragraph as still accurate; it is not.
 
 ## Where we start (already built)
 - Classifier + 133-code taxonomy whose `Classification.treatment` dict already carries the exact sub-bucket codes the engines aggregate (`mspm`: `471`/`471-Pre`/`I`/`I-Pre`/`C`/`M`/`E`/`N`; `resale`: `471`/`P`/`S`/`I`/…). **No new classification work — the engines are aggregation + arithmetic over `analyze()` output.** Current classification accuracy: ~78% raw / ~84% high-confidence precision on a 250-line messy labeled set (see README.md; re-check with `python -m financial_tools.cap263a.validation.validate` before relying on a stale number).
@@ -210,7 +210,7 @@ also applies here specifically ((c)(3)(iii)(C)): if 90%+ of capitalizable mixed 
 allocate to one bucket under either method, taxpayer may elect 100% to that bucket.
 Implement as `EntityProfile.mspm_mixed_split_method: Literal["direct_material", "labor"]`.
 
-- **Negatives + $50M rule (VERIFIED, §1.263A-1(d)(3)(ii)(B), see "Where we start"):** SPM excludes negative §263A when `avg_gross_receipts_prior3 > $50M` (already implemented as `LARGE_PRODUCER_THRESHOLD` + a warning — reuse it, don't recreate); **MSPM and SRM allow negatives with NO size restriction** (verified: (B)(2)/(B)(3) list MSPM/SRM with no dollar threshold, unlike (B)(1)'s SPM $50M cap). Add `avg_gross_receipts_prior3`, `include_negative_263a` fields to `EntityProfile`.
+- **Negatives + $50M rule (VERIFIED, §1.263A-1(d)(3)(ii)(B), see "Where we start"):** SPM excludes negative §263A when gross receipts exceed $50M (already implemented as `LARGE_PRODUCER_THRESHOLD` compared against the EXISTING `EntityProfile.avg_gross_receipts` field — reuse both, don't recreate or duplicate); **MSPM and SRM allow negatives with NO size restriction** (verified: (B)(2)/(B)(3) list MSPM/SRM with no dollar threshold, unlike (B)(1)'s SPM $50M cap). **Corrected 2026-07-08:** an earlier draft of this bullet both said the $50M comparison was "already implemented" AND instructed "add `avg_gross_receipts_prior3`" as a new field in the same sentence — self-contradictory. Resolution: `EntityProfile.avg_gross_receipts` already exists and already feeds the SPM $50M comparison; do NOT add a second, differently-named gross-receipts field for that comparison. Only add `include_negative_263a: bool` as new. If a true 3-year-rolling-average (as opposed to whatever single-year/period figure `avg_gross_receipts` currently represents) turns out to be needed for precision, that's a migration of the EXISTING field's computation, not an additional field living alongside it.
 - **HAR election (VERIFIED, §1.263A-2(c)(4)):** requires 3+ consecutive prior years on MSPM with actual (not historic) ratios; frozen pre-production AND production historic ratios (or a combined ratio for LIFO) used for a 5-year qualifying period; recompute in year 6 (the "recomputation year") — if within ±0.5 percentage points of the historic ratio(s), extend 5 more years; if not, revert to actual ratios and rebuild a new 3-year test period. Fields: `har_election`, `har_preprod_ratio`, `har_production_ratio`, `har_qualifying_year_index`.
 - **De minimis for producers with ≤$200,000 total indirect costs (VERIFIED, §1.263A-2(b)(3)(iv), applies to MSPM via (c)(3)(v)):** additional §263A costs deemed zero — a real, cheap early-out worth implementing regardless of Phase B's other complexity.
 - **Canonical worked test — the regulation's OWN Example 1 (§1.263A-2(c)(3)(vi)(A), Taxpayer P), not a hand-built illustration: use this verbatim as the `test_mspm_srm.py` golden fixture, since every intermediate number is IRS-sourced, not derived.**
@@ -235,51 +235,161 @@ storage_handling_ratio = storage_handling / (beginning_inv_471 + current_year_47
 combined = purchasing_ratio + storage_handling_ratio
 add'l_to_inv = combined * ending_inventory_471
 ```
-- The #1 reseller audit error is the S&H denominator — assert beginning inventory is in S&H denom only.
+Both denominators re-checked term-for-term against Practice Unit COR-P-021 Step 6 (`docs/TAX_DECISIONS.md` §7e):
+CONFIRMED exactly as written — the purchasing-ratio denominator omits beginning inventory, the storage-and-handling
+denominator includes it. This is the single most safety-critical formula in this section (the reg's own audit
+guidance calls the S&H denominator the source of the most common reseller error), so treat any future change to it
+as requiring the same re-verification rigor.
+- Assert beginning inventory is in the S&H denominator only, never the purchasing denominator.
+- **Goods valued below cost excluded from the base (§1.263A-3(d)(3)(i)(C)(2), missing entirely until now):**
+  `ending_inventory_471` for purposes of this formula does NOT include inventory the taxpayer has written down or
+  written off as obsolete/below cost. Without this exclusion, a taxpayer with write-downs would get an inflated
+  base and an overstated capitalized amount.
 - **1/3–2/3 purchasing-labor** rule (§1.263A-3(c)(3)(ii)(A)) — election; if not elected, reasonably allocate.
-- **90/10 dual-function storage** rule (§1.263A-3(c)(5)(iii)(C)) — on-site/off-site facility deeming, ratio =
-  gross on-site sales / total gross sales of the facility.
-- **Method-availability gate (VERIFIED via Practice Unit COR-P-021, citing §1.263A-3(a)(2)(i)/(a)(4)(ii)/(a)(4)(iii)):
-  this is NOT just a "de minimis production" flag — it determines which method is even legal to use:**
+- **90/10 dual-function storage** rule — CORRECTED citation mapping 2026-07-08: the 90/10 deeming itself ("if 90%+
+  of a facility's costs are on-site, the whole facility is deemed on-site" and its off-site mirror) is §1.263A-3(c)(5)(iii)(C).
+  The **allocation ratio formula** (gross on-site sales of the facility ÷ total gross sales of the facility) used
+  when the 90/10 deeming does NOT apply is a separate, more general rule at §1.263A-3(c)(5)(iii) (with the
+  dual-function facility itself defined at (c)(5)(ii)(G)) — a prior draft attributed both under a single (iii)(C)
+  citation, which overstates what that specific subpart governs. Also missing: "total gross sales" for this ratio
+  **includes the value of items the taxpayer ships to its OTHER facilities**, not just external retail sales — a
+  builder computing the denominator from external sales alone would understate it.
+- **Method-availability gate (RE-VERIFIED 2026-07-08 against Practice Unit COR-P-021 Step 2 text directly, one
+  framing corrected):**
   - de minimis production activity → **not required** to capitalize additional §263A costs at all (§1.263A-3(a)(5)).
-  - de minimis production activity, but taxpayer chooses to capitalize resale+production costs anyway → **may use
-    SPM or SRM** ((a)(4)(ii)).
+  - **de minimis production activity, capitalization of resale+production costs is REQUIRED** (§1.263A-3(a)(4)(ii))
+    → **may use SPM or SRM**. **Corrected 2026-07-08: a prior draft mischaracterized this as the taxpayer
+    "choosing to capitalize... anyway" — the Practice Unit states this scenario as mandatory ("is required to
+    capitalize resale and production costs"), not elective.** The Practice Unit lists this as a distinct scenario
+    from the plain de-minimis/not-required bullet above without stating what distinguishes when each applies;
+    `EntityProfile.production_activity_level` needs a fourth state (or an added field) to capture this distinction
+    rather than collapsing it into "de_minimis," since the two de-minimis scenarios have different capitalization
+    consequences even though production-activity level alone doesn't resolve which one applies — flag as an open
+    modeling question, not yet resolved by any source retrieved so far.
   - **more than de minimis** production activity → **required** to capitalize resale+production costs, and **may
     use SPM but NOT SRM** ((a)(2)(i)) — this is the real trigger for `method_conflict`, not a soft "recommend"
     warning; SRM is simply unavailable to this taxpayer.
   - **private-label goods** exception: reseller with private-label production is required to capitalize resale+
-    production costs but **may use SPM or SRM** ((a)(4)(iii)) — carves back out of the "more than de minimis" bar.
+    production costs but **may use SPM or SRM** ((a)(4)(iii)). **Note added 2026-07-08:** the framing that this
+    "carves back out of the more-than-de-minimis bar" is this plan's own structural inference, not something the
+    Practice Unit states outright (it lists private-label as a parallel, independent bullet) — treat as plausible
+    but unconfirmed pending the primary §1.263A-3(a)(4)(iii) text itself.
   - Implement as `EntityProfile.production_activity_level: Literal["none", "de_minimis", "more_than_de_minimis"]`
     + `EntityProfile.private_label_goods: bool`; `compute_srm` raises `method_conflict=True` (hard, not a
     recommendation) when `production_activity_level == "more_than_de_minimis" and not private_label_goods`.
-  - De minimis production activities test itself (confirmed same-day in §7c from the primary reg text): <10% of
-    gross receipts from produced property AND <10% of labor costs on production activities.
-- Allocable mixed service costs per activity (purchasing / storage-and-handling), confirmed via Practice Unit
-  COR-P-021 Step 5 to use the **same SSCM labor-ratio structure** already implemented for the resale-vs-other-activities
-  split — `labor costs allocable to the activity / total labor costs`, both nets of MSC labor — reuse, don't
-  reimplement.
-- Worked test: 60k/2.0M=0.03 + 105k/2.4M=0.043750 = 0.073750 × 500k = **36,875**.
+  - De minimis production activities test itself (sourced to the primary reg text per §7c, not to the Practice
+    Unit — the Practice Unit text alone does not state this numeric test): <10% of gross receipts from produced
+    property AND <10% of labor costs on production activities.
+- **Allocable mixed service costs per activity (purchasing / storage-and-handling) — DOWNGRADED from "confirmed" to
+  unconfirmed 2026-07-08:** a prior draft claimed Practice Unit COR-P-021 Step 5 confirms this uses the same
+  SSCM labor-ratio structure as the resale-vs-other-activities split. On re-reading, Step 5 only describes the
+  overall SSCM resale/non-resale split (`§263A labor costs / total labor costs`) — it does not describe any further
+  sub-allocation of the resale-allocable MSC pool between purchasing and storage-and-handling specifically, which is
+  what SRM's two separate numerators actually need. Treat this as **NOT addressed in the source text retrieved so
+  far** — a plausible engineering assumption, not a confirmed rule — and re-verify against the primary §1.263A-3(c)
+  text before relying on it for a filing position.
+- Worked test: 60k/2.0M=0.03 + 105k/2.4M=0.043750 = 0.073750 × 500k = **36,875** (arithmetic independently
+  re-verified 2026-07-08; this remains a hand-built illustration, not a regulation- or Practice-Unit-sourced
+  example — no such worked SRM example was found in the source material retrieved so far).
 
 ### LIFO
 Apply current-year ratio to the new layer on increments; on a **decrement**, release the liquidated layers' prior §263A to COGS (don't apply current ratio to liquidated qty). `inventory_method`, `lifo_layers` fields; fallback = single-layer approximation + REVIEW flag.
 
-New `EntityProfile` fields: `beginning_inventory_471`, `ending_inventory_471_preprod/_prod`, `avg_gross_receipts_prior3`, `production_gross_receipts`, `include_negative_263a`, `inventory_method`, `lifo_layers`, HAR fields. `compute_mspm`/`compute_srm` return supersets of the SPM shape (same `additional_capitalized_to_inventory` key). UNICAP tab renders the method-specific ratio tables in IRS Practice-Unit format (numerator/denominator/ratio/applied $).
+New `EntityProfile` fields (**consolidated 2026-07-08 — a prior version of this list omitted three fields proposed
+earlier in this same phase, which is fixed here**): `beginning_inventory_471`, `ending_inventory_471_preprod/_prod`,
+`ending_inventory_471` (undivided, for SRM — needed since SRM applies its combined ratio to the whole ending
+§471 balance, unlike MSPM's pre-production/production split; not previously declared anywhere despite the SRM
+formula referencing it), `current_year_471_costs`, `purchasing_costs`, `storage_handling_costs` (the latter three
+also referenced by the SRM formula but previously undeclared), `production_gross_receipts`, `include_negative_263a`,
+`inventory_method`, `lifo_layers`, HAR fields (`har_election`, `har_preprod_ratio`, `har_production_ratio`,
+`har_qualifying_year_index`), `mspm_mixed_split_method`, `production_activity_level`, `private_label_goods` (these
+last three were each proposed in the MSPM/SRM subsections above but missing from this consolidated list before).
+`compute_mspm`/`compute_srm` return supersets of the SPM shape (same `additional_capitalized_to_inventory` key). UNICAP tab renders the method-specific ratio tables in IRS Practice-Unit format (numerator/denominator/ratio/applied $).
 
 ---
 
 ## Phase C — Self-constructed assets (SCA)
 
-Same classifier output, different allocation target: an **asset register**, not ending inventory. Three basis buckets per asset: **A** §471 (CIP book cost) + **B** additional §263A (allocated indirect + SSCM-capitalized mixed) + **C** §263A(f) interest (from Phase D). Direct material/labor/contractor always in A; the 11 non-capitalizable categories never enter B.
+Same classifier output, different allocation target: an **asset register**, not ending inventory. Three basis
+buckets per asset: **A** §471 (CIP book cost) + **B** additional §263A (allocated indirect + capitalizable mixed) +
+**C** §263A(f) interest (from Phase D). **Direct material/labor/contractor always in A — CONFIRMED 2026-07-08
+against IRS Concept Unit COR-C-023, which states a taxpayer's §471 costs "MUST INCLUDE ALL direct material costs...
+whether or not a taxpayer capitalizes these costs in its financial statements," with the identical mandatory
+language for direct labor, explicitly extending to "contract employees and independent contractors."** The 11
+non-capitalizable categories never enter B.
+- **GAP found 2026-07-08, not yet addressed:** COR-C-023 also confirms OTHER indirect costs (engineering, design,
+  utilities, insurance incurred to build the asset) can ALSO be §471/bucket-A costs, "provided some portion of the
+  costs incurred is properly allocable to the property produced" AND the taxpayer's own financial statements
+  capitalize them that way — the general §471 test is financial-statement-based, and material/labor/contractor are
+  the ONLY costs pulled into bucket A unconditionally regardless of book treatment. Phase C's current bucket
+  A/B split doesn't describe a mechanism for routing book-capitalized indirect costs (already sitting in CIP book
+  cost, i.e. already in bucket A per this plan's own definition of A) versus re-adding them via bucket B's
+  "allocated indirect" pool — a live double-count risk on real capital projects, where engineering/design costs are
+  commonly booked directly to the CIP account. Needs a rule: if a cost is already reflected in the asset's own
+  CIP/book-cost ledger, it must NOT also be re-allocated through bucket B's pool-based mechanism.
 
 Allocation model: **pool → driver → per-asset share** across `{assets…, NON_PRODUCTION}`:
 ```
 share(t) = driver_value(t) / Σ driver_value ; allocated(t) = round2(pool * share); penny-plug largest
 ```
 - Drivers: headcount, square_footage, direct_labor_$/hrs, machine_hours, book_cost, direct_material_$; a pool declares one driver (or a weighted composite for facts-&-circumstances).
-- Mixed pools: SSCM split first (reuse `compute_unicap`'s ratio for consistency), then driver-allocate the capitalizable share; **90% de minimis** (≥90%→100%, ≤10%→0%).
+- **GAP found 2026-07-08: this driver-share formula implements only ONE of the three cost-allocation methods
+  COR-C-023 describes as valid, independently-electable methods of accounting — Specific Identification (which is
+  exactly this `share(t)=driver_value(t)/Σdriver_value` mechanic). Burden Rate (a PREDETERMINED rate set in advance,
+  approximating actual indirect costs) and Standard Cost (PREESTABLISHED standard allowances, computed WITHOUT
+  reference to actual costs incurred, with a required variance reconciliation) are both real elections common in
+  actual manufacturing/construction books and are not addressed anywhere in this plan.** `docs/TAX_DECISIONS.md`
+  §7c previously claimed this was checked and "matched" COR-C-023's three methods — **that claim was false and has
+  been corrected, see `docs/TAX_DECISIONS.md` §7e.** Treat burden-rate/standard-cost support as an explicit,
+  documented gap (a taxpayer using either method cannot be modeled by this tool as specified) rather than an
+  implicit simplification — flag it in the tool's output when a taxpayer's book method doesn't match specific
+  identification, rather than silently forcing specific identification on their data.
+- **Mixed pools — SSCM eligibility gate added 2026-07-08, this was the most serious gap found in this section:**
+  a prior draft said "SSCM split first (reuse `compute_unicap`'s ratio for consistency)" **unconditionally** — this
+  directly contradicted the SSCM section's own eligible-property discussion above (§1.263A-1(h)(2)), which warns
+  that most self-constructed CAPITAL assets (longer-lived, not mass-produced — exactly what Phase C targets) likely
+  do NOT qualify for SSCM's "routine and repetitive" carve-in, and that SCA's mixed-cost allocation "should default
+  to the general method, not silently assume SSCM eligibility." COR-C-023 independently confirms this scoping: it
+  states its own general facts-and-circumstances guidance (direct reallocation / step-allocation for mixed service
+  costs, per §1.263A-1(g)(4)(iii)) applies specifically to assets that do NOT qualify for the simplified methods.
+  **Corrected mechanic: before reusing the SSCM ratio for a given asset's mixed-service pool, `compute_sca` must
+  check the asset against the §1.263A-1(h)(2) eligibility test (produced on a routine and repetitive basis, ≤3-yr
+  MACRS recovery period, substantially identical to inventory the taxpayer produces) via a new
+  `SelfConstructedAsset.sscm_eligible: bool` (or equivalent derived check). If NOT eligible — the expected case for
+  most Phase C targets per the SSCM section's own analysis — the tool must NOT silently apply the SSCM ratio.**
+  Since the correct fallback (the general §1.263A-1(g)(4) direct-reallocation/step-allocation method) is itself
+  declared out of scope in the SSCM section, the honest interim behavior is: apply the SSCM ratio ONLY when
+  `sscm_eligible` is true; otherwise, warn/flag the asset (`SSCM-INELIGIBLE-NO-FALLBACK` or similar) and require a
+  human override rather than silently computing a number using a method the regulation doesn't actually permit for
+  that asset. This is a real scope decision, not a cosmetic fix — building the general method is future work; NOT
+  silently mis-applying SSCM in the meantime is required now.
+- **90% de minimis rule — CORRECTED 2026-07-08, the symmetric framing was unsupported.** A prior draft stated
+  "90% de minimis (≥90%→100%, ≤10%→0%)" as if it were one symmetric two-sided rule applicable to per-asset driver
+  shares. COR-C-023's actual text describes only a ONE-SIDED rule: "if 90% or more of a mixed service department's
+  costs are DEDUCTIBLE service costs, a taxpayer MAY ELECT NOT TO ALLOCATE ANY PORTION... to property produced" —
+  there is no stated companion "≥90% capitalizable → must/may allocate 100%" rule anywhere in the retrieved text.
+  (Separately, MSPM's SSCM-split de minimis rule at §1.263A-2(c)(3)(iii)(C) IS genuinely two-sided, but that's a
+  different provision governing a two-bucket pre-production/production split of an already-capitalized total — not
+  a per-asset, N-way driver allocation, and doesn't transfer to this context.) Until the correct citation and scope
+  for a symmetric per-asset version of this rule is confirmed against primary text, treat this bullet as: **only
+  the one-sided ≥90%-deductible→elect-zero-allocation rule is confirmed; do not implement a symmetric ≤10%→0%/
+  ≥90%→100% shortcut for per-asset driver shares without further primary-source verification.**
+- **Officer compensation — reconciliation gap noted 2026-07-08, not yet resolved.** `docs/TAX_DECISIONS.md` §1
+  item 1 (NO-OFFICER) re-tiers officer compensation to a blanket Mixed-Service/SSCM-ratio treatment. COR-C-023 lists
+  "Officer's compensation" as a typical additional-§263A (bucket B) cost, consistent with that blanket M-tier
+  routing as a DEFAULT — but COR-C-023 separately allows a purely management-related officer's salary to be
+  ELECTED OUT entirely as a deductible service cost (a binary election, not a blended ratio), while COR-P-020's own
+  audit guidance goes the other direction for a production-engaged owner/officer: "the taxpayer MUST capitalize the
+  salary and benefits of this officer... because the officer's activities benefit the production" (full
+  capitalization / specific identification, not dilution through a company-wide blended ratio). Phase C's SCA
+  engine inherits the blanket M-tier/SSCM treatment without any asset-specific override for either fact pattern —
+  on a project with a working owner/officer materially involved in construction, this can both under-capitalize
+  (relative to COR-P-020's mandate) and over-capitalize (relative to COR-C-023's available elect-out) versus a
+  facts-based treatment. Not resolved here; flagged as a known limitation for the SME to weigh in on before this
+  is built, similar to the still-open §3 items already tracked in `docs/TAX_DECISIONS.md`.
 - **Reasonableness guardrails** in `taxonomy/sca_drivers.yaml`: hard-block nonsensical pairings (HR by machine-hours; property tax by headcount), soft-warn plausible-but-not-preferred, degenerate-denominator guard (Σ=0 → allocate 0, flag), year-over-year driver-change flag (method change).
 - `compute_sca(result, profile)` returns per-asset {book_cost, indirect_263a, mixed_263a, additional_263a, adjusted_basis_pre_interest, `ape_for_interest`, allocation audit trail} + conservation tie-checks. Emits `ape_by_asset` to Phase D (does not compute interest).
-- Worked test: two assets, mixed HR pool 100k @ SSCM 0.60 split by production headcount (45k/15k) + building-dep 50k by sq ft (10k/40k) → each asset +55k additional §263A; conservation = 0; guardrail test (HR-by-machine-hours blocks); degenerate test (Σ driver=0).
+- Worked test: two assets, mixed HR pool 100k @ SSCM 0.60 split by production headcount (45k/15k) + building-dep 50k by sq ft (10k/40k) → each asset +55k additional §263A (arithmetic independently re-verified 2026-07-08 — conservation: 45k+10k=55k, 15k+40k=55k, total 110k = 60k HR + 50k building, correct); conservation = 0; guardrail test (HR-by-machine-hours blocks); degenerate test (Σ driver=0). **Note: this worked test assumes the asset is SSCM-eligible for illustration purposes — per the eligibility-gate fix above, a real asset must pass that check before this SSCM-then-driver-allocate sequence applies at all.**
 - Rebuild the Asset Basis Schedule tab to **per-asset**: `original book basis + §263A indirect + §263A mixed + §263A(f) interest = adjusted basis` (live formula), regime rollup + tie-check retained.
 
 ---
@@ -289,11 +399,18 @@ share(t) = driver_value(t) / Σ driver_value ; allocated(t) = round2(pool * shar
 New `engines/interest.py`, `compute_263Af(result, profile)`, called after `compute_unicap`.
 
 **1. Designated-property identification** (Reg §1.263A-8(b)), first match wins — CONFIRMED 2026-07-08 against
-IRS LB&I Practice Unit COR-P-006 "Interest Capitalization for Self-Constructed Assets" (rev. 02/01/21), a
-secondary-authority audit-technique doc, not binding law, but a reliable cross-check on the reg mechanics:
+the primary text of 26 CFR §1.263A-8 itself (retrieved directly; see `docs/TAX_DECISIONS.md` §7e), superseding
+the earlier Practice-Unit-only confirmation:
 - real property → designated (Category 1);
-- TPP with class life ≥ 20 yrs (Cat 2) OR est. production period > 2 yrs (Cat 3) OR (> 1 yr AND cost > $1M) (Cat 4).
+- TPP with class life ≥ 20 yrs (Cat 2), **but ONLY IF the property is not §1221(l) property in the hands of the
+  taxpayer or a related person** (§1.263A-8(b)(1)(ii)(A) — this carve-out was missing from the plan entirely; §1221(l)
+  is the patent/invention-sale capital-gain provision, so this mostly matters for a taxpayer holding self-created
+  patents/inventions as long-lived TPP) OR est. production period > 2 yrs (Cat 3) OR (> 1 yr AND cost > $1M) (Cat 4).
 - de minimis screen: TPP with cost ≤ $1M **and** period ≤ 2 yrs → not designated. `NEEDS-CLASSLIFE` flag when only MACRS recovery period (not class life) is available.
+- **Excluded property (§1.263A-8(b)(3), missing from the plan entirely until now):** designated property does NOT
+  include (i) timber and evergreen trees more than 6 years old when severed from the roots, or (ii) property the
+  taxpayer produces for use OTHER than in a trade or business or an activity conducted for profit (e.g., personal-use
+  property). Implement as an early-out check alongside the de minimis screen, before the Category 1-4 tests.
 - **Separate de minimis rule for ALL designated property, not just TPP** (§1.263A-8(b)(4), newly found in the
   Practice Unit — not previously in this plan): a production period of **90 days or fewer** AND total production
   expenditures **≤ $1,000,000 ÷ number of days in the production period** → excluded from designated property
@@ -301,44 +418,162 @@ secondary-authority audit-technique doc, not binding law, but a reliable cross-c
   producing assets, land cost, and interest itself from the expenditure test. Implement as an early-out check
   before the Category 1-4 tests, not after — a property can fail this even if it would otherwise be Category 1.
 - Scope: applies to designated property **still in CIP at year end** AND **placed in service during the year** — both computed; the only difference is where the production period ends.
-- **Eligible-taxpayer AFR-plus-3 election** (§1.263A-9(e), newly found): a taxpayer with avg. annual gross receipts
-  ≤ $10,000,000 for the prior 3 years (and every year since 1994) may elect to skip the weighted-average-interest-
-  rate computation entirely and use the highest Applicable Federal Rate + 3 percentage points for the year instead.
-  Cheap real simplification for small producers — implement as `EntityProfile.interest_afr_plus_3_election: bool`
-  gated on a `avg_gross_receipts_10yr_test` helper (distinct from the $25M/$26M §448(c) small-business test already
-  in `EntityProfile` — this is a separate, lower threshold specific to §263A(f)).
-- **Cessation-period election** (§1.263A-9/-12(g), newly found): if production activities cease for ≥120
-  consecutive days, taxpayer may elect to suspend interest capitalization for that period (with a caution: during
-  a cessation period, interest on debt otherwise "traced" to the paused unit may have to be capitalized as
-  nontraced interest for *other* units instead — it doesn't just disappear). Lower priority than the AFR-plus-3
-  election and de minimis rule above — flag as a Phase D stretch goal, not required for MVP.
+- **Eligible-taxpayer AFR-plus-3 election** (§1.263A-9(e), CORRECTED 2026-07-08): a taxpayer with avg. annual gross
+  receipts ≤ $10,000,000 for the prior 3 years (and every year since 1994 — the "$10,000,000 gross receipts test")
+  may elect to use the highest Applicable Federal Rate + 3 percentage points as a substitute for the weighted
+  average interest rate. **A prior draft of this bullet understated the election's scope: a taxpayer making this
+  election may NOT trace debt at all** (§1.263A-9(e)(1) — "A taxpayer that makes this election may not trace
+  debt") — electing AFR-plus-3 converts the ENTIRE unit's computation to a no-tracing approach; it is not a
+  substitute rate plugged into the excess-expenditure step while a separate traced-debt calculation continues in
+  parallel. It is also a **method of accounting**: the first-time election requires no Commissioner consent, but
+  any later change to or from it (other than by ceasing to be an eligible taxpayer) does, and all such changes are
+  made on a cut-off basis (no §481(a) adjustment). Implement as `EntityProfile.interest_afr_plus_3_election: bool`
+  that, when set, ALSO forces `include_negative_263a`-style debt-tracing off for §263A(f) purposes — gated on a
+  `avg_gross_receipts_3yr_10m_test` helper (renamed from an earlier draft's `avg_gross_receipts_10yr_test`, which
+  mis-described a 3-year-average/$10M test as a "10-year" test; distinct from the $25M/$26M §448(c) small-business
+  test already in `EntityProfile`).
+- **Cessation-period election** (§1.263A-12(g), CORRECTED 2026-07-08): if production activities cease for ≥120
+  consecutive days, taxpayer may elect to suspend interest capitalization starting with the first measurement
+  period that BEGINS AFTER the cessation began, resuming (mandatorily) once activities resume. **A prior draft
+  omitted the regulation's carve-out that materially narrows when this even applies**: production activities are
+  NOT considered to have "ceased" — and the election is therefore unavailable — if the cessation is due to
+  circumstances INHERENT in the production process: normal adverse weather, scheduled plant shutdowns, delays due
+  to design/construction flaws, obtaining a permit or license, or settlement of groundfill. Also: interest on debt
+  otherwise "traced" to the paused unit during the suspension must be capitalized as nontraced interest available
+  to *other* units instead — it doesn't just disappear; and post-suspension APE for the resuming unit = the
+  balance at suspension-start PLUS any non-interest costs incurred DURING the suspension (non-interest
+  capitalization keeps running even while interest capitalization is paused). Lower priority than the AFR-plus-3
+  election and de minimis rule above — flag as a Phase D stretch goal, not required for MVP, but implement the
+  "inherent in the production process" gate FIRST if this is ever built, since without it the tool would let a
+  taxpayer improperly suspend capitalization for an ordinary weather delay.
+- **Related-person aggregation (§1.263A-8(b)(2)(ii), §1.263A-12(b), newly found — GAP, not yet spec'd):** activities
+  and costs of a person RELATED to the taxpayer (§267(b)/§707(b)) must be taken into account both in applying the
+  designated-property classification thresholds (Category 2/3/4 above) and in determining the taxpayer's own
+  production period — regardless of whether the related person is performing a mere service or producing a
+  component the related person must itself separately treat as designated property. `DebtInstrument.related_party`
+  (already in the Phase D data contract below) covers related-party DEBT exclusions only; it does not yet cover
+  this separate related-person COST/ACTIVITY aggregation requirement for classification and production-period
+  purposes. Needs a `related_person_activities`/`related_person_costs` input on the CIP-detail schedule before this
+  can be built correctly for any taxpayer using related-party contractors or affiliates.
 
-**2. Production period** (Reg §1.263A-12): start = first physical activity (real) / 5%-of-total-cost (TPP); end = ready for intended use (PIS). Mid-year PIS → prorate the sub-period by active days.
+**2. Production period** (Reg §1.263A-12): start = first physical activity (real) / 5%-of-total-cost (TPP, including
+planning/design expenditures in the 5% test, determined without regard to whether physical activity has started).
+**End — CORRECTED 2026-07-08, was understated as simply "ready for intended use (PIS)":** per §1.263A-12(d)(1), the
+production period ends only when the unit is placed in service (or ready to be held for sale) **AND** all production
+activities reasonably expected to be undertaken by/for the taxpayer or a related person are actually completed —
+the regulation's own example (a homebuilder who paints/finishes interiors only once a buyer is found) explicitly
+holds that the production period does NOT end at PIS/marketing-ready if further production activity is still
+expected. Implement as: PIS date alone is NOT sufficient to stop interest capitalization; the CIP-detail schedule
+needs an explicit `production_complete` flag/date distinct from `placed_in_service_date`, and capitalization runs
+until the LATER of the two (mirroring `§1.263A-12(d)(3)`'s point that a single unit undergoing sequential internal
+stages doesn't end its production period until ALL stages finish, even though *separate* units — e.g. two wings of
+a building, each their own unit of property — end independently as each is completed). Mid-year PIS/completion →
+prorate the sub-period by active days.
 
-**3. Avoided-cost method** (Reg §1.263A-9), per unit, per measurement period *i* (≥ quarterly). Every rate below is **annual**; `day_fraction_i` converts it to the period's share of the year (0.25 for an ordinary full quarter; smaller for a partial/mid-year period — this is the *same* fraction that prorates a mid-year PIS sub-period in step 2, not a separate variable):
+**3. Avoided-cost method (Reg §1.263A-9) — CORRECTED 2026-07-08, primary text re-derived; the plan's earlier
+formula and worked example were materially wrong, not just imprecise.** A multi-agent audit against the actual
+regulation text (`docs/TAX_DECISIONS.md` §7e) found that averaging each period's opening/closing APE **before**
+comparing it against the traced-debt principal does not match how §1.263A-9(b)/(c) and its own worked Example 3
+actually compute the amounts: the regulation evaluates traced debt and excess expenditures **at each measurement
+DATE** (a point-in-time snapshot — the measurement dates themselves, e.g. quarter-ends, not a period average), and
+only afterward averages those snapshot-level results across the computation period. The two approaches diverge
+whenever a traced loan's principal sits between a period's opening and closing APE, which is exactly the shape of
+this plan's own worked example (see below) — the old formula understated the correct answer by about 16%.
+
+Corrected mechanics, per unit, evaluated at each measurement date *d* within a computation period (commonly the
+full taxable year with quarterly measurement dates — a taxpayer may instead elect shorter computation periods per
+§1.263A-9(f)(1), in which case this same snapshot-then-average logic is redone independently per period):
 ```
-APE_avg_i        = (APE_open_i + APE_close_i) / 2   # APE includes prior §263(a)+§263A costs AND
-                                                     # prior capitalized interest (COMPOUNDING, mandatory)
-traced_applied_i = min(APE_avg_i, traced_principal)
-traced_interest_i  = (traced_principal * traced_annual_rate * day_fraction_i)
-                     * (traced_applied_i / traced_principal)
-excess_i         = max(0, APE_avg_i - traced_applied_i)
-avoided_interest_i = excess_i * WAIR_nontraced_annual * day_fraction_i
-WAIR_nontraced_annual = Σ interest(nontraced eligible) / Σ avg_principal(nontraced eligible)
-unit_capitalized = Σ_i (traced_interest_i + avoided_interest_i)
-total = min(Σ units, total_interest_incurred)       # cap; if binds, pro-rate + flag
+APE_d          = accumulated production expenditures AS OF measurement date d (a snapshot, NOT an average of two
+                 dates) — includes prior §263(a)+§263A costs AND prior capitalized interest (COMPOUNDING, mandatory,
+                 per §1.263A-11(b)(1): interest capitalized in a prior computation period is deemed capitalized on
+                 the day immediately following that period's end, so it's part of APE for every later snapshot)
+traced_debt_d  = eligible debt actually allocated (under the §1.163-8T tracing rules) to this unit's APE as of date d
+                 — this is a TRACING determination, not `min(APE_d, principal)`; in the common case where a loan's
+                 full proceeds funded this unit and APE_d exceeds the loan's principal at every date, traced_debt_d
+                 equals the full principal at every date, but tracing can also produce a SMALLER traced amount at an
+                 EARLIER date than a later one (see the regulation's own Property D/E example, §1.263A-9(c)(5)(i)(B))
+excess_d       = max(0, APE_d - traced_debt_d)
+
+# Traced debt amount for the computation period = actual $ interest incurred on the traced debt during each
+# measurement PERIOD (the interval ending on measurement date d) — NOT an annualized-rate × day-fraction estimate:
+traced_interest_period = Σ over each measurement period (interval ending on date d) of
+                            (actual interest incurred, during that period, on the debt identified as traced_debt_d
+                             for the measurement date ending that period)
+
+# Excess expenditure amount for the computation period — ONE figure for the whole period, from averaging the
+# point-in-time snapshots, not a per-sub-period sum of separately-scaled amounts:
+average_excess_expenditures = (Σ over all measurement dates d in the period of excess_d) / (number of measurement dates)
+WAIR_nontraced = (Σ interest incurred on nontraced debt during the period)
+                 / [(Σ over all measurement dates d of nontraced debt outstanding at d) / (number of measurement dates)]
+excess_expenditure_amount = average_excess_expenditures * WAIR_nontraced
+
+unit_capitalized = traced_interest_period + excess_expenditure_amount
+
+# Cap — CORRECTED: §1.263A-9(c)(1) applies the pro-rata cap ONLY to the excess-expenditure (avoided-cost) pool
+# across all of a taxpayer's units, NOT to the combined traced+avoided total. Traced-debt interest is always fully
+# capitalized based on actual interest incurred on the traced debt; it is never part of this proration.
+if Σ (excess_expenditure_amount across all units) > total_interest_available_for_capitalization:
+    # total_interest_available = nontraced-debt interest + certain below-AFR related-party borrowings (§1.263A-9(a)(4)(iii))
+    #   + partnership guaranteed payments for use of capital (§1.263A-9(c)(2)(iii), §707(c)) — see sourcing order below
+    each unit's excess_expenditure_amount *= total_interest_available_for_capitalization
+                                              / Σ (excess_expenditure_amount across all units)
+    flag PRORATED
+total = Σ units (traced_interest_period + each unit's possibly-prorated excess_expenditure_amount)
 ```
-- Data contract: FixedAsset (type, class_life, cost, PIS date), CIP detail (cumulative expenditure per measurement date, production start, total est. cost, `is_improvement`), Debt (principal, rate, interest_incurred, `traced_to`, `related_party`). Legacy scalar APE×rate stub retained as fallback when schedules are empty.
-- **Worked test** (real-property CIP, 4 equal quarters, traced loan $3,000,000 @ 6% annual, nontraced-pool WAIR 7.142857% (1/14) annual, APE ramping linearly from $2,000,000 to $8,000,000 over the year — `day_fraction_i = 0.25` for every quarter, no mid-year proration in this example):
+- **Excess-expenditure interest sourcing order (§1.263A-9(c)(2)), missing entirely from the prior draft:** interest
+  available to satisfy the excess expenditure amount is drawn, in this order, and only up to the total excess
+  expenditure amount for all units: (1) interest incurred on nontraced debt; (2) interest incurred on certain
+  below-AFR related-party borrowings (§1.263A-9(a)(4)(iii)); (3) in the case of a partnership, guaranteed payments
+  for the use of capital under §707(c) that would otherwise be deductible. **Item (3) was previously mis-cited in
+  this plan's "Deferred/out of scope" list as "§1.263A-15" (that section is just effective dates/anti-abuse) — the
+  correct citation is §1.263A-9(c)(2)(iii), inside the very avoided-cost-method section this plan claims to have
+  fully verified.** This is not truly out of scope for any partnership-structured project; move it into Phase D's
+  build list (lower priority than the core snapshot mechanics above) rather than the deferred list.
+- **Eligible-debt exclusions (§1.263A-9(a)(4)), missing entirely from the prior draft:** not all outstanding debt
+  qualifies for tracing/WAIR purposes. Excluded from "eligible debt": debt with interest disallowed under
+  §1.163-8T(m)(7)(ii); non-interest-bearing debt (accounts payable etc.) unless it is itself traced debt; debt from
+  a related person at a below-AFR rate (at issuance); personal interest (§163(h)(2)); qualified residence interest
+  (§163(h)(3)); debt of a tax-exempt organization outside an unrelated trade or business; reserves/deferred-tax
+  liabilities not treated as debt for tax purposes; income tax liabilities/§453A deferred tax/§460(b) look-back
+  hypothetical liabilities; and certain sale-leaseback purchase-money obligations. `DebtInstrument` needs an
+  `is_eligible_debt` derivation (or the individual flags to derive it) — not just `related_party`, `traced_to`.
+- **Ordering against other Code sections (§1.263A-9(g)(1)), missing entirely from the prior draft:** §263A(f)
+  capitalization must be applied BEFORE §163(d) (investment interest), §163(j) (business interest limitation), §266
+  (carrying-charge election), §469 (passive loss limitation), and §861 (interest sourcing) — capitalized interest is
+  removed from consideration under those sections entirely. Within the excess-expenditure step specifically, interest
+  that is NEITHER investment/business/passive interest must be capitalized BEFORE interest that IS one of those
+  types. Conversely, certain "deferral provisions" (§163(e)(3), §267, §446, §461) are applied BEFORE §263A(f) — the
+  opposite ordering — meaning interest deferred under one of those sections is capitalized only in the year it would
+  otherwise become deductible. This interacts materially with §163(j) in particular for any leveraged real-estate or
+  production project; not addressed anywhere in this plan's data model today. Flag as a required build item before
+  Phase D can be relied on for a taxpayer subject to the §163(j) limitation, not a stretch goal.
+- Data contract: FixedAsset (type, class_life, cost, PIS date), CIP detail (cumulative expenditure PER MEASUREMENT
+  DATE — snapshots, not just open/close pairs — production start, `production_complete` flag/date per the corrected
+  production-period-end rule above, total est. cost, `is_improvement`, mid-production-purchase price per §1.263A-11(f)
+  — this field was previously described only in prose below and never actually added to this data contract list,
+  which is the fix), Debt (principal, rate, interest_incurred, `traced_to`, `related_party`, plus enough detail to
+  derive `is_eligible_debt` per the exclusions above). Legacy scalar APE×rate stub retained as fallback when
+  schedules are empty.
+- **Worked test — CORRECTED, was materially wrong** (real-property CIP, 4 equal quarters, traced loan $3,000,000 @
+  6% annual outstanding the full year, nontraced-pool WAIR 7.142857% (1/14) annual, APE at each quarter-end
+  measurement date ramping from $3,500,000 to $8,000,000 — quarterly measurement dates within a single annual
+  computation period, so the average/WAIR below are computed ONCE for the year, not per quarter):
 
-  | Q | APE open | APE close | APE avg | traced_applied | traced_interest | excess | avoided_interest |
-  |---|---|---|---|---|---|---|---|
-  | 1 | 2,000,000 | 3,500,000 | 2,750,000 | 2,750,000 | 41,250.00 | 0 | 0.00 |
-  | 2 | 3,500,000 | 5,000,000 | 4,250,000 | 3,000,000 | 45,000.00 | 1,250,000 | 22,321.43 |
-  | 3 | 5,000,000 | 6,500,000 | 5,750,000 | 3,000,000 | 45,000.00 | 2,750,000 | 49,107.14 |
-  | 4 | 6,500,000 | 8,000,000 | 7,250,000 | 3,000,000 | 45,000.00 | 4,250,000 | 75,892.86 |
+  | Measurement date | APE (snapshot) | traced_debt (fully allocated every date, since APE > $3M throughout) | excess |
+  |---|---|---|---|
+  | Q1 end | 3,500,000 | 3,000,000 | 500,000 |
+  | Q2 end | 5,000,000 | 3,000,000 | 2,000,000 |
+  | Q3 end | 6,500,000 | 3,000,000 | 3,500,000 |
+  | Q4 end | 8,000,000 | 3,000,000 | 5,000,000 |
 
-  Totals: traced **176,250.00** + avoided **147,321.43** = **323,571.43** capitalized (verified with exact `Decimal` arithmetic, not rounded intermediates). Cap (`total_interest_incurred`, assumed ≥ $500,000 across traced + nontraced debt in this example) doesn't bind. Q1's traced-applied equals its full APE (excess = 0) because the loan principal exceeds the APE that quarter — illustrates the "uncovered" case only starting Q2, once cumulative APE outgrows the $3M traced loan and the excess spills into the avoided-cost/nontraced-WAIR calculation. This table is the literal fixture for `test_interest.py` — encode the per-quarter APE_open/close pairs directly rather than re-deriving them.
+  Traced debt amount = actual interest incurred on the fully-traced $3,000,000 loan for the full year = $3,000,000 ×
+  6% = **$180,000.00**. Average excess expenditures = (500,000+2,000,000+3,500,000+5,000,000)/4 = **$2,750,000**.
+  Excess expenditure amount = $2,750,000 × (1/14) = **$196,428.57**. **Total capitalized = $180,000.00 +
+  $196,428.57 = $376,428.57** (verified with exact `Decimal` arithmetic — recomputed independently and confirmed;
+  see `docs/TAX_DECISIONS.md` §7e). This replaces the prior draft's $323,571.43 figure (traced $176,250.00 + avoided
+  $147,321.43), which used the wrong open/close-averaging methodology and must NOT be used as the `test_interest.py`
+  golden fixture. This table is the corrected literal fixture for `test_interest.py`.
 - **"T.D. 10034" is REAL — RESOLVED 2026-07-08, primary text retrieved and read (26 CFR 1.263A-8/-11/-12/-15
   as currently in force).** The earlier "suspected fabrication" flag from the citation-accuracy audit was itself
   wrong — a case of an under-verified guess turning out to be model recall of a genuine, recently-added citation.
@@ -388,14 +623,18 @@ Each phase ships standalone value and keeps the waterfall tie-out.
 - **Extend:** `model.py` (schedule + SCA dataclasses, `EngagementData`, `ValidationReport`), `analysis.py` (EntityProfile fields, dispatcher, `compute_mspm/srm/sca`, call `compute_263Af`), `report.py` (per-asset Asset Basis, §263A(f) tab, MSPM/SRM tables, Data Quality tab, waterfall wiring).
 
 ## Verification
-- Unit tests from each worked example (MSPM 143,000; SRM 36,875; SCA 55k/asset + conservation + guardrail/degenerate; §263A(f) 323,571.43 = traced 176,250.00 + avoided 147,321.43 + compounding + cap + mid-year proration).
+- Unit tests from each worked example — **figures CORRECTED 2026-07-08 to match the actual worked-example sections above** (a prior draft of this checklist had gone stale relative to formula corrections made earlier in the same document): MSPM **284,400** additional §263A / **$3,284,400** total ending inventory (the regulation's own Example 1 — NOT the superseded 143,000 hand-built figure); SRM 36,875; SCA 55k/asset + conservation + guardrail/degenerate; §263A(f) **376,428.57** = traced **180,000.00** + avoided/excess-expenditure **196,428.57** (NOT the superseded 323,571.43 figure, which used an incorrect open/close-averaging methodology — see the Phase D section above and `docs/TAX_DECISIONS.md` §7e). Also confirm MSPM's rounding convention explicitly before coding the test: the regulation's own Example 1 arrives at exactly $284,400 only if the 10.22% production ratio is rounded to two decimal places BEFORE multiplying by ending inventory (unrounded, 920,000/9,000,000 × $2,000,000 = $204,444.44, giving $284,444.44 total) — MSPM should round the ratio to match the IRS's own presentation, which is a DIFFERENT convention from Phase D's "exact Decimal arithmetic, not rounded intermediates" rule; document this per-engine rather than assuming one global rounding rule applies everywhere.
 - FK/validation tests (unresolved links flagged; debit/credit netting already covered).
 - Method-conflict test (SRM chosen but production > de minimis).
 - End-to-end: `read_engagement` on a multi-sheet sample → all engines → workbook with zero formula errors, every tab ties, and `formulas`-library evaluation of the live cells (LibreOffice is blocked in this sandbox).
 - Extend `validation/validate.py` to report per-engine tie-outs alongside classification accuracy.
 
 ## Effort & risk
-Four phases, each comparable to the classifier rebuild. Highest risk: §263A(f) (compounding, traced/nontraced, mid-year proration, and the unverified "T.D. 10034" currency — confirm it's a real citation before building tax-year-gated logic around it) and data ingestion quality (real TBs/asset registers are messy — the Data Quality tab is the mitigation). Classification accuracy (~78% raw / ~84% high-confidence precision, ~35% review queue on messy data — re-verify against a live `validate.py` run, this number moves as the taxonomy is hardened) means asset/CIP inputs should be reviewed, not blindly trusted — the review-queue + Data Quality tab surface this. Additionally: every regulatory citation embedded in this plan and the taxonomy is unverified against a primary source (`docs/TAX_DECISIONS.md` §7) — treat citation confirmation as a build-blocking task for any provision Phase B/C/D newly relies on (the MSPM/SRM/SCA/§263A(f) reg sections themselves have not yet been through the same fact-check pass that found errors in the already-built classifier's citations).
+Four phases, each comparable to the classifier rebuild. Highest risk: §263A(f) — **not because T.D. 10034 is unverified (it's confirmed real, see Phase D above and `docs/TAX_DECISIONS.md` §7d/§7e) but because the avoided-cost method's core snapshot-vs-average mechanics, the eligible-debt exclusions, the excess-expenditure interest-sourcing order, and the ordering rules against §163(j)/§266/§469/etc. are all newly corrected/added as of 2026-07-08 and have NOT yet been implemented or tested against real data** — treat the corrected Phase D formula as unvalidated-by-implementation even though it is now validated-by-primary-text. Also high-risk: data ingestion quality (real TBs/asset registers are messy — the Data Quality tab is the mitigation). Classification accuracy (~78% raw / ~84% high-confidence precision, ~35% review queue on messy data — re-verify against a live `validate.py` run, this number moves as the taxonomy is hardened) means asset/CIP inputs should be reviewed, not blindly trusted — the review-queue + Data Quality tab surface this. Remaining unverified-citation risk (narrower than before, see the opening disclaimer above): `§1.263(a)-1/-3`, `§1.471-11`, `§1.266-1`, and the current §448(c) dollar threshold.
 
 ## Deferred / out of scope
-Combined producer+reseller method; farming (§1.263A-4); interest on flow-through entities (§1.263A-15); live Form 3115 DCN mapping to the current Rev. Proc.; the EY-platform modules (§168(n), §163(j), §45X/§48D, cost seg).
+Combined producer+reseller method; farming (§1.263A-4, see `docs/TAX_DECISIONS.md` §7d); change in accounting method for §263A costs / §481(a) beginning-inventory revaluation (§1.263A-7, see `docs/TAX_DECISIONS.md` §7d — this is a distinct, later-phase deliverable, not touched by Phase A-D above); the general (g)(4)(iii) non-SSCM mixed-service-cost alternative (direct reallocation / step-allocation methods — see the SSCM section above); multi-business mixed-service-cost apportionment (§1.263A-1(h)(7) — see the SSCM section above); live Form 3115 DCN mapping to the current Rev. Proc.; the EY-platform modules (§168(n), §163(j) as a standalone module — though §163(j)'s INTERACTION with §263A(f) ordering is now in-scope for Phase D, see above — §45X/§48D, cost seg).
+**Corrected 2026-07-08:** partnership guaranteed-payment interest sourcing (§1.263A-9(c)(2)(iii)) was previously
+listed here as "interest on flow-through entities (§1.263A-15)" — that citation was wrong (§1.263A-15 is effective
+dates/anti-abuse, not flow-through interest) and the underlying mechanic is not actually out of scope; it has been
+moved into Phase D's build list above as part of the excess-expenditure interest-sourcing order.

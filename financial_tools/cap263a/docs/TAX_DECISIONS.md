@@ -370,9 +370,21 @@ cross-check against §7a/§7b's primary-source regulation reads.
 - **Confirmed, not changed:** COR-P-020 independently reproduces the exact SSCM labor-ratio and
   production-cost-ratio formulas already verified from the primary §1.263A-1(h) text in an
   earlier round of this session — no discrepancy found, a good sign the earlier primary-source
-  read was accurate. COR-C-023's three cost-allocation methods (specific identification, burden
-  rate, standard cost) and the 90% mixed-service-department de minimis election match what's
-  already in Phase C/the SSCM section; no changes made there beyond noting the match.
+  read was accurate.
+- **CORRECTED 2026-07-08 (§7e): the claim in this bullet was FALSE and has been retracted.** This
+  entry originally asserted that "COR-C-023's three cost-allocation methods (specific
+  identification, burden rate, standard cost) and the 90% mixed-service-department de minimis
+  election match what's already in Phase C/the SSCM section; no changes made there beyond noting
+  the match." A subsequent multi-agent audit (§7e) found this was not actually checked carefully:
+  Phase C's driver-share formula implements ONLY specific identification — burden rate and
+  standard cost are not addressed anywhere in Phase C, despite both being real, independently
+  electable methods under COR-C-023. The 90% rule comparison was also wrong: COR-C-023 states a
+  one-sided rule (≥90% deductible → may elect zero allocation), not the two-sided (≥90%→100%,
+  ≤10%→0%) rule Phase C's text claimed. See §7e for the full correction and the fixes made to
+  `BUILD_PLAN.md`. This stands as a caution about this document's own audit trail: a "no changes
+  made... beyond noting the match" entry can itself be wrong if the underlying comparison wasn't
+  done rigorously — treat past verification entries as claims to spot-check, not settled fact,
+  same as any citation in the plan itself.
 - **Still not independently verified from these four units:** the §263A(f) compounding mechanic
   and the traced/nontraced excess-expenditure math in `BUILD_PLAN.md`'s Phase D worked example
   were cross-checked structurally against COR-P-006's own worked example (Corporation X, Units
@@ -442,6 +454,91 @@ special rules, related persons, and effective dates/anti-abuse).
 
 ---
 
+### §7e — Full multi-agent audit of BUILD_PLAN.md against all primary/secondary text supplied this session (2026-07-08)
+
+At the user's request, four parallel subagents independently re-derived every specific claim in
+`BUILD_PLAN.md` against the actual regulation/Practice-Unit text already supplied in this session
+(not summaries of it, and not trusting the plan's own "VERIFIED"/"CONFIRMED" labels) — one each
+for Phase D (§263A(f)) against the full primary text of §§1.263A-8 through -15, the SRM section
+against Practice Unit COR-P-021, Phase C (SCA) against Concept Unit COR-C-023 and Practice Unit
+COR-P-020, and a fourth agent checking the document's internal consistency (stale cross-references,
+self-contradictions, Phase A schema sufficiency). Findings were consolidated, and `BUILD_PLAN.md`
+was then corrected section by section. This is the most consequential verification pass of the
+session — it found a real methodological error in the plan's hardest engine, a false verification
+claim in this very document (§7c, now corrected above), and a genuine self-contradiction between
+two sections of the plan that would have caused the tool to misapply SSCM.
+
+**Highest-severity finding — Phase D's avoided-cost-method formula did not match the regulation.**
+The plan averaged each period's opening/closing APE before comparing it to traced-debt principal.
+The regulation (§1.263A-9(b)/(c), confirmed by its own worked Example 3) instead evaluates traced
+debt and excess expenditures **at each measurement-date snapshot**, and only afterward averages
+those snapshot results. Independently re-deriving the plan's own golden worked example under the
+regulation's actual mechanic (confirmed by hand calculation, not just the auditing subagent's
+claim) gives **$376,428.57** (traced $180,000.00 + excess-expenditure $196,428.57) — not the
+plan's original **$323,571.43** (traced $176,250.00 + avoided $147,321.43), an understatement of
+about 16%. `BUILD_PLAN.md`'s Phase D section has been rewritten with the corrected formula, the
+corrected worked example, and several previously-missing mechanics found in the same pass:
+eligible-debt exclusions (§1.263A-9(a)(4)), the excess-expenditure interest-sourcing order
+(nontraced debt → below-AFR related-party debt → partnership guaranteed payments, the last of
+which was previously mis-cited to §1.263A-15 in the Deferred/out-of-scope list when it actually
+lives in §1.263A-9(c)(2)(iii)), the ordering rules against §163(d)/(j)/266/469/861, a corrected
+cap rule (the pro-rata cap applies only to the excess-expenditure pool, not the combined
+traced+avoided total), a corrected AFR-plus-3 election description (it forecloses debt tracing
+entirely, not just substitutes a rate), a corrected cessation-period description (excludes
+weather/permit/design-flaw delays "inherent in the production process"), a corrected
+production-period-end test (PIS alone is not enough; production activities must also be complete,
+per the regulation's own homebuilder-finishing example), a missing §1221(l) carve-out and missing
+§1.263A-8(b)(3) exclusions in the designated-property test, and a missing related-person cost/
+activity aggregation requirement for classification and production-period purposes.
+
+**SRM section corrections:** the core combined-ratio formula itself was re-verified and confirmed
+correct term-for-term against Practice Unit COR-P-021 (this is genuinely solid). Fixed: a missing
+"goods valued below cost" exclusion from the ending-§471-costs base; a missing "total gross sales
+includes inter-facility shipments" nuance in the dual-function storage ratio; a citation-mapping
+error that attributed the general dual-function ratio formula to the 90/10-specific subpart
+((c)(5)(iii)(C)) rather than the broader (c)(5)(iii); a mischaracterization of the
+§1.263A-3(a)(4)(ii) scenario as elective when the Practice Unit states it as mandatory; and a
+downgrade of the "purchasing/storage-handling MSC sub-split reuses the SSCM labor-ratio structure"
+claim from "confirmed" to "not addressed in the source text retrieved so far" (Practice Unit Step
+5 only describes the overall resale/non-resale split, not a further sub-split). Also flagged: the
+private-label "carves back out of the more-than-de-minimis bar" framing is this plan's own
+inference, not something the Practice Unit states.
+
+**Phase C (SCA) corrections — the most consequential non-Phase-D finding:** Phase C's own text
+said to "reuse SSCM's ratio" for mixed-cost pools **unconditionally**, directly contradicting the
+SSCM section's own warning (added earlier this session) that most capital SCA assets likely do
+NOT qualify for SSCM's routine-and-repetitive eligibility test and that Phase C "should default to
+the general method... not silently assume SSCM eligibility." `BUILD_PLAN.md` now requires an
+explicit `sscm_eligible` gate before applying the SSCM ratio to any asset, with a hard warning/flag
+(not a silent misapplication) when an asset fails that gate, since the correct general-method
+fallback remains out of scope. Also fixed: the false "three allocation methods match" claim from
+§7c (Phase C only implements specific identification, not burden rate or standard cost); the
+unsupported symmetric 90% de-minimis rule (the source only supports a one-sided version); a gap
+around book-capitalized indirect costs' bucket-A-vs-B routing; and an unresolved (flagged, not yet
+fixed, pending SME input) tension between the blanket officer-compensation M-tier treatment and
+the fact-specific rules in COR-C-023/COR-P-020.
+
+**Internal-consistency corrections:** a stale MSPM worked-example figure in the Verification
+checklist (143,000, superseded by the corrected 284,400/3,284,400 figure elsewhere in the same
+document); a stale "T.D. 10034 is unverified" warning in Effort & risk and the opening disclaimer,
+contradicted by the plan's own later confirmation that it's real; an incomplete `EntityProfile`
+field consolidation list missing three fields proposed earlier in the same phase; a
+self-contradictory instruction to both "reuse the already-implemented $50M comparison" and "add a
+new field" for the same gross-receipts figure in the same sentence; a misnamed
+`avg_gross_receipts_10yr_test` helper for what is actually a 3-year-average-plus-since-1994 test;
+an incomplete Deferred/out-of-scope list missing two items the SSCM section separately calls out
+of scope; and an unresolved rounding-convention ambiguity between MSPM's example (which only
+reproduces the IRS's own $284,400 figure with a rounded ratio) and Phase D's stated "no rounded
+intermediates" preference — now documented explicitly as a per-engine convention rather than one
+assumed global rule.
+
+**What this pass does NOT cover:** none of these fixes have been implemented or tested against
+real data yet — Phase A/B/C/D remain unbuilt. The corrected Phase D formula is now validated
+against primary text but not validated by an actual implementation; treat that as the next
+verification gate, not a substitute for this one.
+
+---
+
 ### Reviewer summary
 - **7 bug fixes (§1):** all recommended **approve**; items #3 (EX-BID) and the scope items carry a "revisit scope" caveat.
 - **8 new-code groups / 10 codes (§2):** all recommended **approve** (SEC195-STARTUP and the SEC263A-IMPROVE/REPAIR keyword set carry minor-revisit notes).
@@ -450,4 +547,4 @@ special rules, related persons, and effective dates/anti-abuse).
 - **27 hardening-pass corrections (§5):** found across four independent multi-agent audit rounds (initial, adversarial re-verification, previously-unaudited files + deeper taxonomy data, and end-to-end/lexicon/practitioner review), all fixed and regression-tested; items #16, #28, #35, #36, and #37 change computed dollar output — re-run any workpaper generated before this pass.
 - **8 red-team corrections (§6):** three adversarial agents (hostile input / tax-wrongness / single-source divergence). Two are security-class (formula injection #44, the =PY() NaN divergence #43); five change or bound computed dollar output (#45–#49). All fixed and regression-tested (93 tests). Highlights: an unbounded absorption ratio could show a **$50 billion** capitalized figure unflagged (#46); a NaN amount silently defeated the integrity tie-check (#45). Nothing further should be relied on for filing without SME sign-off on §3/§3a.
 - **Citation accuracy audit (§7):** 5 citations corrected (moderate-high confidence, still unverified), 6 flagged unverified/possibly fabricated rather than guess-corrected — most notably a suspected-fabricated Treasury Decision ("T.D. 10034") in BUILD_PLAN.md. **No citation in this tool should be relied on for a filing position without independent primary-source verification.**
-- **Primary-source verification passes (§7a-§7d):** §1.263A-1 (SSCM/UNICAP general), §1.263A-2 (MSPM), §1.263A-3 (SRM), §1.263A-4 (farming), and §§1.263A-7 through -15 (change in method + full interest-capitalization scheme) regulation text retrieved and cross-checked directly; four IRS LB&I Practice/Concept Units (resellers, interest capitalization, self-constructed-asset costs, producers) cross-checked as independent secondary confirmation. Found and fixed one real citation bug ($50M rule), two real missing MSPM mechanics (residual pre-production, direct materials adjustment), one real missing SRM method-availability gate (SPM-only above de minimis production), one real missing §263A(f) de minimis designated-property exclusion, and one real missing mid-production-purchase APE rule — none of these were caught by the four prior audit rounds in §5/§6 because those rounds worked from model recall, not primary text. Also resolved the "T.D. 10034" suspected-fabrication flag: the citation is real (§7d) — a reminder that unverified cuts both ways.
+- **Primary-source verification passes (§7a-§7e):** §1.263A-1 (SSCM/UNICAP general), §1.263A-2 (MSPM), §1.263A-3 (SRM), §1.263A-4 (farming), and §§1.263A-7 through -15 (change in method + full interest-capitalization scheme) regulation text retrieved and cross-checked directly; four IRS LB&I Practice/Concept Units (resellers, interest capitalization, self-constructed-asset costs, producers) cross-checked as independent secondary confirmation, then re-audited a second time by four parallel subagents (§7e) specifically checking whether the plan's own "VERIFIED" claims actually held up. Found and fixed: one real citation bug ($50M rule); two real missing MSPM mechanics (residual pre-production, direct materials adjustment); one real missing SRM method-availability gate (SPM-only above de minimis production) plus several smaller SRM gaps (goods-valued-below-cost exclusion, inter-facility-shipment nuance, a mandatory-vs-elective mischaracterization); one real missing §263A(f) de minimis designated-property exclusion and mid-production-purchase APE rule; a **materially wrong core avoided-cost-method formula** in Phase D that understated the golden worked example by ~16% (corrected from $323,571.43 to $376,428.57); a **false verification claim in this very document** (§7c's Phase-C-cost-methods claim, retracted in §7e); and a genuine **self-contradiction** where Phase C silently misapplied SSCM to assets the plan's own SSCM section says likely don't qualify for it. Also resolved the "T.D. 10034" suspected-fabrication flag: the citation is real (§7d) — a reminder that unverified cuts both ways, and that this document's own past verification entries need spot-checking too, not just the underlying tax law.
