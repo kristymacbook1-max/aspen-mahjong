@@ -2,12 +2,26 @@
 
 **Goal:** extend `cap263a` from a classifier + SPM inventory calc into a complete tool that accurately computes §263A inventory under **MSPM** and **SRM**, §263A for **self-constructed assets (SCA)** using reasonable allocation factors, and a full **§263A(f)** interest capitalization for designated property (in CIP and placed in service mid-year), including automatic designated-property identification.
 
-Synthesized from four design specs (grounded in Reg §§1.263A-1..-15 and IRS Practice Units COR-P-020/-021/-006/COR-C-023). Each engine has a worked numeric example destined to become a unit test.
+**Today the tool accepts exactly one input — a trial balance — and that is the ceiling on what it can compute.** MSPM/SRM/SCA/§263A(f) are mathematically impossible from a trial balance alone; they need four more schedules. The complete tool takes **five inputs**:
+
+| # | Input | Feeds | Status |
+|---|---|---|---|
+| 1 | **Trial balance** (by cost center/department) | Classification, SPM absorption ratio | ✅ Built |
+| 2 | **Book-tax difference schedule** | Negative-§263A adjustments, M-1 reconciliation | ❌ Phase A |
+| 3 | **Fixed asset schedule** | Per-asset basis/class-life/PIS date → SCA allocation target + §263A(f) designated-property ID | ❌ Phase A |
+| 4 | **CIP (construction-in-progress) detail** | Cumulative production expenditure over time → the core §263A(f) APE input | ❌ Phase A |
+| 5 | **Debt/interest schedule** | Traced vs. non-traced debt, principal, rates → the other half of §263A(f) | ❌ Phase A |
+
+Phase A below builds the ingestion for inputs 2-5. Phases B/C/D are the calculation engines those inputs feed. **Nothing in Phase B/C/D can run until Phase A exists** — that ordering is not optional.
+
+Synthesized from four design specs (grounded in Reg §§1.263A-1..-15 and IRS Practice Units COR-P-020/-021/-006/COR-C-023 — **these citations, and every citation in this plan, are unverified against a primary source; see `docs/TAX_DECISIONS.md` §7 before treating any of them as a filing position**). Each engine has a worked numeric example destined to become a unit test.
 
 ## Where we start (already built)
-- Classifier + 132-code taxonomy whose `Classification.treatment` dict already carries the exact sub-bucket codes the engines aggregate (`mspm`: `471`/`471-Pre`/`I`/`I-Pre`/`C`/`M`/`E`/`N`; `resale`: `471`/`P`/`S`/`I`/…). **No new classification work — the engines are aggregation + arithmetic over `analyze()` output.**
+- Classifier + 133-code taxonomy whose `Classification.treatment` dict already carries the exact sub-bucket codes the engines aggregate (`mspm`: `471`/`471-Pre`/`I`/`I-Pre`/`C`/`M`/`E`/`N`; `resale`: `471`/`P`/`S`/`I`/…). **No new classification work — the engines are aggregation + arithmetic over `analyze()` output.** Current classification accuracy: ~78% raw / ~84% high-confidence precision on a 250-line messy labeled set (see README.md; re-check with `python -m financial_tools.cap263a.validation.validate` before relying on a stale number).
 - `analyze()` → waterfall buckets + `compute_unicap` (SPM only) + SSCM labor ratio (reused by MSPM/SRM/SCA).
 - Reader with debit/credit netting; 5-tab report; tests; validation harness.
+- **Guardrail infrastructure already built and REUSE, don't duplicate:** `EntityProfile.LARGE_PRODUCER_THRESHOLD` (>$50M rule), the SSCM-ratio [0,1] clamp + warning pattern (`analysis.py` `compute_unicap`, ~line 220), the absorption-ratio->1 warning, and the `bucket_warnings`/`unicap["warnings"]` list pattern that surfaces computation caveats on the Summary tab. MSPM/SRM/SCA/§263A(f) must plug into this same warnings list, not invent a parallel mechanism — that's how a >100%-style bug gets caught instead of silently shipped again.
+- **Open SME decisions that materially affect this build** (`docs/TAX_DECISIONS.md` §3, items 1 and 5 — resolve or make configurable before locking Phase B math): (1) whether `DM-*` direct-materials lines are correctly tagged `471-Pre` for the MSPM pre-production ratio; (5) whether Additional-§263A-tier labor (purchasing/warehouse/buying) belongs in the SSCM labor-ratio denominator — three defensible readings exist with a material dollar swing. Build Phase B's ratio logic to expose both as named constants/flags rather than hardcoding one answer, so the SME's eventual decision is a one-line change, not a re-derivation.
 
 ## Architecture of the extension
 
@@ -161,7 +175,7 @@ Each phase ships standalone value and keeps the waterfall tie-out.
 - Extend `validation/validate.py` to report per-engine tie-outs alongside classification accuracy.
 
 ## Effort & risk
-Four phases, each comparable to the classifier rebuild. Highest risk: §263A(f) (compounding, traced/nontraced, mid-year proration, and the unverified "T.D. 10034" currency — confirm it's a real citation before building tax-year-gated logic around it) and data ingestion quality (real TBs/asset registers are messy — the Data Quality tab is the mitigation). Classification accuracy (~66–71% on messy data) means asset/CIP inputs should be reviewed, not blindly trusted — the review-queue + Data Quality tab surface this.
+Four phases, each comparable to the classifier rebuild. Highest risk: §263A(f) (compounding, traced/nontraced, mid-year proration, and the unverified "T.D. 10034" currency — confirm it's a real citation before building tax-year-gated logic around it) and data ingestion quality (real TBs/asset registers are messy — the Data Quality tab is the mitigation). Classification accuracy (~78% raw / ~84% high-confidence precision, ~35% review queue on messy data — re-verify against a live `validate.py` run, this number moves as the taxonomy is hardened) means asset/CIP inputs should be reviewed, not blindly trusted — the review-queue + Data Quality tab surface this. Additionally: every regulatory citation embedded in this plan and the taxonomy is unverified against a primary source (`docs/TAX_DECISIONS.md` §7) — treat citation confirmation as a build-blocking task for any provision Phase B/C/D newly relies on (the MSPM/SRM/SCA/§263A(f) reg sections themselves have not yet been through the same fact-check pass that found errors in the already-built classifier's citations).
 
 ## Deferred / out of scope
 Combined producer+reseller method; farming (§1.263A-4); interest on flow-through entities (§1.263A-15); live Form 3115 DCN mapping to the current Rev. Proc.; the EY-platform modules (§168(n), §163(j), §45X/§48D, cost seg).
