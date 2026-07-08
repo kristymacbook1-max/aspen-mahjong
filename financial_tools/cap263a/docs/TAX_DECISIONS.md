@@ -58,6 +58,31 @@ These are defensible-but-debatable calls the tool cannot make on the facts alone
 
 ---
 
+## §3a — Residual High-Confidence Error Patterns (post error-mining, for SME awareness)
+
+After the error-mining round (raw agreement 68.8% → 77.6%), the ~28 remaining high-confidence
+disagreements on the validation set cluster into patterns that are deliberately NOT being
+"fixed" by data tweaks, because they are tier-boundary judgment calls or need new categories:
+
+1. **§471 vs Additional §263A boundary** (production planning, materials handling, warehouse
+   staging labor): both sides capitalize — the disagreement rarely changes the tax answer,
+   only which pool the cost sits in. Candidates for `acceptable_alt_tier1` labels if the SME
+   agrees; not relabeled unilaterally.
+2. **Banking codes' tier1** (BANK-ORIGINATE/-SERVICING/-APPRAISAL as Mixed Service vs the
+   set's expected §263(a) Transaction/Intangible or Excluded): whether direct loan origination
+   costs capitalize under §1.263(a)-4/-5 for tax (they generally do NOT follow book SFAS 91
+   deferral) is a genuine SME call; changing these tiers changes real answers.
+3. **Abnormal spoilage / dry-hole IDC** (expected Excluded, classified §471/§263(a)):
+   correctly excluding these needs dedicated deductible categories (abnormal rework/spoilage;
+   §263(c) IDC election) — new tax content, queued rather than guessed.
+4. **§263(a) Elective bucket is unreachable from the taxonomy** (no category carries tier1
+   `§263(a) Tangible` + `cap_vs_deduct: elective`): the Summary row and Asset Basis line are
+   $0 unless an analyst overrides a Bucket cell. Adding an elective capitalize-repairs
+   (§1.263(a)-3(n)) category is an SME decision.
+5. **Expense lines containing "inventory"** ("Insurance - warehouse inventory", floor-plan
+   interest): the bare "inventory" balance keyword occasionally grabs these at conf 85;
+   narrowing it breaks the (far more common) bare "Inventory" balance line. Left for review.
+
 ## §4 — Known Limitations (SME should be aware)
 
 1. **Only SPM is implemented; MSPM two-ratio and SRM combined-ratio are not yet computed.** The taxonomy *tags* costs as pre-production (`471-Pre`, `I-Pre`) and carries resale P/S/M codes, but the MSPM production/pre-production two-factor computation (COR-P-020) and the SRM purchasing + storage-&-handling dual absorption ratios (COR-P-021, incl. the beginning-inventory-in-S&H-denominator rule) are **not built**. Classifications will not yet produce MSPM/SRM adjustments.

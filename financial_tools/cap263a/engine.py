@@ -126,7 +126,8 @@ def classify(acct_num="", acct_desc="", cc_num="", cc_desc="", tax=None):
     # explicit regime keyword ("construction loan" interest must not lose to
     # plain "interest expense" + immune, and an "inventory shrinkage" IS
     # charge must not vanish into the Balance Sheet tier).
-    _SPECIALIZED_TIERS = ("§263A(f) Interest", "§266 Carrying Charges")
+    _SPECIALIZED_TIERS = ("§263A(f) Interest", "§266 Carrying Charges",
+                          "§263(a) Transaction/Intangible")
     specialized_codes = set()
     for t1 in _SPECIALIZED_TIERS:
         specialized_codes |= tax.codes_by_tier1.get(t1, set())

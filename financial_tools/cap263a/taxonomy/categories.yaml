@@ -18,6 +18,7 @@
   - notes receivable
   - prepaid
   - other assets
+  - goodwill
   - intangible asset
   - intangible assets
   - fixed asset
@@ -3744,7 +3745,11 @@
   - franchise fee
   - trademark
   - license acquired
-  - goodwill
+  - goodwill amortization
+  - goodwill depreciation
+  - goodwill impairment
+  - goodwill write-off
+  - acquired goodwill
   - patent application
   - patent cost
   - permit and impact

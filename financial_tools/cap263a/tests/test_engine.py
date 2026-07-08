@@ -167,6 +167,20 @@ def test_construction_loan_interest_reaches_263af_layer():
     assert r2.tier1 == "Non-Operating"
 
 
+def test_goodwill_balance_vs_amortization_split():
+    """A bare "Goodwill" TB line (a balance, present on every acquisitive
+    company's TB) classified as a capitalizable §263(a) transaction cost;
+    conversely "Goodwill amortization" (an IS charge) must NOT be dropped to
+    Balance Sheet. Note the lexicon maps amortization->depreciation, so the
+    keyword carries the post-lexicon form."""
+    r = classify(acct_desc="Goodwill", cc_desc="Corporate HQ")
+    assert r.tier1 == "Balance Sheet"
+    r = classify(acct_desc="Goodwill amortization", cc_desc="Corporate")
+    assert r.code == "SEC263A-INTANG"
+    r = classify(acct_desc="Goodwill impairment charge", cc_desc="Corporate")
+    assert r.code == "SEC263A-INTANG"
+
+
 def test_subcontractor_billable_require_client_project_context():
     """Bare "subcontractor"/"billable" keywords on DL-PROD over-capitalized:
     "Subcontractor fees" in a Corporate/IT department hit §471 at conf 70.
