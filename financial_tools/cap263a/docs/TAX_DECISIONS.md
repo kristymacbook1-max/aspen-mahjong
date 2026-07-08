@@ -625,3 +625,160 @@ a claim to spot-check, not settled fact.
 - **8 red-team corrections (§6):** three adversarial agents (hostile input / tax-wrongness / single-source divergence). Two are security-class (formula injection #44, the =PY() NaN divergence #43); five change or bound computed dollar output (#45–#49). All fixed and regression-tested (93 tests). Highlights: an unbounded absorption ratio could show a **$50 billion** capitalized figure unflagged (#46); a NaN amount silently defeated the integrity tie-check (#45). Nothing further should be relied on for filing without SME sign-off on §3/§3a.
 - **Citation accuracy audit (§7):** 5 citations corrected (moderate-high confidence, still unverified), 6 flagged unverified/possibly fabricated rather than guess-corrected — most notably a suspected-fabricated Treasury Decision ("T.D. 10034") in BUILD_PLAN.md. **No citation in this tool should be relied on for a filing position without independent primary-source verification.**
 - **Primary-source verification passes (§7a-§7f):** §1.263A-1 (SSCM/UNICAP general), §1.263A-2 (MSPM), §1.263A-3 (SRM), §1.263A-4 (farming), and §§1.263A-7 through -15 (change in method + full interest-capitalization scheme) regulation text retrieved and cross-checked directly; four IRS LB&I Practice/Concept Units (resellers, interest capitalization, self-constructed-asset costs, producers) cross-checked as independent secondary confirmation, then re-audited a second time by four parallel subagents (§7e) specifically checking whether the plan's own "VERIFIED" claims actually held up, then **red-teamed a third time (§7f)** — including an agent given only raw facts, with no knowledge of any prior answer, to independently re-derive the hardest number from scratch. Found and fixed: one real citation bug ($50M rule); two real missing MSPM mechanics (residual pre-production, direct materials adjustment); one real missing SRM method-availability gate (SPM-only above de minimis production) plus several smaller SRM gaps; one real missing §263A(f) de minimis designated-property exclusion and mid-production-purchase APE rule; a **materially wrong core avoided-cost-method formula** in Phase D that understated the golden worked example by ~16% (corrected from $323,571.43 to $376,428.57, then independently re-confirmed from scratch in §7f); **two separate false verification claims in this very document's own audit trail** (§7c's Phase-C-cost-methods claim, and §7d's Phase-D-formula claim — both retracted); and a genuine **self-contradiction** where Phase C silently misapplied SSCM to assets the plan's own SSCM section says likely don't qualify for it (plus two more instances of that same "reuses SSCM" staleness found and fixed in §7f, elsewhere in the document). Also resolved the "T.D. 10034" suspected-fabrication flag: the citation is real (§7d). **Standing lesson from this whole sequence: confident "verified"/"no discrepancy found" language in this document's own audit trail has twice turned out to be wrong — every entry, including this one, is a claim to spot-check, not settled fact.**
+- **Synthetic-data full-calculation stress test + final decisions (§8):** every formula (SPM/MSPM/SRM/SCA/§263A(f)) run end-to-end against non-trivial synthetic datasets by five parallel subagents; a real shipped-code taxonomy bug found and fixed (§8, intro); four genuine specification gaps found and closed with explicit adopted decisions (§8a-§8d). `BUILD_PLAN.md` updated throughout and declared final/buildable as of 2026-07-08.
+
+---
+
+## §8 — Synthetic-data full-calculation stress test and final decisions (2026-07-08)
+
+Five parallel subagents each built a non-trivial synthetic dataset (larger and messier than the
+regulation's own tiny textbook examples) and ran the full calculation for one of SPM (against the
+real shipped code), MSPM, SRM, SCA, and §263A(f) (against this document's/`BUILD_PLAN.md`'s
+formulas, via standalone throwaway scripts using exact `Decimal`/`Fraction` arithmetic, not
+committed to the repo). Every documented formula computed correctly on every scenario tested — no
+arithmetic error survived this pass, across SSCM-election variants, 90% de minimis shifts,
+dual-function facilities, multi-loan tracing, and cross-unit pro-rata proration. Two categories of
+finding resulted.
+
+### A real bug in already-shipped code (not a build-plan gap)
+The SPM subagent built a 33-line synthetic trial balance and ran it through the actual `analyze()`/
+`compute_unicap()` code. All UNICAP arithmetic matched independent hand-verification exactly, but
+the classifier itself mis-tagged one line: **"Finished goods warehouse storage costs"** (a
+production-cost-center P&L line) classified as `INV-BOOK` (Balance Sheet) instead of `ADD-FGWH`
+(Additional §263A) — $78,450.25 of real capitalizable cost would have silently vanished from the
+income statement entirely. Root cause: `INV-BOOK`'s bare `"finished goods"` keyword is a substring
+of `ADD-FGWH`'s own `"finished goods warehouse"` keyword; `INV-BOOK`'s Balance-Sheet immune-tier
+scoring bonus (+25, `engine.py`'s `IMMUNE_TIERS` mechanic) plus its cost-center clue hit on
+"warehouse" (+20) outscored `ADD-FGWH`'s kw+cc+zone total (95 vs 90). **Fixed 2026-07-08:**
+`taxonomy/categories.yaml`'s `INV-BOOK` keyword narrowed from `"finished goods"` to `"finished
+goods inventory"` — still catches genuine balance-sheet descriptions ("Finished goods inventory",
+and via the still-present bare `"inventory"` keyword, "Inventory - finished goods"), no longer
+bare-matches a cost-line description that merely mentions finished goods in passing. Verified via
+(1) a new regression test, `test_fg_warehouse_costs_dont_collide_with_fg_inventory_balance` in
+`tests/test_engine.py`, asserting the fix AND that the two existing balance-sheet test cases still
+pass; (2) the full test suite (95 passing, up from 94); (3) the classification accuracy validation
+harness (`python -m financial_tools.cap263a.validation.validate`) — 78.4% raw / 84.0%
+high-confidence precision, byte-identical to the previously documented baseline, confirming no
+regression across the 250-line labeled set.
+
+### Four specification gaps, each closed with an explicit adopted decision
+
+**§8a — MSPM: rounding order, and negative-residual/negative-on-hand floors.** The synthetic
+dataset (a manufacturer with resale property, non-trivial mixed-service costs, and a
+residual-pre-production absorbing 85% of its bucket — far harder-worked than the regulation's own
+example, where the residual is a comparatively mild 60%) surfaced two gaps:
+- *Rounding order.* The regulation's own Example 1 rounds the two absorption ratios to 2 decimal
+  places before multiplying; it says nothing about whether the SSCM pre-production/production
+  split proportion (an intermediate feeding one of those ratios' numerators) should also be
+  pre-rounded. **Decision: round only the two absorption ratios; carry the SSCM split proportion at
+  full `Decimal` precision.** This is an adopted convention (not textually mandated — the
+  regulation's SSCM-split examples land on clean 25%/10% splits that don't test the question either
+  way), chosen to avoid compounding rounding error into an intermediate with no textual basis for
+  rounding it.
+- *Negative residual / negative on-hand.* Both are structurally possible (a carried-forward
+  beginning-inventory stockpile can make `pre_production_ratio * pre_production_471_on_hand`
+  exceed `pre_production_additional_263A`; a WIP/finished-goods drawdown can make total on-hand
+  smaller than the pre-production on-hand subcomponent) — demonstrated with concrete numbers in the
+  subagent's script (residual −$37,695.00; on-hand −$119,630.00 in modified sensitivity runs). The
+  formula text gives no floor. **Decision: floor both at zero, with `MSPM-NEGATIVE-RESIDUAL-FLOORED`
+  / `MSPM-NEGATIVE-ON-HAND-BALANCE` flags for review** — mirrors the existing codebase's
+  clamp-and-warn pattern (the SSCM ratio's own [0,1] clamp), and is required because a negative
+  residual/on-hand balance flowing through unclamped would improperly reduce capitalized cost with
+  no basis in the formula's own "not yet absorbed" logic.
+- Also confirmed by the same test: the labor-proportion vs. direct-material-proportion SSCM-split
+  election is not cosmetic — it moved the result by ~$9,860 on identical underlying facts. No
+  action needed (the plan already documents this as a real election); noted here as confirmation
+  the election matters enough to warrant clear UI/input handling when built.
+
+**§8b — SRM: four gaps closed by a multi-facility synthetic dataset.**
+- *On-site/off-site definition* — never actually stated anywhere in `BUILD_PLAN.md` before this
+  pass, despite the plan's dual-function-storage rule depending on it. **Decision (adopted, not yet
+  independently re-verified word-for-word against primary text in this session — flag before
+  relying on it for a filing position): on-site = attached to/part of a retail sales facility
+  (non-capitalizable); off-site = separate warehouse/distribution function (capitalizable).**
+- *Multi-facility combination* — the formula's `storage_handling_costs` is one scalar; the plan
+  never said how a reseller with more than one storage facility combines them. **Decision: sum each
+  facility's own already-determined capitalizable share** (each facility independently run through
+  its own 90/10 test or gross-sales-ratio fallback, then summed) — the only mechanic that is
+  dimensionally coherent given the formula shape.
+- *Write-down exclusion scope* — does the §1.263A-3(d)(3)(i)(C)(2) write-down exclusion reach
+  `current_year_471_costs` (either ratio's denominator), or only the final `ending_inventory_471`
+  multiplier? **Decision: only the final multiplier** — the textually narrower, more conservative
+  reading (the cited rule speaks to "ending inventory," not costs incurred during the year). Tested
+  impact of the rejected alternative: ~$4,800 swing on a ~$293K base — flagged as a candidate SME
+  override, not a closed question beyond this plan's own working assumption.
+- *90/10 threshold basis* — is the 90%+ threshold test itself measured by the same gross-sales
+  ratio used as the fallback allocation formula, or an independent cost-attribution measure?
+  **Decision: an independent cost-attribution measure** (e.g. a functional/time study or
+  square-footage determination) — the regulation's threshold language speaks to "costs," the
+  fallback ratio explicitly speaks to "sales"; treated as two different measures by the plain text.
+- All four decisions are reflected in the SRM section of `BUILD_PLAN.md`, each marked `DECISION
+  2026-07-08`.
+
+**§8c — SCA: mixed-SSCM-eligibility-within-one-pool (the single most consequential gap this pass
+found).** A synthetic scenario with four self-constructed assets sharing mixed-service pools — two
+SSCM-ineligible, one eligible, sharing the SAME pool — exposed a question the existing 2-asset
+worked example (which assumed uniform eligibility) never had to answer: what happens to a mixed
+pool's allocation once eligibility isn't uniform across its target assets? Two orderings are each
+individually consistent with the eligibility-gate rule (don't silently apply SSCM to an ineligible
+asset) but diverge by tens of thousands of dollars on identical facts (confirmed: $59,778.74 vs.
+$48,155.10 on one pool; $33,623.28 vs. $4,174.95 on another):
+- *(A) Ratio-first:* apply the SSCM ratio to the whole pool, then driver-split only the resulting
+  capitalizable dollars across the eligible assets alone. Matches the existing worked example's
+  arithmetic under uniform eligibility, but under split eligibility it silently reroutes an
+  ineligible asset's implied share of the pool onto a DIFFERENT eligible asset sharing that pool —
+  overstating the eligible asset's basis and dropping the ineligible asset's share entirely.
+- *(B) Split-first:* driver-split the FULL pool across every declared target — every asset assigned
+  to the pool plus `NON_PRODUCTION` — first, preserving the general allocation formula's own
+  literal target set (`{assets…, NON_PRODUCTION}`) and the pool's total-dollar conservation
+  invariant, THEN gate each asset's own resulting dollar share through the SSCM eligibility test.
+
+  **Decision: adopt (B).** Rationale: (A) has no basis in either the general allocation formula
+  (which names every asset sharing the pool — not just the eligible ones — as a target-set member)
+  or in COR-C-023; reallocating one asset's cost onto a different asset purely because the first is
+  SSCM-ineligible is not a "reasonable allocation method," it is a basis-shifting error with no
+  textual support. Under (B), an ineligible asset's own computed share stays visible in the
+  allocation audit trail but is not booked to bucket B — flagged `SSCM-INELIGIBLE-NO-FALLBACK`,
+  consistent with the existing interim-behavior rule (apply SSCM only when eligible; otherwise flag
+  for human override, since the correct general-method fallback remains out of scope). This is an
+  explicit SME-level policy call made where the primary text was genuinely silent on the combined
+  scenario — not a re-derivation of settled law — and is flagged as open to override in
+  `BUILD_PLAN.md`.
+
+**§8d — Phase D: reconciling the sourcing-order prose with the proration pseudocode.** The
+multi-unit/multi-loan synthetic test (two designated-property units, one with two traced loans
+drawn at different dates, one with zero traced debt, a shared nontraced pool, an excluded
+below-AFR related-party loan, and a scenario engineered so the pro-rata cap actually fires) found
+an apparent conflict: the cap pseudocode sums all three interest sources (nontraced, below-AFR
+related-party, §707(c) guaranteed payments) into one scalar and prorates the combined total as a
+single pool, while the sourcing-order prose describes drawing on the three sources sequentially, in
+priority order, "only up to" what's needed. **Resolved, not a real conflict — the two govern
+different outputs.** The units-level total capitalized $ and the per-unit pro-rata split depend
+only on the SCALAR total of all three sources combined, and are correct as written regardless of
+source order — confirmed independently: whenever proration actually fires (the pool is fully
+exhausted, by definition of the `if` branch), every dollar of all three sources gets consumed
+regardless of order, so order cannot change either the total or the per-unit split in that case
+(verified in testing: the two units' prorated amounts summed to the cap exactly, both as exact
+`Fraction`s and at rounded-cents precision). What the sourcing-order rule actually governs is a
+separate, additional output the pseudocode was missing entirely: how much of EACH source gets
+"consumed" by capitalization (as opposed to remaining ordinary deductible interest, which matters
+for the already-flagged §163(j)/§266/§469/§861 ordering elsewhere in Phase D). **Decision: add a
+strict sequential draw-down computation, additive to (not a replacement for) the existing total/
+per-unit math** — consume nontraced interest first up to the full excess-expenditure total, then
+below-AFR related-party interest for any remainder, then guaranteed payments for any remainder
+still outstanding; each source's unconsumed remainder stays ordinary deductible interest. This only
+produces a different-looking number from a flat-consumption assumption when the pool is NOT fully
+exhausted — a case this plan's own worked test doesn't exercise (it deliberately hits the proration
+branch) and that the next `test_interest.py` build should add as a separate fixture. Also confirmed
+in this test: the below-AFR related-party loan was correctly excluded from both the traced-debt
+pool and the WAIR-nontraced pool (folding it in wrongly would have moved WAIR from 7.12% to 6.29%,
+a material, non-hypothetical error the eligible-debt exclusion list exists to prevent).
+
+### What this section does not cover
+No engine code was written for MSPM/SRM/SCA/§263A(f) in this pass — the synthetic-data tests ran
+against standalone throwaway scripts implementing the documented formulas, not against
+`financial_tools/cap263a/engines/` (which does not yet exist). "Validated by synthetic-data stress
+test" is a stronger claim than "validated by primary text alone," but it is still not "validated by
+implementation" — a future engine-coding pass can still introduce translation bugs even from a
+now-fully-specified formula. See `BUILD_PLAN.md`'s "Effort & risk" section (updated 2026-07-08) for
+this exact caveat.

@@ -230,6 +230,26 @@ def test_inventory_charges_stay_in_waterfall_but_balances_do_not():
         assert r.tier1 == "Balance Sheet", f"{desc} should be a balance-sheet line"
 
 
+def test_fg_warehouse_costs_dont_collide_with_fg_inventory_balance():
+    """Found 2026-07-08 via a synthetic-data stress test of the SPM engine: a
+    P&L cost line whose description contains the phrase "finished goods
+    warehouse" (an ADD-FGWH keyword) was losing to INV-BOOK, because
+    INV-BOOK's bare "finished goods" keyword is a substring of that same
+    phrase and INV-BOOK's Balance-Sheet immune-tier bonus (+25) outweighed
+    ADD-FGWH's kw+cc+zone score. $78,450 of real Additional-§263A cost
+    silently vanished onto the Balance Sheet. Fixed by narrowing INV-BOOK's
+    keyword to "finished goods inventory" (still catches genuine BS balances,
+    no longer bare-matches a cost-line description)."""
+    r = classify(acct_desc="Finished goods warehouse storage costs", cc_desc="Warehouse")
+    assert r.tier1 == "Additional §263A"
+    assert r.code == "ADD-FGWH"
+    # the balance-sheet cases this fix must not break
+    r = classify(acct_desc="Inventory - finished goods", cc_desc="Warehouse")
+    assert r.tier1 == "Balance Sheet"
+    r = classify(acct_desc="Finished goods inventory", cc_desc="Warehouse")
+    assert r.tier1 == "Balance Sheet"
+
+
 def test_balance_sheet_asset_and_contra_lines():
     """From the end-to-end audit: M&E balances were pulled into §471 labor by
     cost-center clues; book-inventory balances were treated as current-period
