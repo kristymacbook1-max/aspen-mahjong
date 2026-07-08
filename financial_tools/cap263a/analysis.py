@@ -31,6 +31,13 @@ class EntityProfile:
     # exemption regardless of gross receipts. Added 2026-07-09 — the
     # receipts-only gate silently exempted ineligible taxpayers.
     is_tax_shelter: bool = False
+    # De minimis safe harbor ceiling (§1.263(a)-1(f)(1)): $5,000/invoice-or-item
+    # with an applicable financial statement. WITHOUT an AFS the regulation text
+    # itself says $500 ((f)(1)(ii)(D)) — the $2,500 used here is the higher
+    # amount set by Notice 2015-82 under the reg's "or other amount as
+    # identified in published guidance" clause (effective for costs incurred in
+    # taxable years beginning on/after 1-1-2016). Verified against the full
+    # §1.263(a)-1 text 2026-07-09; see docs/TAX_DECISIONS.md §10.
     has_afs: bool = True                   # de minimis $5,000 vs $2,500
     industry: str = ""
     produces: bool = True                  # §263A producer
