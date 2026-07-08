@@ -23,7 +23,14 @@ class EntityProfile:
     entity_name: str = ""
     entity_type: str = "c_corp"            # c_corp/s_corp/partnership/sole_prop
     tax_year: int = 2026
-    avg_gross_receipts: Decimal = Decimal("0")   # 3-yr avg (§448(c))
+    # 3-yr avg (§448(c)) — must be the AGGREGATED figure under §448(c)(2)/
+    # §1.448-2 (related entities combined), not this entity's receipts alone.
+    avg_gross_receipts: Decimal = Decimal("0")
+    # §1.263A-1(b)(1)/(j): a tax shelter under §448(a)(3) (e.g. a loss-
+    # allocating syndicate) is statutorily barred from the small-business
+    # exemption regardless of gross receipts. Added 2026-07-09 — the
+    # receipts-only gate silently exempted ineligible taxpayers.
+    is_tax_shelter: bool = False
     has_afs: bool = True                   # de minimis $5,000 vs $2,500
     industry: str = ""
     produces: bool = True                  # §263A producer
@@ -78,6 +85,8 @@ class EntityProfile:
 
     @property
     def small_business_exempt(self) -> bool:
+        if self.is_tax_shelter:
+            return False
         return self.avg_gross_receipts <= self.sec448_threshold
 
     @property
@@ -219,23 +228,31 @@ def compute_unicap(result: dict, profile: EntityProfile) -> dict:
                 "absorption_ratio": Decimal("0"), "additional_capitalized_to_inventory": Decimal("0")}
 
     rows = result["rows"]
-    # Reg §1.263A-1(h): the SSCM labor ratio is capitalizable production labor
-    # over total UNICAP-relevant labor (production + mixed-service), NOT total
-    # enterprise labor. Sales/R&D/other Excluded-tier compensation is never part
-    # of that base and must not dilute the denominator.
+    # Reg §1.263A-1(h)(4) (CORRECTED 2026-07-09 against the regulation text —
+    # a prior version of this comment asserted the opposite rule on both
+    # counts): the labor-based allocation ratio is §263A labor costs / total
+    # labor costs, where BOTH numerator and denominator EXCLUDE labor costs
+    # included in mixed service costs, and the denominator includes the labor
+    # of EVERY activity of the trade or business — production, resale, AND
+    # selling/R&D/G&A (Excluded-tier) labor. The previous implementation put
+    # Mixed-Service-tier labor IN the denominator and kept Excluded-tier labor
+    # OUT — each individually backwards; see docs/TAX_DECISIONS.md §9.
+    # Non-Operating labor stays out of the denominator as outside the trade
+    # or business (a judgment call, documented there).
     #
-    # SME decision (docs/TAX_DECISIONS.md §3 item 5, resolved): Additional-§263A
-    # -tier labor (PP-PURCH purchasing, ADD-WHLBR warehouse, RES-BUYING buying-
-    # office) is genuinely production-allocable indirect labor under §1.263A-1
-    # (e)(3)(ii) — already 100% capitalized in its own tier, so it belongs in
-    # BOTH the numerator (capitalizable labor, alongside §471 production labor)
-    # AND the denominator (total UNICAP-relevant labor), not excluded entirely.
+    # SME decision (docs/TAX_DECISIONS.md §3 item 5, resolved — unaffected by
+    # the correction above): Additional-§263A-tier labor (PP-PURCH purchasing,
+    # ADD-WHLBR warehouse, RES-BUYING buying-office) is production-allocable
+    # indirect labor under §1.263A-1(e)(3)(ii), so it belongs in BOTH the
+    # numerator (§263A labor, alongside §471 production labor) AND the
+    # denominator (it is trade-or-business labor that is not mixed-service).
     CAPITALIZABLE_LABOR_TIERS = ("§471 Cost", "Additional §263A")
-    UNICAP_LABOR_TIERS = ("§471 Cost", "Mixed Service", "Additional §263A")
+    SSCM_DENOM_EXCLUDED_TIERS = ("Mixed Service", "Non-Operating",
+                                 "Balance Sheet", "Revenue")
     prod_labor = sum((r.line.amount for r in rows
                       if r.cls.is_labor and r.cls.tier1 in CAPITALIZABLE_LABOR_TIERS), Decimal("0"))
     total_labor = sum((r.line.amount for r in rows
-                       if r.cls.is_labor and r.cls.tier1 in UNICAP_LABOR_TIERS), Decimal("0"))
+                       if r.cls.is_labor and r.cls.tier1 not in SSCM_DENOM_EXCLUDED_TIERS), Decimal("0"))
     ratio_warn = None
     if profile.mixed_alloc_ratio is not None:
         ratio = profile.mixed_alloc_ratio

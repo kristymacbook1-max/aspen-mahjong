@@ -626,6 +626,7 @@ a claim to spot-check, not settled fact.
 - **Citation accuracy audit (§7):** 5 citations corrected (moderate-high confidence, still unverified), 6 flagged unverified/possibly fabricated rather than guess-corrected — most notably a suspected-fabricated Treasury Decision ("T.D. 10034") in BUILD_PLAN.md. **No citation in this tool should be relied on for a filing position without independent primary-source verification.**
 - **Primary-source verification passes (§7a-§7f):** §1.263A-1 (SSCM/UNICAP general), §1.263A-2 (MSPM), §1.263A-3 (SRM), §1.263A-4 (farming), and §§1.263A-7 through -15 (change in method + full interest-capitalization scheme) regulation text retrieved and cross-checked directly; four IRS LB&I Practice/Concept Units (resellers, interest capitalization, self-constructed-asset costs, producers) cross-checked as independent secondary confirmation, then re-audited a second time by four parallel subagents (§7e) specifically checking whether the plan's own "VERIFIED" claims actually held up, then **red-teamed a third time (§7f)** — including an agent given only raw facts, with no knowledge of any prior answer, to independently re-derive the hardest number from scratch. Found and fixed: one real citation bug ($50M rule); two real missing MSPM mechanics (residual pre-production, direct materials adjustment); one real missing SRM method-availability gate (SPM-only above de minimis production) plus several smaller SRM gaps; one real missing §263A(f) de minimis designated-property exclusion and mid-production-purchase APE rule; a **materially wrong core avoided-cost-method formula** in Phase D that understated the golden worked example by ~16% (corrected from $323,571.43 to $376,428.57, then independently re-confirmed from scratch in §7f); **two separate false verification claims in this very document's own audit trail** (§7c's Phase-C-cost-methods claim, and §7d's Phase-D-formula claim — both retracted); and a genuine **self-contradiction** where Phase C silently misapplied SSCM to assets the plan's own SSCM section says likely don't qualify for it (plus two more instances of that same "reuses SSCM" staleness found and fixed in §7f, elsewhere in the document). Also resolved the "T.D. 10034" suspected-fabrication flag: the citation is real (§7d). **Standing lesson from this whole sequence: confident "verified"/"no discrepancy found" language in this document's own audit trail has twice turned out to be wrong — every entry, including this one, is a claim to spot-check, not settled fact.**
 - **Synthetic-data full-calculation stress test + final decisions (§8):** every formula (SPM/MSPM/SRM/SCA/§263A(f)) run end-to-end against non-trivial synthetic datasets by five parallel subagents; a real shipped-code taxonomy bug found and fixed (§8, intro); four genuine specification gaps found and closed with explicit adopted decisions (§8a-§8d). `BUILD_PLAN.md` updated throughout and declared final/buildable as of 2026-07-08.
+- **Full regulation-by-regulation review, §§1.263A-1..-15 (§9, 2026-07-09):** five parallel agents, clause-by-clause against retrieved regulation text (mirrored/search channels — canonical hosts blocked; provenance in §9). Five MATERIAL findings, all fixed: the shipped SSCM labor-ratio denominator was backwards on two counts vs (h)(4) (code + tests fixed — prior workpapers used a wrong ratio); the "one-sided 90% rule" correction from §7e was itself wrong (both sides exist at (g)(4)(ii), asymmetrically); Phase D's §1221 carve-out misread an eCFR rendering artifact as a nonexistent "§1221(l) patent provision" (it's the §1221(a)(1) inventory carve-out); the dropped "associated property rule eliminated" claim was actually TRUE (restored, with a pre/post-Oct-2025 dual-regime implication); a day-proration sentence contradicted the (f)(2)(iii) measurement-date convention. Plus: the SRM (a)(4)(ii)-vs-(a)(5) open question RESOLVED (taxpayer size), the MSC sub-split found prescribed at (d)(3)(i)(F), the §1.263A-7 method-change gap partially in-scoped, the §448(c) 2026 threshold verified ($32M), a tax-shelter bar added to the exemption, and ~30 smaller citation/scope corrections. Suite: 96 passing. Four standing lessons recorded (§9.8).
 
 ---
 
@@ -782,3 +783,189 @@ test" is a stronger claim than "validated by primary text alone," but it is stil
 implementation" — a future engine-coding pass can still introduce translation bugs even from a
 now-fully-specified formula. See `BUILD_PLAN.md`'s "Effort & risk" section (updated 2026-07-08) for
 this exact caveat.
+
+**Staleness note added 2026-07-09:** this section's SPM run figures (mixed_alloc_ratio 0.578915,
+total_labor 2,475,356.45, etc.) were computed under the pre-§9 SSCM denominator rule and are a
+point-in-time record of that run, not current expected outputs — the §1.263A-1(h)(4) correction in
+§9 below changes SPM's computed ratios on the same inputs.
+
+---
+
+## §9 — Full regulation-by-regulation review, §§1.263A-1 through -15 (2026-07-09)
+
+Five parallel review agents compared `BUILD_PLAN.md` (and the shipped `analysis.py`) clause-by-clause
+against retrieved text of 26 CFR §§1.263A-1 through -15: one agent each for -1 (SSCM/general), -2
+(MSPM), -3 (SRM), -8 through -15 (interest capitalization), and -4/-7 plus a whole-document
+internal-consistency sweep.
+
+**Retrieval provenance (applies to everything below):** the canonical hosts (ecfr.gov,
+law.cornell.edu, govinfo.gov, irs.gov, federalregister.gov) are BLOCKED by this environment's egress
+policy (403 CONNECT denials at the proxy). No agent fell back on model recall. Text was retrieved
+via (a) GitHub-hosted eCFR mirrors — two independent mirrors diff-checked against each other with
+verbatim agreement on every clause used (§1.263A-2 and §§-8..-15 were retrieved this way IN FULL,
+including a pre-T.D.-10034 snapshot that proved decisive, see below), plus Cornell LII's own MathML
+equation files for the MSPM ratio formulas; and (b) server-side WebSearch snippets of the canonical
+pages, cross-checked across multiple independently-phrased queries (§§1.263A-1, -3, -4, -7 — snippet-
+level, one fidelity notch below a full-page read). Items neither channel could pin down are flagged
+"could not verify" in place, both here and in `BUILD_PLAN.md`. **Re-pull load-bearing quotes from
+live eCFR before any filing position.**
+
+### §9.1 — MATERIAL: the shipped SSCM labor ratio implemented the wrong denominator (FIXED in code)
+
+§1.263A-1(h)(4) defines the labor-based allocation ratio as §263A labor costs / total labor costs,
+where BOTH sides exclude labor included in mixed service costs, and the denominator includes the
+labor of EVERY activity of the trade or business (production, resale, selling, R&D, G&A). The
+shipped `compute_unicap` did the opposite on both counts: Mixed-Service-tier labor was IN the
+denominator and Excluded-tier labor was OUT (`UNICAP_LABOR_TIERS = ("§471 Cost", "Mixed Service",
+"Additional §263A")`), with a code comment asserting the incorrect rule and a BUILD_PLAN sentence
+("This is what `compute_unicap` implements today") falsely claiming conformity — sitting directly
+under the plan's own CORRECT prose description of (h)(4). The two errors bias in opposite
+directions, so prior outputs were wrong in a fact-dependent direction. **Fixed 2026-07-09:**
+`SSCM_DENOM_EXCLUDED_TIERS = ("Mixed Service", "Non-Operating", "Balance Sheet", "Revenue")` —
+denominator now = all trade-or-business labor except MSC labor. Non-Operating labor is excluded as
+outside the trade or business (a documented judgment call: officer comp was already re-tiered out of
+Non-Operating, so this exclusion touches genuinely non-operating labor only). Both encoded-wrong
+tests rewritten (`test_analysis.py`; e.g. the 3-line fixture's correct ratio is 100k/950k = 0.105263,
+not 100k/150k = 0.666667). SME decision §3 item 5 (Additional-§263A labor in both numerator and
+denominator) is unaffected — that labor is trade-or-business, non-MSC labor on both sides either way.
+**Any workpaper generated before this fix used a wrong SSCM ratio.**
+
+### §9.2 — MATERIAL: yesterday's "one-sided 90% rule" correction was itself wrong (REVERSED)
+
+§1.263A-1(g)(4)(ii) contains BOTH sides of the department-level 90% rule, asymmetrically:
+≥90%-deductible → may ELECT zero allocation; ≥90%-capitalizable → MUST allocate 100% to the
+benefitted activity. The 2026-07-08 pass (§7e/§7f) declared the capitalizable side "unconfirmed —
+do not rely," reasoning from IRS Concept Unit COR-C-023's silence — a false negative produced by
+verifying against a secondary source instead of the primary text. Both BUILD_PLAN locations (SSCM
+section, Phase C) re-corrected; the mandatory capitalizable side is an under-capitalization risk and
+needs at least a warning flag when built. What survives from the earlier correction: (g)(4)(ii) is
+department-level and still does not transfer to per-asset N-way driver shares. **Meta-lesson
+(third instance in this file): a "correction" is only as good as the source it was checked against —
+COR-C-023's silence was treated as the regulation's silence.**
+
+### §9.3 — MATERIAL: Phase D's §1221 carve-out misread (FIXED)
+
+§1.263A-8(b)(1)(ii)(A)'s Category-2 carve-out reads "not property described in section 1221(l)" in
+the eCFR rendering — a digit-1→letter-l artifact (provable: §1221(l) does not exist; the same
+retrieved section renders "(b)(l)(ii)(A)" where (b)(1)(ii) is meant; the rule dates to T.D. 8584
+(1994) when §1221 ran (1)-(5)). The intended cite is §1221(1), today §1221(a)(1): INVENTORY /
+held-for-sale property. The 2026-07-08 pass glossed it as "the patent/invention-sale capital-gain
+provision" and told implementers to model a patents flag — wrong target entirely; the real effect is
+that a producer's long-lived held-for-sale product (aircraft, vessels) escapes Category 2. Fixed;
+implement `held_for_sale_by_taxpayer_or_related_person`, and the rendering artifact is documented in
+the plan so nobody re-chases "§1221(l)".
+
+### §9.4 — MATERIAL: the "associated property rule eliminated" claim was TRUE (RESTORED)
+
+The 2026-07-08 T.D. 10034 verification concluded the claim "T.D. 10034 eliminated the associated
+property rule" was unconfirmed/possibly hallucinated and directed it be dropped. Wrong: the
+pre-amendment §1.263A-11(e)(1)(ii)(B) (retrieved this pass from a Feb-2025 snapshot) expressly
+defined "associated property," and T.D. 10034's rewrite of (e) removed it — corroborated by the
+Federal Register's description. The 2026-07-08 pass searched only the CURRENT text for a rule whose
+whole point is that it no longer exists there — a structurally guaranteed false negative.
+Restored, with a build implication: pre-Oct-2025 tax years still need the OLD (e) mechanics
+(dual-regime improvement path keyed on tax year). **Meta-lesson: verifying a claim about a REPEALED
+provision requires the before-text, not the after-text.**
+
+### §9.5 — MATERIAL: Phase D's mid-year proration sentence contradicted the regulation (FIXED)
+
+"Mid-year PIS/completion → prorate the sub-period by active days" contradicted §1.263A-9(f)(1)(iii)
+(full computation period regardless of production-period start/end) and (f)(2)(iii) (APE counted
+from the first measurement date after the period starts through the first after it ends). The
+regulation's own examples zero out out-of-period measurement dates and always divide by the full
+number of dates — no day-fraction proration anywhere. Fixed to the measurement-date convention (the
+worked table already implicitly followed it; only the prose was wrong).
+
+### §9.6 — Resolved SRM items (one WRONG-CITATION, one open question closed, one downgrade reversed)
+
+- **Write-down exclusion re-cited:** the "goods valued below cost" exclusion is NOT in
+  §1.263A-3(d)(3)(i)(C)(2)'s text — it is Practice Unit COR-P-021's gloss ON (C)(2). Rule kept,
+  authority level corrected. What (C)(2) actually says: the multiplier is current-year-incurred §471
+  costs remaining on hand (LIFO: the increment) — which itself was a missed constraint, now added
+  (the multiplier is NOT the undivided ending balance).
+- **The (a)(4)(ii)-vs-(a)(5) open question is RESOLVED: taxpayer size.** (a)(5) is just the de
+  minimis DEFINITION (10%/10% presumption); its small-reseller example is where "not required to
+  capitalize" comes from. Small reseller (now the §263A(i)/§448(c) exemption axis) → not required;
+  larger reseller with the same de-minimis, incident-to-resale production → required, may elect SPM
+  or SRM under (a)(4)(ii). No fourth `production_activity_level` state — gate on existing
+  small-business machinery + new `production_incident_to_resale` flag.
+- **The MSC purchasing/storage/handling sub-split is prescribed by the reg itself** at
+  §1.263A-3(d)(3)(i)(F) — a one-step allocation (per-activity labor ratio × TOTAL mixed service
+  costs, MSC labor excluded from both ratio sides), NOT the two-step capitalize-then-sub-split
+  approximation previously assumed, and NOT "unaddressed in sources" as the 2026-07-08 downgrade
+  concluded from the Practice Unit alone.
+- Also: SRM bar cite corrected (a)(2)(i)→(a)(4)(i); private-label inference upgraded to confirmed
+  ((a)(4)(i) opens "Except as provided in (a)(4)(ii) and (iii)") with the unrelated-party/
+  incident-to-resale/sold-to-customers conditions attached; permissible variations (d)(3)(iii)(A)/(B)
+  added (the beginning-inventory assert must be conditional); 1/3-2/3 rule nuances (all-or-nothing
+  election, middle band still requires reasonable allocation); on-site/off-site definitions confirmed
+  with (c)(5)(i)/(ii)(A)/(ii)(C) cites plus the retail-sales-facility exclusivity and
+  physically-present-customer sub-definitions; the 90/10 threshold-basis DECISION's rationale
+  rewritten (the reg supplies no attribution mechanism for the cost-worded threshold — the
+  independent-cost-attribution reading stays as an SME call, explicitly open to the
+  sales-ratio-collapse alternative).
+
+### §9.7 — Other gaps closed (per-section)
+
+- **§1.263A-1:** (h)(2) eligible property is four categories with (C)/(D) as alternative routes
+  (Phase C's gate reshaped; materials/supplies-consumed-within-3-years arm added); (h)(5) "income-
+  based taxes" exclusion hedged (Practice Unit formula says it, retrieved reg text says only
+  MSC+interest); (h)(7) "any reasonable method" downgraded to paraphrase; §448(a)(3) tax-shelter bar
+  added to `small_business_exempt` (code + test) with the §448(c)(2) aggregation documentation; 2026
+  §448(c) threshold VERIFIED at $32M (Rev. Proc. 2025-32) — `THRESHOLDS` correct as shipped.
+- **§1.263A-2:** (c)(3)(ii)(F) property-sold cost exclusion added as a global MSPM input filter;
+  HAR refinements (extension = recomputation year + 5 following; both-ratios AND-test; mandatory
+  resumption in the 3rd year after a failed recomputation; HAR unavailable to (c)(3)(v)-zero
+  taxpayers); $200K de minimis sub-rules (excludable categories, related-party aggregation); the §8a
+  negative-residual/on-hand DECISION's rationale rewritten — the reg's current-year-incurred on-hand
+  definitions make negatives structurally impossible on compliant inputs, so the floors are DATA-
+  ERROR guardrails, not tax-scenario handling (and the engine must document the input contract, not
+  just clamp).
+- **§§1.263A-8..-15:** the fabricated "TPP de minimis screen" deleted (non-designation follows from
+  failing (b)(1)(ii)(A)-(C); the conjunctive shorthand missed a case and mis-ordered vs Cat 2);
+  (b)(2)(iii) contemporaneous-records + estimate-exclusion requirements added; timber-exclusion
+  phrasing re-confirmed verbatim; traced-debt definition pinpointed to (b)(2) with the
+  unpaid-capitalized-interest component added; WAIR division-by-zero fallback added ((c)(5)(iii)(D):
+  highest AFR when no nontraced debt); APE composition expanded per §1.263A-11(d)/(b)(1)/(b)(2)/(h)
+  (producing-asset bases — the bulldozer rule — pre-production costs entering day one, dedication,
+  installation) and -11(g) (related-person activities count, only taxpayer costs enter APE);
+  AFR-plus-3 second eligibility route ((e)(2) last sentence: §1.263A-1(j) small business taxpayers);
+  proration-share note ((c)(7)(i)(B) prorates by average-excess share — identical result, right
+  cite); (d)(3)(iii) independent-thresholds gate for TPP improvements; cessation (g)(2)/(g)(3)
+  sub-rules; (g)(1)(ii) residual deferral clause + no-retroactive-capitalization note; the deferral
+  machinery ((c)(4)/(g)(2)) declared out of scope EXPLICITLY; worked-fixture completed with
+  nontraced-pool inputs ($2.8M avg nontraced debt / $200K nontraced interest).
+- **§§1.263A-4/-5/-6/-7/-13/-14/-15:** -4 (farming) and -7 (method change) characterizations
+  confirmed; -5/-6 confirmed reserved (nothing ignored); -15 description completed ("transitional
+  rules" added); -13/-14 noted as out of scope. **The real -7 finding: switching an EXISTING taxpayer
+  onto MSPM/SRM through `profile.method` is a Form 3115/§481(a) method change with beginning-
+  inventory revaluation — the plan treated smaller elections as method-of-accounting events while
+  leaving the biggest switch unflagged.** Partially in-scoped: `prior_year_method` field +
+  `METHOD-CHANGE-3115-481A-REQUIRED` warning + revalued-inputs contract note; the revaluation/§481(a)
+  computation itself stays deferred.
+- **Internal consistency:** the intro's "nothing in Phase B/C/D can run until Phase A exists" fixed
+  (Phase B was never schedule-gated — it contradicted the sequencing section); "the three schedules"
+  → four; the orphaned BTD input (#2) given a spec'd consumer (negative-§263A pipeline + M-1 block);
+  the Phase C worked test restated in the ADOPTED Option-(B) ordering (as written it demonstrated
+  the rejected ratio-first ordering — same numbers under uniform eligibility, wrong shape to copy);
+  the AFR-plus-3 "forces `include_negative_263a`-style debt-tracing off" wording fixed; the §7a-§7e
+  history pointer → §7a-§7f; the "(h)(5))" unbalanced paren fixed.
+
+### §9.8 — Standing lessons (now four instances deep)
+
+1. Verifying against a SECONDARY source's silence (COR-C-023, twice now) produces false "one-sided
+   rule" / "unaddressed in sources" conclusions the primary text contradicts.
+2. Verifying a claim about a REPEALED provision against only the current text guarantees a false
+   negative (§9.4).
+3. A correct prose description and a false "the code implements this" claim can sit adjacent for
+   multiple audit rounds without the contradiction being noticed (§9.1) — conformity claims about
+   code need to be checked against the code, not against the prose next to them.
+4. eCFR rendering artifacts (digit-1 as letter-l) can send a verifier chasing a nonexistent Code
+   subsection (§9.3); when a citation looks wrong, check the promulgation-era numbering before
+   inventing a gloss.
+
+Every §9 fix is marked in place in `BUILD_PLAN.md` with `CORRECTED/ADDED/RESTORED 2026-07-09`. Code
+changes: `analysis.py` (SSCM denominator, `is_tax_shelter` + exemption bar, aggregation doc),
+`tests/test_analysis.py` (two ratio tests rewritten to the correct rule, one new tax-shelter test).
+Suite: 96 passing. Accuracy harness re-run: 78.4%/84.0%, unchanged (the SSCM fix changes UNICAP
+ratios, not classification).

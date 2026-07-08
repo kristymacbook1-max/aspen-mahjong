@@ -41,6 +41,17 @@ def test_small_business_exemption_turns_off_unicap():
     assert b["Deductible"] >= Decimal("1800000")
 
 
+def test_tax_shelter_barred_from_small_business_exemption():
+    """§1.263A-1(b)(1)/(j): a §448(a)(3) tax shelter cannot use the small-
+    business exemption regardless of gross receipts (added 2026-07-09 —
+    the receipts-only gate silently exempted ineligible taxpayers)."""
+    p = EntityProfile(avg_gross_receipts=Decimal("1000000"), is_tax_shelter=True)
+    assert not p.small_business_exempt
+    r = analyze(_tb(), p)
+    assert not r["unicap"]["exempt"]
+    assert r["bucket_totals"]["Inventory §471"] > Decimal("0")
+
+
 def test_unicap_absorption_and_sscm():
     from decimal import Decimal as D
     lines = _tb()
@@ -150,12 +161,16 @@ def test_unimplemented_method_and_stale_threshold_are_warned():
     assert "2027" in joined and "VERIFY" in joined
 
 
-def test_sscm_labor_ratio_excludes_excluded_tier_labor():
-    """Reg §1.263A-1(h): the SSCM ratio denominator is production + mixed-service
-    labor only. Sales-commission labor (Excluded tier, is_labor=True) must not
-    dilute it — a prior bug summed ALL is_labor rows regardless of tier,
-    understating the capitalizable mixed-service share whenever sales/R&D
-    compensation was large relative to production labor."""
+def test_sscm_labor_ratio_excludes_msc_labor_and_includes_all_other_tob_labor():
+    """Reg §1.263A-1(h)(4), CORRECTED 2026-07-09 (docs/TAX_DECISIONS.md §9):
+    the labor-based allocation ratio's denominator is TOTAL trade-or-business
+    labor EXCLUDING labor included in mixed service costs. A prior version of
+    this test asserted the opposite rule on both counts (mixed-service officer
+    comp IN the denominator, sales-commission labor OUT), citing the same
+    regulation — the code and this test were wrong together. Under (h)(4):
+    numerator = §263A labor (production 100k); denominator = production 100k +
+    sales 850k = 950k (officer comp is mixed-service labor, excluded from
+    BOTH)."""
     lines = [
         TBLine("5000", "Direct labor", "100", "Production", amount=Decimal("100000")),
         TBLine("8000", "Officer compensation", "400", "Executive", amount=Decimal("50000")),
@@ -164,19 +179,20 @@ def test_sscm_labor_ratio_excludes_excluded_tier_labor():
     p = EntityProfile(avg_gross_receipts=Decimal("75000000"), ending_inventory_471=Decimal("0"))
     r = analyze(lines, p)
     u = r["unicap"]
-    # denominator must be production (100k) + mixed-service officer comp (50k) = 150k,
-    # NOT + sales commissions (850k) = 1,000,000
-    assert u["total_labor"] == Decimal("150000"), f"got {u['total_labor']}"
-    assert u["mixed_alloc_ratio"] == Decimal("0.666667")
+    assert u["production_labor"] == Decimal("100000"), f"got {u['production_labor']}"
+    assert u["total_labor"] == Decimal("950000"), f"got {u['total_labor']}"
+    assert u["mixed_alloc_ratio"] == Decimal("0.105263")
 
 
 def test_sscm_labor_ratio_includes_additional_263a_tier_labor():
-    """SME decision (docs/TAX_DECISIONS.md §3 item 5, resolved): purchasing
-    and warehouse labor (Additional §263A tier — already 100% capitalized in
-    its own right) belongs in BOTH the numerator and denominator of the SSCM
-    ratio, not excluded entirely. Worked example from the decision record:
-    §471 $200k / Mixed $50k / Additional §263A $80k / Excluded $300k ->
-    ratio = (200k+80k)/(200k+50k+80k) = 280,000/330,000 = 0.848485."""
+    """SME decision (docs/TAX_DECISIONS.md §3 item 5, resolved; ratio values
+    re-derived 2026-07-09 under the corrected §1.263A-1(h)(4) denominator —
+    see §9): purchasing and warehouse labor (Additional §263A tier — already
+    100% capitalized in its own right) belongs in BOTH the numerator and
+    denominator of the SSCM ratio, not excluded entirely. Under the corrected
+    denominator rule: §471 $200k / Mixed $50k / Additional §263A $80k /
+    Excluded $300k -> numerator = 200k+80k = 280k; denominator = 200k+80k+300k
+    = 580k (mixed-service officer comp excluded); ratio = 0.482759."""
     lines = [
         TBLine("1", "Direct labor", "100", "Production", amount=Decimal("200000")),
         TBLine("2", "Officer compensation", "400", "Executive", amount=Decimal("50000")),
@@ -186,5 +202,5 @@ def test_sscm_labor_ratio_includes_additional_263a_tier_labor():
     p = EntityProfile(avg_gross_receipts=Decimal("75000000"))
     u = analyze(lines, p)["unicap"]
     assert u["production_labor"] == Decimal("280000"), f"got {u['production_labor']}"
-    assert u["total_labor"] == Decimal("330000"), f"got {u['total_labor']}"
-    assert u["mixed_alloc_ratio"] == Decimal("0.848485")
+    assert u["total_labor"] == Decimal("580000"), f"got {u['total_labor']}"
+    assert u["mixed_alloc_ratio"] == Decimal("0.482759")
