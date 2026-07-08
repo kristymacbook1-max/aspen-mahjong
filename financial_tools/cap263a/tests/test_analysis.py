@@ -168,3 +168,23 @@ def test_sscm_labor_ratio_excludes_excluded_tier_labor():
     # NOT + sales commissions (850k) = 1,000,000
     assert u["total_labor"] == Decimal("150000"), f"got {u['total_labor']}"
     assert u["mixed_alloc_ratio"] == Decimal("0.666667")
+
+
+def test_sscm_labor_ratio_includes_additional_263a_tier_labor():
+    """SME decision (docs/TAX_DECISIONS.md §3 item 5, resolved): purchasing
+    and warehouse labor (Additional §263A tier — already 100% capitalized in
+    its own right) belongs in BOTH the numerator and denominator of the SSCM
+    ratio, not excluded entirely. Worked example from the decision record:
+    §471 $200k / Mixed $50k / Additional §263A $80k / Excluded $300k ->
+    ratio = (200k+80k)/(200k+50k+80k) = 280,000/330,000 = 0.848485."""
+    lines = [
+        TBLine("1", "Direct labor", "100", "Production", amount=Decimal("200000")),
+        TBLine("2", "Officer compensation", "400", "Executive", amount=Decimal("50000")),
+        TBLine("3", "Purchasing dept salaries", "200", "Procurement", amount=Decimal("80000")),
+        TBLine("4", "Sales commissions", "500", "Sales", amount=Decimal("300000")),
+    ]
+    p = EntityProfile(avg_gross_receipts=Decimal("75000000"))
+    u = analyze(lines, p)["unicap"]
+    assert u["production_labor"] == Decimal("280000"), f"got {u['production_labor']}"
+    assert u["total_labor"] == Decimal("330000"), f"got {u['total_labor']}"
+    assert u["mixed_alloc_ratio"] == Decimal("0.848485")

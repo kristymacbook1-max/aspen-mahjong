@@ -212,9 +212,17 @@ def compute_unicap(result: dict, profile: EntityProfile) -> dict:
     # over total UNICAP-relevant labor (production + mixed-service), NOT total
     # enterprise labor. Sales/R&D/other Excluded-tier compensation is never part
     # of that base and must not dilute the denominator.
-    UNICAP_LABOR_TIERS = ("§471 Cost", "Mixed Service")
+    #
+    # SME decision (docs/TAX_DECISIONS.md §3 item 5, resolved): Additional-§263A
+    # -tier labor (PP-PURCH purchasing, ADD-WHLBR warehouse, RES-BUYING buying-
+    # office) is genuinely production-allocable indirect labor under §1.263A-1
+    # (e)(3)(ii) — already 100% capitalized in its own tier, so it belongs in
+    # BOTH the numerator (capitalizable labor, alongside §471 production labor)
+    # AND the denominator (total UNICAP-relevant labor), not excluded entirely.
+    CAPITALIZABLE_LABOR_TIERS = ("§471 Cost", "Additional §263A")
+    UNICAP_LABOR_TIERS = ("§471 Cost", "Mixed Service", "Additional §263A")
     prod_labor = sum((r.line.amount for r in rows
-                      if r.cls.is_labor and r.cls.tier1 == "§471 Cost"), Decimal("0"))
+                      if r.cls.is_labor and r.cls.tier1 in CAPITALIZABLE_LABOR_TIERS), Decimal("0"))
     total_labor = sum((r.line.amount for r in rows
                        if r.cls.is_labor and r.cls.tier1 in UNICAP_LABOR_TIERS), Decimal("0"))
     ratio_warn = None
