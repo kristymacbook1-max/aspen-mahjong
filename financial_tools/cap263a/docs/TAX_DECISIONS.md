@@ -295,10 +295,42 @@ citation work in this project done against an actual primary source rather than 
   is genuinely new information this project did not have — not a citation fix, a scope gap.
 - **Still NOT covered by this retrieval** (different regulation sections, not fetched this pass):
   §1.263(a)-1/-3 (de minimis/BAR-test citations), §1.471-11 (abnormal spoilage), §1.266-1 (§266
-  carrying charges), §1.263A-2/-3 (MSPM/SRM mechanics — including the still-open question of how
-  MSPM splits the SSCM-capitalized amount between its pre-production and production ratios),
-  §1.263A-8/-9/-12 (§263A(f) interest, including the "T.D. 10034" fabrication concern). These
-  remain at their prior confidence level — do not treat this pass as having verified the whole tool.
+  carrying charges), §1.263A-3 (SRM mechanics), §1.263A-8/-9/-12 (§263A(f) interest, including
+  the "T.D. 10034" fabrication concern). **§1.263A-2 (MSPM) was subsequently retrieved and
+  verified — see §7b below**, closing out what was the single largest open item in §7a.
+
+### §7b — §1.263A-2 (MSPM) primary-source verification (2026-07-08, same-day follow-up)
+
+The user supplied the full text of 26 CFR §1.263A-2 directly (same retrieval method as §7a —
+this tool's `WebFetch` remains blocked to the primary-source sites). This closed the one
+open item §7a explicitly flagged as unresolved: **how MSPM splits SSCM-capitalized mixed
+service costs between its pre-production and production absorption ratios.**
+
+- **CONFIRMED, verbatim, exactly matching the earlier lower-confidence WebSearch lead:**
+  §1.263A-2(c)(3)(iii)(B) allows either "the proportion of direct material costs to total
+  section 471 costs" or "the proportion of pre-production labor costs to total labor costs"
+  — a taxpayer election, both real. A 90% de minimis election applies to this split too
+  ((c)(3)(iii)(C)). Full detail and the regulation's own three worked examples (Examples 4-6)
+  moved into `docs/BUILD_PLAN.md`'s MSPM section.
+- **Found two mechanics this plan had never had at all, not just wrong**, both of which move
+  real dollars in the MSPM formula: the **residual pre-production additional §263A costs**
+  (the portion of pre-production additional costs not absorbed into pre-production ending
+  inventory rolls INTO the production ratio's numerator — omitting this understates the
+  production ratio) and the **direct materials adjustment** (net direct materials that
+  entered production during the year, added to the production ratio's denominator). The
+  plan's prior MSPM formula (`pre_production_ratio*ending_inv_471_preprod +
+  production_ratio*ending_inv_471_prod` with no residual/adjustment terms) was a
+  simplification that would have produced a wrong number even with correct inputs.
+  Confirmed by reproducing the regulation's own Example 1 by hand: $284,400 additional §263A
+  allocable to ending inventory, matching the text's stated result exactly (worked in
+  BUILD_PLAN.md's MSPM section, replacing the plan's prior hand-built 143,000 illustration
+  as the canonical test fixture — the regulation's own numbers are more defensible than a
+  constructed example).
+- **Also confirmed:** the HAR (historic absorption ratio) election mechanics — a 5-year
+  qualifying period (not 6 as the plan previously guessed) with a year-6 recomputation check
+  against a ±0.5 percentage point corridor; and a $200,000 total-indirect-costs de minimis
+  rule (§1.263A-2(b)(3)(iv), applies to MSPM via (c)(3)(v)) that zeroes additional §263A costs
+  entirely for small producers — not previously in this plan at all.
 
 **Bottom line for the SME/reviewer:** every citation in this tool should be treated as a
 starting point for research, not a verified filing position, until confirmed against a primary

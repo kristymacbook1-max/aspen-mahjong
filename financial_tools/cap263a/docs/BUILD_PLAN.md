@@ -105,15 +105,12 @@ in both numerator/denominator per the verified formula above.
   trade or business, apportion by "any reasonable method" before applying SSCM. Out
   of scope for a single-entity-scoped tool; note only.
 
-**Still unverified — needs primary text this pass didn't retrieve:** how MSPM
-specifically splits the SSCM-capitalized total between its **pre-production** and
-**production** absorption ratios (Phase B, MSPM two-ratio math below). That mechanic
-lives in §1.263A-2(c), not §1.263A-1(h) (which only governs the *total* capitalizable
-mixed service cost amount, not its pre-production/production split). An earlier
-WebSearch-only pass (lower confidence than this section) suggested the split uses
-either a direct-material-to-§471-costs proportion or a pre-production-labor-to-total-
-labor proportion — **do not build Phase B's MSPM split against that claim until
-§1.263A-2(c) gets the same primary-source verification this section got.**
+**RESOLVED 2026-07-08 (was "still unverified" in this section):** how MSPM splits the
+SSCM-capitalized total between its pre-production and production absorption ratios
+is now confirmed against the actual §1.263A-2(c)(3)(iii)(B) text — see the MSPM
+section of Phase B below for the verified formula and the regulation's own worked
+examples. The earlier WebSearch-only lead (direct-material proportion or
+pre-production-labor proportion) turned out to be exactly right, word for word.
 
 ## Architecture of the extension
 
@@ -159,16 +156,72 @@ Backward compatible: existing `read_trial_balance`/`analyze`/`generate` keep wor
 
 Refactor `compute_unicap` into a dispatcher on `profile.method` (`"SPM"` keeps the existing body renamed `compute_spm`).
 
-### MSPM (Reg §1.263A-2(c)) — two absorption ratios
+### MSPM (Reg §1.263A-2(c)) — two absorption ratios, VERIFIED 2026-07-08 against primary-source text
+
+Full text of §1.263A-2 was directly retrieved and read (see `docs/TAX_DECISIONS.md` §7a/§7b).
+The formula below is materially more precise than this plan's earlier version — it has two
+mechanics that were previously missing entirely (residual pre-production costs, the direct
+materials adjustment), both of which move real dollars and are not optional simplifications:
+
 ```
-pre_production_ratio = preprod_additional_263A / preprod_471          # I-Pre / 471-Pre (+ mixed preprod share)
-production_ratio     = prod_additional_263A    / prod_471             # I    / 471     (+ mixed prod share)
-add'l_to_inv = pre_production_ratio*ending_inv_471_preprod + production_ratio*ending_inv_471_prod
+add'l_to_inv = (pre_production_ratio * pre_production_471_on_hand)
+             + (production_ratio     * production_471_on_hand)
+
+pre_production_ratio = pre_production_additional_263A / pre_production_471
+  # pre_production_additional_263A = additional §263A costs that are pre-production costs
+  #   (incurred before production begins, on property held/reasonably-likely-to-be-produced)
+  #   + the pre-production SHARE of capitalizable mixed service costs (see SSCM split below)
+  #   + additional §263A costs for property acquired for resale
+  #   + additional §263A costs for contract-produced property treated as taxpayer's own
+  # pre_production_471 = §471 direct material costs + §471 costs for property acquired for resale
+
+pre_production_471_on_hand = pre_production_471 remaining in ending inventory,
+  # EXCLUDING direct material costs that have already entered/completed production
+  # (i.e. WIP/finished-goods direct materials are NOT pre-production for this ratio —
+  # only unprocessed/raw materials still on hand count)
+
+residual_pre_production_263A = pre_production_additional_263A
+                              - (pre_production_ratio * pre_production_471_on_hand)
+  # the pre-production additional cost NOT absorbed into pre-production ending inventory
+  # rolls INTO the production ratio's numerator — do not drop it
+
+direct_materials_adjustment = beginning_DM_not_yet_in_production
+                             + DM_purchased_during_year
+                             - ending_DM_not_yet_in_production
+  # net direct materials that DID enter production during the year
+
+production_ratio = (production_additional_263A + residual_pre_production_263A)
+                  / (production_471 + direct_materials_adjustment)
+  # production_471 = total §471 costs incurred during the year MINUS pre_production_471 incurred
+production_471_on_hand = total §471 remaining on hand at year end MINUS pre_production_471_on_hand
 ```
-- Split additional & §471 pools pre-production vs production from the `mspm` codes. **Splitting the SSCM-capitalized `mixed_cap` between pre-production and production is NOT yet verified against primary source** — see the "Still unverified" note in the SSCM section above; do not lock this in from the earlier WebSearch-only lead without confirming §1.263A-2(c) text first.
+
+**SSCM split between pre-production and production (§1.263A-2(c)(3)(iii)(B)) — the item
+this plan previously flagged as unverified is now CONFIRMED, verbatim:** *"...the amount of
+capitalizable mixed service costs... allocated to and included in pre-production additional
+section 263A costs... is determined based on either of the following: The proportion of
+direct material costs to total section 471 costs that a taxpayer incurs during its current
+taxable year or the proportion of pre-production labor costs to total labor costs that a
+taxpayer incurs during its current taxable year."* Both options are real, it's a taxpayer
+choice (method of accounting), and — critically — the labor-based option requires excluding
+mixed-service labor from BOTH the pre-production-labor numerator and the total-labor
+denominator (mirrors the SSCM ratio's own exclusion rule). A **90% de minimis election**
+also applies here specifically ((c)(3)(iii)(C)): if 90%+ of capitalizable mixed service costs
+allocate to one bucket under either method, taxpayer may elect 100% to that bucket.
+Implement as `EntityProfile.mspm_mixed_split_method: Literal["direct_material", "labor"]`.
+
 - **Negatives + $50M rule (VERIFIED, §1.263A-1(d)(3)(ii)(B), see "Where we start"):** SPM excludes negative §263A when `avg_gross_receipts_prior3 > $50M` (already implemented as `LARGE_PRODUCER_THRESHOLD` + a warning — reuse it, don't recreate); **MSPM and SRM allow negatives with NO size restriction** (verified: (B)(2)/(B)(3) list MSPM/SRM with no dollar threshold, unlike (B)(1)'s SPM $50M cap). Add `avg_gross_receipts_prior3`, `include_negative_263a` fields to `EntityProfile`.
-- **HAR election:** 3-yr test period → frozen ratio(s) for a 6-yr qualifying period; recompute in yr 3; ±0.5% corridor. Fields: `har_election`, `har_ratios`, `har_prior_year_ratios`, `har_qualifying_year_index`.
-- Worked test: preprod 140k/1.0M=0.14, prod 360k/3.0M=0.12 → 0.14×250k + 0.12×900k = **143,000**.
+- **HAR election (VERIFIED, §1.263A-2(c)(4)):** requires 3+ consecutive prior years on MSPM with actual (not historic) ratios; frozen pre-production AND production historic ratios (or a combined ratio for LIFO) used for a 5-year qualifying period; recompute in year 6 (the "recomputation year") — if within ±0.5 percentage points of the historic ratio(s), extend 5 more years; if not, revert to actual ratios and rebuild a new 3-year test period. Fields: `har_election`, `har_preprod_ratio`, `har_production_ratio`, `har_qualifying_year_index`.
+- **De minimis for producers with ≤$200,000 total indirect costs (VERIFIED, §1.263A-2(b)(3)(iv), applies to MSPM via (c)(3)(v)):** additional §263A costs deemed zero — a real, cheap early-out worth implementing regardless of Phase B's other complexity.
+- **Canonical worked test — the regulation's OWN Example 1 (§1.263A-2(c)(3)(vi)(A), Taxpayer P), not a hand-built illustration: use this verbatim as the `test_mspm_srm.py` golden fixture, since every intermediate number is IRS-sourced, not derived.**
+  Inputs: pre-production §471 incurred $2,500,000 ($1,900,000 direct material + $600,000 resale); production §471 incurred $7,500,000; pre-production additional §263A incurred $200,000; production additional §263A incurred $800,000; pre-production §471 on hand at year end $1,000,000 ($800,000 direct material + $200,000 resale); production §471 on hand at year end $2,000,000; beginning direct materials not yet in production $400,000, ending $800,000.
+  - `pre_production_ratio = 200,000 / 2,500,000 = 8.00%`
+  - `residual_pre_production_263A = 200,000 - (8.00% × 1,000,000) = 120,000`
+  - `direct_materials_adjustment = 400,000 + 1,900,000 - 800,000 = 1,500,000`
+  - `production_ratio = (800,000 + 120,000) / (7,500,000 + 1,500,000) = 920,000 / 9,000,000 = 10.22%`
+  - `add'l_to_inv = (8.00% × 1,000,000) + (10.22% × 2,000,000) = 80,000 + 204,400 = **284,400**`
+  - Total ending inventory = $3,000,000 §471 + $284,400 = **$3,284,400**.
+- **SSCM-split worked tests, also verbatim from the regulation** ((c)(3)(vi) Examples 4-6): $200,000 capitalizable mixed service costs; direct-material method with $2,000,000 direct materials / $8,000,000 total §471 = 25% → **$50,000 pre-production / $150,000 production**; labor method with $1,000,000 pre-production labor / $10,000,000 total labor = 10% → **$20,000 pre-production / $180,000 production**; the labor-method case with a 90%+/production split → **100% to production** under the de minimis election.
 
 ### SRM (Reg §1.263A-3(d)) — combined ratio (two denominators)
 ```
