@@ -627,6 +627,7 @@ a claim to spot-check, not settled fact.
 - **Primary-source verification passes (§7a-§7f):** §1.263A-1 (SSCM/UNICAP general), §1.263A-2 (MSPM), §1.263A-3 (SRM), §1.263A-4 (farming), and §§1.263A-7 through -15 (change in method + full interest-capitalization scheme) regulation text retrieved and cross-checked directly; four IRS LB&I Practice/Concept Units (resellers, interest capitalization, self-constructed-asset costs, producers) cross-checked as independent secondary confirmation, then re-audited a second time by four parallel subagents (§7e) specifically checking whether the plan's own "VERIFIED" claims actually held up, then **red-teamed a third time (§7f)** — including an agent given only raw facts, with no knowledge of any prior answer, to independently re-derive the hardest number from scratch. Found and fixed: one real citation bug ($50M rule); two real missing MSPM mechanics (residual pre-production, direct materials adjustment); one real missing SRM method-availability gate (SPM-only above de minimis production) plus several smaller SRM gaps; one real missing §263A(f) de minimis designated-property exclusion and mid-production-purchase APE rule; a **materially wrong core avoided-cost-method formula** in Phase D that understated the golden worked example by ~16% (corrected from $323,571.43 to $376,428.57, then independently re-confirmed from scratch in §7f); **two separate false verification claims in this very document's own audit trail** (§7c's Phase-C-cost-methods claim, and §7d's Phase-D-formula claim — both retracted); and a genuine **self-contradiction** where Phase C silently misapplied SSCM to assets the plan's own SSCM section says likely don't qualify for it (plus two more instances of that same "reuses SSCM" staleness found and fixed in §7f, elsewhere in the document). Also resolved the "T.D. 10034" suspected-fabrication flag: the citation is real (§7d). **Standing lesson from this whole sequence: confident "verified"/"no discrepancy found" language in this document's own audit trail has twice turned out to be wrong — every entry, including this one, is a claim to spot-check, not settled fact.**
 - **Synthetic-data full-calculation stress test + final decisions (§8):** every formula (SPM/MSPM/SRM/SCA/§263A(f)) run end-to-end against non-trivial synthetic datasets by five parallel subagents; a real shipped-code taxonomy bug found and fixed (§8, intro); four genuine specification gaps found and closed with explicit adopted decisions (§8a-§8d). `BUILD_PLAN.md` updated throughout and declared final/buildable as of 2026-07-08.
 - **Full-text reconciliation, §§1.261-1..1.266-1 + §§1.263A-0..-15 (§10, 2026-07-09 second pass):** complete authoritative eCFR text supplied in-session — §9's provenance caveat lifted for everything it covers, and every §9 correction it covers confirmed verbatim. One §9 hedge reversed (the (h)(5) income-tax exclusion IS in the reg — partial retrieval of a correct paragraph had produced a false hedge); one adopted SME decision reversed (SRM 90/10 threshold = the (c)(5)(iii)(B) sales ratio, not an independent cost study); §1.263A-3(a)(4)(iv) resolved (production costs flow through the SRM formula itself); §1.263(a)-1/-3 and §1.266-1 verified (closing two of the three remaining unverified citations — only §1.471-11 remains); and ~10 genuinely new mechanics entered the plan (financial-statement-based §471 definition, MSPM+LIFO combined ratio, SRM handling exclusions incl. pick-and-pack, §1.263A-10 unit/common-feature rules, §1.263A-11(c) contract-payment APE rules, §1.263A-9(d) no-tracing election, aged-property production periods, de minimis safe harbor $2,500-authority note). Suite: 96 passing.
+- **Interview layer / question decision tree (§11, 2026-07-09):** review found the plan had no user-facing question inventory or conditional-ask logic (engine-first, fields scattered as implementation notes; three required questions absent entirely). Added BUILD_PLAN.md Phase E: declarative question graph (`taxonomy/interview.yaml` + `interview.py`), seven gates with exemption short-circuiting, FACT/ELECTION/METHOD-OF-ACCOUNTING tagging feeding the Form 3115 warning, per-facility/per-asset/per-unit/per-line sub-trees, and graph-validation + path tests.
 - **Full regulation-by-regulation review, §§1.263A-1..-15 (§9, 2026-07-09):** five parallel agents, clause-by-clause against retrieved regulation text (mirrored/search channels — canonical hosts blocked; provenance in §9). Five MATERIAL findings, all fixed: the shipped SSCM labor-ratio denominator was backwards on two counts vs (h)(4) (code + tests fixed — prior workpapers used a wrong ratio); the "one-sided 90% rule" correction from §7e was itself wrong (both sides exist at (g)(4)(ii), asymmetrically); Phase D's §1221 carve-out misread an eCFR rendering artifact as a nonexistent "§1221(l) patent provision" (it's the §1221(a)(1) inventory carve-out); the dropped "associated property rule eliminated" claim was actually TRUE (restored, with a pre/post-Oct-2025 dual-regime implication); a day-proration sentence contradicted the (f)(2)(iii) measurement-date convention. Plus: the SRM (a)(4)(ii)-vs-(a)(5) open question RESOLVED (taxpayer size), the MSC sub-split found prescribed at (d)(3)(i)(F), the §1.263A-7 method-change gap partially in-scoped, the §448(c) 2026 threshold verified ($32M), a tax-shelter bar added to the exemption, and ~30 smaller citation/scope corrections. Suite: 96 passing. Four standing lessons recorded (§9.8).
 
 ---
@@ -1098,3 +1099,36 @@ verified against primary text either supplied in-session or independently retrie
 
 Code changes this pass: `analysis.py` (documentation comment on the de minimis ceiling authority
 only — no computational change). Suite: 96 passing.
+
+---
+
+## §11 — Interview layer added: the user-question inventory and decision tree (2026-07-09)
+
+A direct review question ("does the plan include all the questions users must answer, and a
+platform that asks them via decision trees?") surfaced an honest NO: the plan was engine-first —
+its fields, elections, and gates existed but were scattered across sections as implementation
+notes, with no consolidated user-facing question set, no ask-ordering, no conditional logic, and
+no fact/election/method-of-accounting distinction. Three required questions existed NOWHERE in any
+form: the de minimis safe harbor's written-accounting-procedures-at-year-start prerequisite and
+its annual-statement election mechanics (§1.263(a)-1(f)); the per-building small-taxpayer safe
+harbor election (§1.263(a)-3(h)); and the established-prior-year-method question that drives the
+Form 3115 trigger as an interview input rather than an after-the-fact warning.
+
+**Resolution: BUILD_PLAN.md Phase E** — `interview.py` + a declarative `taxonomy/interview.yaml`
+question graph (id / question / answer type / maps-to field / authority / ask-when predicate /
+kind / consequence), validated at load with the same discipline as the taxonomy (every
+engine-consumed field reachable, no orphan questions). Seven gates encode the decision tree:
+Gate 0 (identity/exemption/adoption-vs-change — the §448(c) exemption SHORT-CIRCUITS gates 1-3,
+6-7 while §263(a)/§266 gates still run, and the prior-year-method answer arms the 3115 warning),
+Gate 1 (activity profile → method availability matrix), Gate 2 (method + elections, each tagged
+FACT / ELECTION / METHOD-OF-ACCOUNTING), Gate 3 (method-conditioned balance inputs + the
+per-facility SRM sub-tree), Gate 4 (§263(a) safe harbors and BAR follow-ups, per flagged line),
+Gate 5 (§266 election confirmation — wiring the still-open §3 item 3 into the interview), Gate 6
+(per-asset SCA sub-tree incl. the SSCM (C)/(D) route facts and the officer-involvement surfacing),
+Gate 7 (per-unit and per-debt §263A(f) sub-trees incl. tracing posture as a three-way choice:
+trace / §1.263A-9(d) no-tracing / AFR-plus-3). Sequencing updated: Gate 0-2 core builds early
+(it populates `EntityProfile` for everything and tells Phase A which schedules to request);
+Gates 3/6/7 land with Phases B/C/D respectively.
+
+Scope note: the deliverable is the question graph + runner (CLI prompts or JSON answers file) —
+a graphical front end is out of scope; any UI consumes the same YAML.

@@ -992,6 +992,123 @@ total = Σ units (traced_interest_period + each unit's possibly-prorated excess_
 
 ---
 
+## Phase E — Interview layer: the question inventory and decision tree (ADDED 2026-07-09)
+
+**Gap this phase closes:** every engine above consumes `EntityProfile` fields and schedules but nothing specified how
+they get populated. A user cannot be handed a 40-field dataclass; the tool needs an interview that asks only the
+questions the taxpayer's prior answers make relevant, distinguishes facts from elections from methods of accounting,
+and emits a fully-populated `EntityProfile` + schedule requirements list + warnings. This section is the
+authoritative question inventory; the engines' sections above remain the authority for each rule's mechanics.
+
+**Architecture:** `interview.py` + `taxonomy/interview.yaml`. The YAML is a declarative question graph — each node:
+`id`, `question`, `answer_type` (bool/enum/decimal/date/per-item), `maps_to` (EntityProfile field / schedule
+column / per-line override), `authority`, `ask_when` (predicate over prior answers — this IS the decision tree),
+`kind` (**FACT** / **ELECTION** / **METHOD-OF-ACCOUNTING**), and `consequence` (gates skipped or unlocked; warnings
+emitted). Loader validates: every engine-consumed field is populated by exactly one reachable node or an explicit
+default; every `ask_when` references defined nodes (same validate-at-load discipline as the taxonomy). Every
+`kind: METHOD-OF-ACCOUNTING` answer that differs from the established-method answer (Q0.6) emits the
+`METHOD-CHANGE-3115-481A-REQUIRED` warning; first-§263A-year adoption does not. Sub-trees repeat per facility
+(Gate 3), per asset (Gate 6), per unit/per debt instrument (Gate 7), and per flagged line (Gate 4).
+
+**Gate 0 — Identity, exemption, and adoption-vs-change (asked always; can END most of the interview):**
+- Q0.1 Entity type (c_corp/s_corp/partnership/sole_prop) → `entity_type`. FACT. Unlocks §707(c) guaranteed-payment
+  questions (Gate 7) for partnerships; determines who signs elections (entity-level for S corps/partnerships).
+- Q0.2 Tax year → `tax_year`. FACT. Drives §448(c) threshold lookup and the T.D. 10034 pre/post-Oct-2025 regime.
+- Q0.3 Is the taxpayer a tax shelter under §448(a)(3) (syndicate/loss-allocation tests)? → `is_tax_shelter`. FACT.
+  If yes: exemption barred regardless of receipts (skip Q0.4's exemption consequence).
+- Q0.4 Aggregated 3-yr average gross receipts under §448(c)(2)/§1.448-2 (single-employer aggregation — ask the
+  related-entities sub-questions needed to aggregate) → `avg_gross_receipts`. FACT. If ≤ threshold and not Q0.3 →
+  `small_business_exempt`: **skip Gates 1-3, 6, 7 entirely** (all §263A off, including (f)); Gates 4-5 (§263(a),
+  §266 — not §263A provisions) still run.
+- Q0.5 First taxable year with production/resale activities? → `is_first_263a_year`. FACT. If yes → methods below
+  are ADOPTED (no 3115); if no → Q0.6.
+- Q0.6 Established §263A method last year (SPM/MSPM/SRM/facts-and-circumstances/none-noncompliant) + established
+  sub-elections → `prior_year_method`. FACT. Any divergence from answers below → 3115 warning + the
+  revalued-beginning-inventory input-contract notice (§1.263A-7).
+
+**Gate 1 — Activity profile and method availability (ask unless exempt):**
+- Q1.1 Produces real/tangible property? Acquires for resale? Both? → `produces`/`acquires_for_resale`. FACT.
+- Q1.2 (if both) Production gross receipts and production labor as shares of the trade or business (measured at
+  trade-or-business level per (a)(5)(ii)) → `production_activity_level` via the 10%/10% presumption; below both →
+  presumed de minimis, above → facts-and-circumstances follow-up (volume). FACT.
+- Q1.3 (if production de minimis) Incident to resale of §1221(a)(1) property? → `production_incident_to_resale`. FACT.
+- Q1.4 Private-label production (contract, UNRELATED party, incident to resale, sold to customers — three
+  sub-questions)? → `private_label_goods`. FACT.
+- Consequence matrix (no question — computed): SRM available only if pure reseller, or de-minimis-incident
+  ((a)(4)(ii)), or private-label ((a)(4)(iii)); otherwise SPM/MSPM only (`method_conflict` if SRM chosen).
+
+**Gate 2 — Inventory & UNICAP method elections (ask unless exempt):**
+- Q2.1 Inventory method (FIFO / specific-goods LIFO / dollar-value LIFO; if LIFO → layer detail) → `inventory_method`,
+  `lifo_layers`. FACT (established method).
+- Q2.2 §263A method this year (menu constrained by Gate 1) → `method`. METHOD-OF-ACCOUNTING.
+- Q2.3 (SPM only) >$50M 3-yr receipts? → negatives barred; else Q2.4.
+- Q2.4 Include negative §263A adjustments? → `include_negative_263a`. METHOD-OF-ACCOUNTING; warn on the
+  (d)(3)(ii)(C)-(E) restrictions (no negatives for discounts / §162(c)(e)(f)(g) items; consistency).
+- Q2.5 (producers) Total indirect costs ≤ $200,000 (after excluding not-required-to-capitalize categories;
+  related-party aggregated)? → de-minimis zero additional §263A; **skip Gates 2.6-2.8 and 3's ratio inputs**. FACT.
+- Q2.6 HAR election? `ask_when`: 3+ consecutive prior years on Q2.2's method with actual ratios AND not Q2.5-zero →
+  `har_election` + ratio/qualifying-year inputs. METHOD-OF-ACCOUNTING (cut-off).
+- Q2.7 (MSPM) SSCM-split method (direct-material vs. labor) → `mspm_mixed_split_method`; and the (c)(3)(iii)(C) 90%
+  one-bucket election. Both METHOD-OF-ACCOUNTING.
+- Q2.8 SSCM: elected? ratio method (labor; production-cost offered ONLY if producer per (h)(3)(ii)) →
+  `sscm_ratio_method`; exclude-self-constructed-assets election ((h)(2)(ii)); (g)(4)(ii) all-departments 90%
+  election → `msc_90_10_election`. Each METHOD-OF-ACCOUNTING.
+- Q2.9 Book-conformity check (§1.263A-1(d)(2)): does financial-statement capitalization match the classifier's
+  §471/Additional tier split? On TD 9843 elective methods ((d)(2)(iii)/(iv)/(v))? → review-queue flags, not fields
+  (flag-don't-model per Phase B). FACT.
+
+**Gate 3 — Balance and cost-pool inputs (menu strictly follows Q2.2):** SPM → `ending_inventory_471`. MSPM → the
+current-year-incurred on-hand set (pre-/production incurred and on-hand, DM-not-in-production begin/end — with the
+input-contract language from the MSPM DECISION block). SRM → purchases, beginning inventory (LIFO carrying value if
+Q2.1=LIFO), 1/3-2/3 purchasing-labor election (ELECTION, all-or-nothing), write-down carve-out, permissible-variation
+flags (`srm_variation_a/b`, METHOD-OF-ACCOUNTING), then a **per-facility sub-tree**: attached to retail facility? →
+integral part? → exclusively retail on-site sales (the (E)(2) four-part test if non-retail customers exist)? →
+dual-function → on-site sales $ and total gross sales $ INCLUDING inter-facility shipments (the (B) ratio; 90/10
+deeming applied to it per the reversed decision above); handling-cost exclusion prompts (store-level handling,
+distribution, custom-order, pick-and-pack) per the (c)(4) bullet.
+
+**Gate 4 — §263(a) tangible-property questions (always asked; per flagged line where noted):**
+- Q4.1 De minimis safe harbor: AFS? (→ ceiling authority) — **written accounting procedures in place at the
+  BEGINNING of the year** ((f)(1)(i)(B)/(ii)(B) — a prerequisite fact no prior draft of this plan captured
+  anywhere)? elect this year? → ANNUAL ELECTION (statement on timely filed return, irrevocable for the year, NOT a
+  method change — (f)(5)).
+- Q4.2 Small-taxpayer building safe harbor ((h)): ≤$10M receipts under (h)(3)'s OWN definition (not §448(c))?
+  per-building: unadjusted basis ≤$1M? repairs+improvements ≤ lesser of 2% basis or $10,000? → ANNUAL PER-BUILDING
+  ELECTION — also not previously in this plan.
+- Q4.3 Routine-maintenance safe harbor facts (twice-in-10-years / twice-in-class-life expectation) — per flagged
+  line from the review queue. FACT.
+- Q4.4 Election to capitalize repairs per books ((n)) → ANNUAL ELECTION. BAR follow-ups (betterment/restoration/
+  adaptation sub-questions) per flagged improvement line.
+
+**Gate 5 — §266 (always asked where classifier flags candidates):** property unimproved AND unproductive this year
+(annual election)? development/construction project (election sticks to completion)? election statement confirmed
+filed? → resolves the still-open §3 item 3 confirmation workflow.
+
+**Gate 6 — SCA (ask if self-constructed assets exist; per asset):** SSCM eligibility routes (C) or (D) (three
+sub-facts each); book-capitalized indirect costs already in CIP (double-count guard); pool/driver assignments
+(validated against `sca_drivers.yaml`); officer materially involved in construction? (surfaces the open §8c-adjacent
+officer-comp limitation rather than silently proceeding).
+
+**Gate 7 — §263A(f) (ask if designated-property candidates exist; per unit, then per debt instrument):** per-unit
+classification (real? improvement + (d)(3)(iii) gate? class life ≥20 + held-for-sale carve-out? period/cost
+estimates with the contemporaneous-records question ((b)(2)(iii))? 90-day/$1M-per-day de minimis? excluded
+property? related-person activities?); unit-of-property structure (common features, benefitted-unit map, per-property
+activity dates — §1.263A-10); produced under contract → customer/contractor role + payments-by-date; computation
+period & measurement-date frequency (METHOD-OF-ACCOUNTING); tracing posture — trace / §1.263A-9(d) no-tracing
+election (METHOD-OF-ACCOUNTING) / AFR-plus-3 (ask_when: $10M test OR small-business route; METHOD-OF-ACCOUNTING,
+forecloses tracing); per-debt eligible-debt exclusion screens ((a)(4)(i)-(ix)); suspension election (120-day facts +
+inherent-cause carve-out; METHOD-OF-ACCOUNTING, all-units consistency); 15-day repayment toggle (per-period, NOT a
+method). Partnerships (from Q0.1): guaranteed payments for use of capital ((c)(2)(iii)).
+
+**Build/test notes:** the interview emits (a) a populated `EntityProfile`, (b) the list of schedules Phase A must
+ingest for this taxpayer (only what the answers require), (c) the election/3115 summary for the workpaper, and (d)
+warnings. Tests: graph-validation tests (every engine field reachable; no orphan questions), path tests (exempt
+taxpayer answers 6 questions and is done; pure reseller never sees MSPM questions; SRM blocked when Gate 1 says
+`method_conflict`), and a golden full-path fixture per method. UI is out of scope — the deliverable is the question
+graph + `interview.py` runner (CLI prompts or a JSON answers file); any front end consumes the same YAML.
+
+---
+
 ## Sequencing & why
 
 1. **Phase A first** — the four new schedules (BTD, FixedAsset, CIP, Debt) are the inputs Phases C/D consume ("three" was a stale count, fixed 2026-07-09; and per the corrected intro, Phase B is NOT actually gated on Phase A — only C/D are).
@@ -1001,11 +1118,15 @@ total = Σ units (traced_interest_period + each unit's possibly-prorated excess_
    analysis; this line previously said "reuses SSCM" unconditionally, which was stale relative to that fix);
    produces `ape_by_asset`.
 4. **Phase D (§263A(f))** — needs FixedAsset/CIP/Debt (Phase A) and SCA's APE hand-off (Phase C); hardest, so last.
+5. **Phase E (interview layer)** — build its Gate 0-2 core EARLY (alongside or before Phase B), since it is what
+   populates `EntityProfile` for every engine and what tells Phase A which schedules a given taxpayer even needs;
+   Gates 3-7 land with their corresponding engine phases (Gate 3 with B, Gate 6 with C, Gate 7 with D). Gates 4-5
+   can ship any time — they gate classifier-level decisions, not engines.
 
 Each phase ships standalone value and keeps the waterfall tie-out.
 
 ## Files
-- **New:** `readers.py`, `engines/sca.py`, `engines/interest.py`, `taxonomy/sca_drivers.yaml`, tests `test_readers.py`/`test_mspm_srm.py`/`test_sca.py`/`test_interest.py`.
+- **New:** `readers.py`, `engines/sca.py`, `engines/interest.py`, `taxonomy/sca_drivers.yaml`, `interview.py` + `taxonomy/interview.yaml` (Phase E), tests `test_readers.py`/`test_mspm_srm.py`/`test_sca.py`/`test_interest.py`/`test_interview.py`.
 - **Extend:** `model.py` (schedule + SCA dataclasses, `EngagementData`, `ValidationReport`), `analysis.py` (EntityProfile fields, dispatcher, `compute_mspm/srm/sca`, call `compute_263Af`), `report.py` (per-asset Asset Basis, §263A(f) tab, MSPM/SRM tables, Data Quality tab, waterfall wiring).
 
 ## Verification
