@@ -627,6 +627,7 @@ a claim to spot-check, not settled fact.
 - **Primary-source verification passes (§7a-§7f):** §1.263A-1 (SSCM/UNICAP general), §1.263A-2 (MSPM), §1.263A-3 (SRM), §1.263A-4 (farming), and §§1.263A-7 through -15 (change in method + full interest-capitalization scheme) regulation text retrieved and cross-checked directly; four IRS LB&I Practice/Concept Units (resellers, interest capitalization, self-constructed-asset costs, producers) cross-checked as independent secondary confirmation, then re-audited a second time by four parallel subagents (§7e) specifically checking whether the plan's own "VERIFIED" claims actually held up, then **red-teamed a third time (§7f)** — including an agent given only raw facts, with no knowledge of any prior answer, to independently re-derive the hardest number from scratch. Found and fixed: one real citation bug ($50M rule); two real missing MSPM mechanics (residual pre-production, direct materials adjustment); one real missing SRM method-availability gate (SPM-only above de minimis production) plus several smaller SRM gaps; one real missing §263A(f) de minimis designated-property exclusion and mid-production-purchase APE rule; a **materially wrong core avoided-cost-method formula** in Phase D that understated the golden worked example by ~16% (corrected from $323,571.43 to $376,428.57, then independently re-confirmed from scratch in §7f); **two separate false verification claims in this very document's own audit trail** (§7c's Phase-C-cost-methods claim, and §7d's Phase-D-formula claim — both retracted); and a genuine **self-contradiction** where Phase C silently misapplied SSCM to assets the plan's own SSCM section says likely don't qualify for it (plus two more instances of that same "reuses SSCM" staleness found and fixed in §7f, elsewhere in the document). Also resolved the "T.D. 10034" suspected-fabrication flag: the citation is real (§7d). **Standing lesson from this whole sequence: confident "verified"/"no discrepancy found" language in this document's own audit trail has twice turned out to be wrong — every entry, including this one, is a claim to spot-check, not settled fact.**
 - **Synthetic-data full-calculation stress test + final decisions (§8):** every formula (SPM/MSPM/SRM/SCA/§263A(f)) run end-to-end against non-trivial synthetic datasets by five parallel subagents; a real shipped-code taxonomy bug found and fixed (§8, intro); four genuine specification gaps found and closed with explicit adopted decisions (§8a-§8d). `BUILD_PLAN.md` updated throughout and declared final/buildable as of 2026-07-08.
 - **Full-text reconciliation, §§1.261-1..1.266-1 + §§1.263A-0..-15 (§10, 2026-07-09 second pass):** complete authoritative eCFR text supplied in-session — §9's provenance caveat lifted for everything it covers, and every §9 correction it covers confirmed verbatim. One §9 hedge reversed (the (h)(5) income-tax exclusion IS in the reg — partial retrieval of a correct paragraph had produced a false hedge); one adopted SME decision reversed (SRM 90/10 threshold = the (c)(5)(iii)(B) sales ratio, not an independent cost study); §1.263A-3(a)(4)(iv) resolved (production costs flow through the SRM formula itself); §1.263(a)-1/-3 and §1.266-1 verified (closing two of the three remaining unverified citations — only §1.471-11 remains); and ~10 genuinely new mechanics entered the plan (financial-statement-based §471 definition, MSPM+LIFO combined ratio, SRM handling exclusions incl. pick-and-pack, §1.263A-10 unit/common-feature rules, §1.263A-11(c) contract-payment APE rules, §1.263A-9(d) no-tracing election, aged-property production periods, de minimis safe harbor $2,500-authority note). Suite: 96 passing.
+- **Pre-build completeness validation of the interview layer (§12, 2026-07-09):** three parallel agents (field-reachability audit, golden-example dry run, adversarial fresh-eyes gap hunt) pressure-tested Phase E as a spec, before any interview code exists. Two of the four golden worked examples FAILED as originally written — SRM's own `ending_inventory_471` multiplier (confirmed independently by two agents) and MSPM's `DM_purchased_during_year` were both silently un-asked — plus a load-bearing Gate 0/1 contradiction (an undefined `none-noncompliant` prior-method path) and 8 further Gate-7 per-unit/per-debt gaps (aged-property periods, producing-asset APE inputs, T.D. 10034 mid-production purchase price, pre-2025 associated-property inputs, `production_complete` vs. placed-in-service, AFR-plus-3's since-1994 look-back, the A/P fold-in sub-election, related-person activities-vs-costs). All fixed inline in Phase E. One item deliberately deferred and documented: full `Q#.#` numbering of Gates 3/5/6/7 before `interview.yaml` is authored.
 - **Interview layer / question decision tree (§11, 2026-07-09):** review found the plan had no user-facing question inventory or conditional-ask logic (engine-first, fields scattered as implementation notes; three required questions absent entirely). Added BUILD_PLAN.md Phase E: declarative question graph (`taxonomy/interview.yaml` + `interview.py`), seven gates with exemption short-circuiting, FACT/ELECTION/METHOD-OF-ACCOUNTING tagging feeding the Form 3115 warning, per-facility/per-asset/per-unit/per-line sub-trees, and graph-validation + path tests.
 - **Full regulation-by-regulation review, §§1.263A-1..-15 (§9, 2026-07-09):** five parallel agents, clause-by-clause against retrieved regulation text (mirrored/search channels — canonical hosts blocked; provenance in §9). Five MATERIAL findings, all fixed: the shipped SSCM labor-ratio denominator was backwards on two counts vs (h)(4) (code + tests fixed — prior workpapers used a wrong ratio); the "one-sided 90% rule" correction from §7e was itself wrong (both sides exist at (g)(4)(ii), asymmetrically); Phase D's §1221 carve-out misread an eCFR rendering artifact as a nonexistent "§1221(l) patent provision" (it's the §1221(a)(1) inventory carve-out); the dropped "associated property rule eliminated" claim was actually TRUE (restored, with a pre/post-Oct-2025 dual-regime implication); a day-proration sentence contradicted the (f)(2)(iii) measurement-date convention. Plus: the SRM (a)(4)(ii)-vs-(a)(5) open question RESOLVED (taxpayer size), the MSC sub-split found prescribed at (d)(3)(i)(F), the §1.263A-7 method-change gap partially in-scoped, the §448(c) 2026 threshold verified ($32M), a tax-shelter bar added to the exemption, and ~30 smaller citation/scope corrections. Suite: 96 passing. Four standing lessons recorded (§9.8).
 
@@ -1132,3 +1133,106 @@ Gates 3/6/7 land with Phases B/C/D respectively.
 
 Scope note: the deliverable is the question graph + runner (CLI prompts or JSON answers file) —
 a graphical front end is out of scope; any UI consumes the same YAML.
+
+## §12 — Pre-build completeness validation of the interview layer (2026-07-09)
+
+**Trigger:** a direct question — "how can you test this and make sure it has everything needed
+before you do an actual build?" — asked after Phase E (§11) closed the "no user-facing question
+inventory" gap but before any Phase E code exists. Since `interview.yaml` isn't written yet,
+"testing" here means validating the PROSE SPECIFICATION in `BUILD_PLAN.md`'s Phase E section
+against (a) what the engines actually require and (b) taxpayer scenarios more complex than the
+plan's own worked examples — the same discipline Phase E's own build notes call for
+("graph-validation tests... every engine field reachable"), applied by hand before the graph is
+code.
+
+**Methodology — three independent agents, run in parallel, each with no visibility into the
+others' work:**
+1. **Field-reachability audit** — enumerated every `EntityProfile` field / schedule column /
+   election flag named anywhere in the engine sections (SSCM, MSPM, SRM, LIFO, SCA, §263A(f)),
+   including ones introduced only in inline "DEFINITIONAL CONSTRAINTS" code-comment blocks, and
+   checked each against Phase E's Gates 0-7 for a question that would populate it.
+2. **Golden-example dry run** — reconstructed the full taxpayer fact pattern behind each of the
+   plan's four verified worked examples (MSPM's $284,400/$3,284,400 Taxpayer-P example; SRM's
+   $36,875 example; SCA's $55,000/asset example; §263A(f)'s $376,428.57 example) and hand-traced
+   that taxpayer through Gates 0-7 as literally written, checking whether the interview would
+   actually arrive at the exact inputs those formulas need.
+3. **Adversarial fresh-eyes gap hunt** — invented a composite taxpayer deliberately outside all
+   five existing worked examples (a partnership, producing AND reselling above the 10%/10% de
+   minimis threshold, LIFO, a dual-function retail/warehouse facility, mid-construction on a
+   self-constructed asset with both traced and nontraced debt, in its second year on SRM after
+   switching off SPM) and walked it through the gates looking for points where the described
+   interview breaks down, contradicts itself, or has no defined next step.
+
+**Findings — two of the four golden traces FAILED as originally written, both on load-bearing
+inputs the SRM/MSPM formulas cannot compute without:**
+- **SRM ($36,875 example) — FAIL, confirmed independently by BOTH the field-reachability audit
+  AND the golden-example dry run:** Gate 3's SRM branch never asked for `ending_inventory_471` —
+  the §471-costs-remaining-on-hand-at-year-end figure that is the direct multiplier in
+  `add'l_to_inv = combined * ending_inventory_471`. It jumped from beginning inventory straight to
+  the write-down carve-out (an adjustment to a number that was never established). The
+  field-reachability audit separately found the SRM numerator (`purchasing_costs`, the
+  purchasing-department cost pool) was also never asked, and that Gate 3's bare word "purchases"
+  was ambiguous between that field and `current_year_471_costs` (the reg's "current year's
+  purchases," a different, already-named field).
+- **MSPM ($284,400 example) — FAIL:** the golden-example dry run found Gate 3's MSPM branch never
+  separately asked for `DM_purchased_during_year` — a fact distinct from both the aggregate
+  pre-production-incurred figure and the DM-not-in-production begin/end stock figures, and one
+  the `direct_materials_adjustment` formula in the MSPM section directly requires.
+- **HAR `ask_when` not scoped to MSPM:** the golden-example dry run separately noticed Gate 2's
+  Q2.6 (HAR election) had no method restriction at all, so as written it would incorrectly fire
+  for SPM/SRM taxpayers too, even though HAR is an MSPM-only mechanic.
+- **Gate 0/Gate 1 contradiction (adversarial run):** Q0.6 offers `none-noncompliant` as a
+  prior-year-method answer, but nothing defines what happens when a taxpayer's stated prior
+  method (e.g. SRM) turns out to have been legally unavailable under Gate 1's own
+  method-availability matrix — a discovered-impermissible-method scenario the interview had no
+  path for.
+- **SCA ($55,000/asset) and §263A(f) ($376,428.57) golden traces both PASSED** — no missing fact
+  found; Gate 6/7's topic coverage was adequate for those two examples, with only soft
+  (non-blocking) observations noted.
+- **Adversarial run found 11 total snags**, the Gate 0/1 contradiction above being the only
+  hard, load-bearing one; the rest were unscoped `ask_when` conditions, a Gate-5/Gate-7 ordering
+  conflict for a self-constructed real-property asset that is simultaneously a §266 development-
+  project candidate (per §1.266-1(a)(2), §263A(f) must be determined first), a Gate 6 question
+  with no defined cost-allocation-method screen (Specific ID vs. burden rate vs. standard cost —
+  this tool implements Specific ID only, per Phase C's own scope), and "officer" terminology not
+  adapted for a partnership entity type.
+- **Field-reachability audit found 11 gaps total** (see above for the two shared with the
+  dry-run) plus, in Gate 7's per-unit/per-debt tree specifically: the aged-property
+  (tobacco/wine/whiskey) production-period extension; producing-asset basis + usage-apportionment
+  for equipment used TO PRODUCE a unit (moves real dollars into APE); the T.D. 10034
+  mid-production-acquisition purchase price; the pre-Oct-2025 associated-property inputs for the
+  dual regime; a `production_complete` date distinct from `placed_in_service_date`; the
+  since-1994 (not just 3-year) look-back for AFR-plus-3 eligibility; the §1.263A-9(d)(1)
+  accounts-payable fold-in sub-election; and related-person ACTIVITIES vs. related-person COSTS
+  as two distinct data needs, not one question. Plus 7 lower-severity ambiguous items (an
+  unnamed field for MSPM's 90%-one-bucket election; an orphaned `production_gross_receipts`
+  field; the already-shipped `mixed_alloc_ratio` override and legacy Phase-4 fallback scalars
+  never addressed by Phase E).
+
+**All findings fixed in `BUILD_PLAN.md`'s Phase E section directly** (dated `ADDED`/`CORRECTED`/
+`CLARIFIED` 2026-07-09 inline, following this document's established annotation convention):
+the two SRM inputs and the MSPM input added to Gate 3 with explicit disambiguation from their
+same-formula neighbors; HAR's `ask_when` scoped to MSPM; the Q0.6/Gate-1 reconciliation node
+(Q0.6a) added with a distinct `PRIOR-METHOD-IMPERMISSIBLE` flag for the discovered-impermissible-
+method case; the Gate 5/Gate 7 cross-dependency documented; a cost-allocation-method question
+added to Gate 6 along with entity-neutral "officer" wording; the 8 Gate-7 per-unit/per-debt gaps
+added as a consolidated bullet; the MSPM 90%-election field named; and a scope note added
+clarifying `mixed_alloc_ratio` and the legacy Phase-4 fallback scalars are intentionally outside
+Phase E's question set.
+
+**Deliberately NOT fixed this pass (documented, not silently dropped):** the actual `Q#.#`
+numbering of Gates 3, 5, 6, and 7 (currently unnumbered prose/topic lists, unlike Gates 0/1/2/4)
+— flagged inline in `BUILD_PLAN.md` as documentation debt to resolve when `taxonomy/interview.yaml`
+is actually authored, since the loader's reachability validation needs real node IDs to check
+against. The §446(e) discovered-impermissible-method CORRECTION computation itself remains out of
+scope (same boundary as the existing §1.263A-7 revaluation/§481(a) computation deferral).
+
+**Standing-lesson note:** this is the first validation pass in this document's history performed
+entirely against a PROSE SPECIFICATION with no code and no regulation text to re-verify — it
+tested internal consistency and completeness of the plan itself, not tax accuracy. It caught two
+independently-confirmed load-bearing gaps in worked examples this same document had already
+"verified" as buildable (§8/§10/§11) — a reminder that "the formula is correct" and "the
+interview that's supposed to gather the formula's inputs actually gathers them" are separate
+claims, and this document's prior passes had only ever tested the former.
+
+Suite: 96 passing (docs-only change; no code touched this pass).
