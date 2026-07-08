@@ -339,7 +339,37 @@ total = min(Σ units, total_interest_incurred)       # cap; if binds, pro-rate +
   | 4 | 6,500,000 | 8,000,000 | 7,250,000 | 3,000,000 | 45,000.00 | 4,250,000 | 75,892.86 |
 
   Totals: traced **176,250.00** + avoided **147,321.43** = **323,571.43** capitalized (verified with exact `Decimal` arithmetic, not rounded intermediates). Cap (`total_interest_incurred`, assumed ≥ $500,000 across traced + nontraced debt in this example) doesn't bind. Q1's traced-applied equals its full APE (excess = 0) because the loan principal exceeds the APE that quarter — illustrates the "uncovered" case only starting Q2, once cumulative APE outgrows the $3M traced loan and the excess spills into the avoided-cost/nontraced-WAIR calculation. This table is the literal fixture for `test_interest.py` — encode the per-quarter APE_open/close pairs directly rather than re-deriving them.
-- **⚠ "T.D. 10034 (Oct 2025)" citation is UNVERIFIED and under active suspicion of fabrication** (flagged by a citation-accuracy audit — see `docs/TAX_DECISIONS.md` §7 — no Treasury Decision by this number is recognized). Do NOT gate any tax-year cutover logic on this T.D. number without first confirming, from a primary source (IRS.gov, a tax research service, or direct reg-text lookup), that it exists and says what's described below. If it does not check out, treat the associated-property-rule/improvement-interest change described here as unconfirmed and drop the `tax_year`-gated behavior entirely rather than shipping a citation-shaped guess. As specified (pending that verification): associated-property rule eliminated (don't add land/existing structure to APE for TY≥2026); interest narrowed for improvements (`is_improvement` → only the improvement's own costs in APE). Flags `ASSOCIATED-PROPERTY-EXCLUDED`, `IMPROVEMENT-NARROWED-2025`.
+- **"T.D. 10034" is REAL — RESOLVED 2026-07-08, primary text retrieved and read (26 CFR 1.263A-8/-11/-12/-15
+  as currently in force).** The earlier "suspected fabrication" flag from the citation-accuracy audit was itself
+  wrong — a case of an under-verified guess turning out to be model recall of a genuine, recently-added citation.
+  T.D. 10034, 90 FR 47582/47583, Oct. 2, 2025, amended §1.263A-8(d)(3), §1.263A-11(e)-(f), and consequentially
+  §1.263A-15(a)(6), **effective for tax years beginning after October 2, 2025** (a change in method of accounting
+  under §§446/481 — not a self-executing cutover). Confirmed content, replacing the earlier speculative
+  description:
+  - §1.263A-8(d)(3): any improvement to real or tangible personal property (under §1.263(a)-3 / §1.263A-2(a)(2)(ii))
+    constitutes production of designated property, UNLESS the de minimis exception (§1.263A-8(b)(4)) applies or
+    the activity is a repair/maintenance item under §1.162-4(a) — this confirms `is_improvement` needs its own
+    de-minimis and repair-carve-out checks, not just a flag.
+  - §1.263A-11(e) (new): APE for an improvement is limited to costs required to be capitalized **with respect to
+    the improvement itself** — this is exactly the plan's prior `is_improvement` guess (narrow the APE to the
+    improvement's own costs) and is now CONFIRMED, not speculative. Implement as: when `is_improvement`, APE
+    excludes the pre-existing property's basis/APE entirely.
+  - §1.263A-11(f) (new, NOT previously in this plan at all): a **mid-production purchase** rule — if a taxpayer
+    buys a unit of property for further production before placing it in service, APE includes the **full purchase
+    price** of the purchased unit PLUS all additional direct/indirect production costs the taxpayer incurs
+    afterward. Real new mechanic: add an `EntityProfile`/CIP-detail field for "acquired mid-production, purchase
+    price" so the APE calc doesn't understate basis for assets bought partway through construction by someone
+    else.
+  - The "associated property rule eliminated" half of the old guess is **not confirmed by this text** — no
+    "associated property" rule appears anywhere in §§1.263A-8 through -15 as retrieved. Drop that claim; it may
+    have been a hallucinated elaboration on the real T.D. number, or it may live in text not yet retrieved (e.g.
+    a different subsection). Flags `IMPROVEMENT-NARROWED-2025` (confirmed), `MID-PRODUCTION-PURCHASE` (new).
+  - Lower-priority, noted but not yet spec'd: §1.263A-9(g)(7) 15-day repayment election (treat debt repaid within
+    15 days before a quarterly measurement date as still outstanding on that date — prevents WAIR "mismatch"
+    inflation) and §1.263A-9(g)(3) simplified inventory method (an alternative to per-unit avoided-cost tracking
+    for inventory-only designated property, using inventory-age segmentation and a compounded interest factor per
+    segment — a materially different algorithm from the per-unit method already spec'd above; treat as a
+    stretch-goal alternative path, not a required build item).
 - Outputs: a real **§263A(f) Interest tab** (per-unit 7-step APE worksheet in Practice-Unit format), the interest column of the Asset Basis Schedule, and the Summary `§263A(f) Interest` bucket (route *capitalized* interest to the bucket; incurred − capitalized stays deductible — document in the tie-check to avoid double count).
 
 ---

@@ -382,6 +382,66 @@ cross-check against §7a/§7b's primary-source regulation reads.
 
 ---
 
+### §7d — §1.263A-4 (farming) and §§1.263A-7 through -15 (change in method + interest capitalization) primary-source verification (2026-07-08, same-day follow-up)
+
+The user supplied the full primary text of 26 CFR §1.263A-4 (farming businesses), §1.263A-7
+(change in method of accounting for §263A costs), and §§1.263A-8 through -15 (the complete
+interest-capitalization regulatory scheme underlying Phase D — designated property, the avoided
+cost method, unit of property, accumulated production expenditures, production period, oil/gas
+special rules, related persons, and effective dates/anti-abuse).
+
+- **"T.D. 10034" resolved — it is REAL, not fabricated.** A prior citation-accuracy audit round
+  (§7, before any primary text had been retrieved) flagged "T.D. 10034 (Oct 2025)" in
+  `BUILD_PLAN.md` as **under active suspicion of fabrication**, and `BUILD_PLAN.md` carried a
+  hard warning not to build tax-year-gated logic around it without verification. The now-retrieved
+  primary text confirms T.D. 10034, 90 FR 47582/47583 (Oct. 2, 2025), is a real amendment to
+  §1.263A-8(d)(3) and §1.263A-11(e)-(f), effective for tax years beginning after October 2, 2025.
+  **This is the second time in this session a flagged-unverified citation turned out to be exactly
+  right** (the first being the SSCM-split formula in §7b) — a reminder that "unverified" is a
+  statement about confidence, not a prediction of wrongness, and that guesses need confirming in
+  both directions before being trusted OR discarded.
+- **What T.D. 10034 actually changed (previously only guessed at) — confirmed:** APE for an
+  improvement to existing property is limited to the improvement's own capitalized costs
+  (§1.263A-11(e)) — the plan's prior guess ("interest narrowed for improvements") was correct.
+  **What was newly found, not previously guessed at all:** a mid-production-purchase rule
+  (§1.263A-11(f)) — APE for property purchased for further production before being placed in
+  service includes the full purchase price plus subsequent production costs. **What was NOT
+  confirmed and has been dropped from the plan:** the "associated property rule eliminated" half
+  of the prior guess — no "associated property" rule appears anywhere in the retrieved text of
+  §§1.263A-8 through -15; that detail may have been a hallucinated elaboration riding along with
+  an otherwise-correct T.D. number, or may live in text not yet retrieved. Treat it as unconfirmed,
+  not as false — the distinction matters for how confidently the plan's silence on it should be read.
+- **Phase D's avoided-cost-method pseudocode (`APE_avg`, `traced_applied`, `excess`,
+  `avoided_interest`, WAIR) independently cross-checked against §1.263A-9(b)/(c) primary text
+  directly (superseding the earlier Practice-Unit-only confirmation in §7c) — no discrepancy
+  found.** The de minimis designated-property exclusion (§1.263A-8(b)(4), 90-day/$1,000,000-per-day)
+  and the eligible-taxpayer AFR-plus-3 election (§1.263A-9(e), $10M gross receipts) added to
+  `BUILD_PLAN.md` in §7c were both confirmed to match the primary text exactly, including the
+  $10,000,000 figure and the "3 percentage points" language. The cessation-period mechanic
+  (§1.263A-12(g)) and its caution about traced-debt interest becoming nontraced for *other* units
+  during a suspension were also confirmed verbatim.
+- **Two lower-priority items newly found, not yet in the plan:** the 15-day repayment election
+  (§1.263A-9(g)(7), prevents a weighted-average-interest-rate "mismatch" when nontraced debt is
+  repaid just before a measurement date) and the simplified inventory method (§1.263A-9(g)(3), a
+  materially different algorithm for inventory-only designated property using inventory-age
+  segmentation and a compounded interest factor instead of per-unit avoided-cost tracking). Both
+  noted in `BUILD_PLAN.md` as stretch goals, not required for the Phase D MVP.
+- **§1.263A-4 (farming) and §1.263A-7 (change in method of accounting) are OUT OF SCOPE for this
+  tool, not silently ignored.** §1.263A-4 is a specialized vertical (preproductive-period rules
+  for plants/animals in a farming business — a wholly different fact pattern from the
+  reseller/producer/SCA/interest scope this tool targets) with its own election mechanics
+  (§263A(d)(3)), casualty-loss exceptions, and unit-livestock-price inventory method — nothing in
+  the current `BUILD_PLAN.md` scope touches farming, and this decision explicitly does not add it.
+  §1.263A-7 governs the §481(a) beginning-inventory revaluation mechanics when a taxpayer changes
+  its §263A accounting method (facts-and-circumstances / weighted-average / 3-year-average
+  revaluation methods) — relevant only to a "Method Changes" deliverable, which the original
+  scoping doc placed in a later, not-yet-reached phase (Phase 4/Tab 5, Form 3115/§481(a)), not
+  Phase A-D. If the SME later wants either regime built, it needs its own phase and this same
+  primary-source verification treatment — do not retrofit either into the existing Phase B/C/D
+  specs described above.
+
+---
+
 ### Reviewer summary
 - **7 bug fixes (§1):** all recommended **approve**; items #3 (EX-BID) and the scope items carry a "revisit scope" caveat.
 - **8 new-code groups / 10 codes (§2):** all recommended **approve** (SEC195-STARTUP and the SEC263A-IMPROVE/REPAIR keyword set carry minor-revisit notes).
@@ -390,4 +450,4 @@ cross-check against §7a/§7b's primary-source regulation reads.
 - **27 hardening-pass corrections (§5):** found across four independent multi-agent audit rounds (initial, adversarial re-verification, previously-unaudited files + deeper taxonomy data, and end-to-end/lexicon/practitioner review), all fixed and regression-tested; items #16, #28, #35, #36, and #37 change computed dollar output — re-run any workpaper generated before this pass.
 - **8 red-team corrections (§6):** three adversarial agents (hostile input / tax-wrongness / single-source divergence). Two are security-class (formula injection #44, the =PY() NaN divergence #43); five change or bound computed dollar output (#45–#49). All fixed and regression-tested (93 tests). Highlights: an unbounded absorption ratio could show a **$50 billion** capitalized figure unflagged (#46); a NaN amount silently defeated the integrity tie-check (#45). Nothing further should be relied on for filing without SME sign-off on §3/§3a.
 - **Citation accuracy audit (§7):** 5 citations corrected (moderate-high confidence, still unverified), 6 flagged unverified/possibly fabricated rather than guess-corrected — most notably a suspected-fabricated Treasury Decision ("T.D. 10034") in BUILD_PLAN.md. **No citation in this tool should be relied on for a filing position without independent primary-source verification.**
-- **Primary-source verification passes (§7a-§7c):** §1.263A-1 (SSCM/UNICAP general), §1.263A-2 (MSPM), and §1.263A-3 (SRM) regulation text retrieved and cross-checked directly; four IRS LB&I Practice/Concept Units (resellers, interest capitalization, self-constructed-asset costs, producers) cross-checked as independent secondary confirmation. Found and fixed one real citation bug ($50M rule), two real missing MSPM mechanics (residual pre-production, direct materials adjustment), one real missing SRM method-availability gate (SPM-only above de minimis production), and one real missing §263A(f) de minimis designated-property exclusion — none of these were caught by the four prior audit rounds in §5/§6 because those rounds worked from model recall, not primary text.
+- **Primary-source verification passes (§7a-§7d):** §1.263A-1 (SSCM/UNICAP general), §1.263A-2 (MSPM), §1.263A-3 (SRM), §1.263A-4 (farming), and §§1.263A-7 through -15 (change in method + full interest-capitalization scheme) regulation text retrieved and cross-checked directly; four IRS LB&I Practice/Concept Units (resellers, interest capitalization, self-constructed-asset costs, producers) cross-checked as independent secondary confirmation. Found and fixed one real citation bug ($50M rule), two real missing MSPM mechanics (residual pre-production, direct materials adjustment), one real missing SRM method-availability gate (SPM-only above de minimis production), one real missing §263A(f) de minimis designated-property exclusion, and one real missing mid-production-purchase APE rule — none of these were caught by the four prior audit rounds in §5/§6 because those rounds worked from model recall, not primary text. Also resolved the "T.D. 10034" suspected-fabrication flag: the citation is real (§7d) — a reminder that unverified cuts both ways.
