@@ -424,9 +424,15 @@ special rules, related persons, and effective dates/anti-abuse).
   an otherwise-correct T.D. number, or may live in text not yet retrieved. Treat it as unconfirmed,
   not as false — the distinction matters for how confidently the plan's silence on it should be read.
 - **Phase D's avoided-cost-method pseudocode (`APE_avg`, `traced_applied`, `excess`,
-  `avoided_interest`, WAIR) independently cross-checked against §1.263A-9(b)/(c) primary text
-  directly (superseding the earlier Practice-Unit-only confirmation in §7c) — no discrepancy
-  found.** The de minimis designated-property exclusion (§1.263A-8(b)(4), 90-day/$1,000,000-per-day)
+  `avoided_interest`, WAIR) was checked against §1.263A-9(b)/(c) primary text at the time —
+  ⚠ RETRACTED 2026-07-08, see §7e: this "no discrepancy found" claim was WRONG.** A subsequent
+  red-team pass (part of §7e) found the check here was not actually rigorous: the pseudocode's
+  open/close-APE-averaging approach does not match §1.263A-9(b)/(c)'s measurement-date-snapshot
+  mechanic, and understated the golden worked example by ~16% ($323,571.43 vs. the corrected
+  $376,428.57). See §7e for the full correction. Leave this entry as a visible example of how a
+  confident "cross-checked... no discrepancy found" claim can itself be wrong — the fix is to
+  re-verify by independently re-deriving the answer, not to trust a prior verification pass's own
+  self-report, however confident it reads. The de minimis designated-property exclusion (§1.263A-8(b)(4), 90-day/$1,000,000-per-day)
   and the eligible-taxpayer AFR-plus-3 election (§1.263A-9(e), $10M gross receipts) added to
   `BUILD_PLAN.md` in §7c were both confirmed to match the primary text exactly, including the
   $10,000,000 figure and the "3 percentage points" language. The cessation-period mechanic
@@ -539,6 +545,77 @@ verification gate, not a substitute for this one.
 
 ---
 
+### §7f — Red-team of §7e's own fixes (2026-07-08, same-day follow-up)
+
+At the user's request, the §7e fixes were themselves red-teamed rather than accepted at face
+value. Three parallel checks: (1) an agent given ONLY the raw regulation text and the numeric
+facts of Phase D's worked example — with NO knowledge of either the original or "corrected"
+answer, specifically to avoid anchoring bias — was asked to derive the answer completely from
+scratch; (2) an agent re-read both files front to back hunting for new contradictions the §7e
+edit itself might have introduced; (3) an agent checked every one of the ~35 individual findings
+from the four original audit agents against the final edited text, to catch anything dropped,
+watered down, or overstated in translation.
+
+**Result on the highest-stakes item: independently confirmed.** Working from raw facts alone,
+agent (1) derived $180,000.00 traced + $196,428.57 excess-expenditure = **$376,428.57**, matching
+§7e's correction exactly, and gave an unambiguous "no" verdict — with quoted textual support from
+both worked examples in §1.263A-9(c)(5)(ii)(B) and (f)(3) — that the original per-quarter
+opening/closing-APE-averaging methodology is supported by the text. This is real independent
+corroboration, not just a repeat of the same reasoning.
+
+**But the red-team also found real bugs in the §7e fix itself — the meta-lesson here matters as
+much as the tax-law lesson:**
+- **A false "no discrepancy found" claim survived in this very document.** §7d's original Phase D
+  entry asserted the avoided-cost-method pseudocode was "independently cross-checked... no
+  discrepancy found" — directly contradicted by §7e's own "highest-severity finding" 45 lines
+  later in the same file, about the identical formula. §7e corrected `BUILD_PLAN.md` but never
+  went back to fix or flag the false claim still sitting in §7d — exactly the kind of staleness
+  bug this whole audit chain was originally set up to catch, reproduced one level up, in the audit
+  trail itself. Now retracted with an explicit note (see the §7d entry above).
+- **Two more stale "reuses SSCM unconditionally" references survived the SSCM-eligibility-gate
+  fix** — one in "Where we start" (near the top of `BUILD_PLAN.md`), one in "Sequencing & why"
+  (near the bottom) — both describing Phase C as unconditionally reusing SSCM even though the
+  Phase C section itself was rewritten to require an `sscm_eligible` gate first. Both now fixed.
+- **A flagged-as-unconfirmed claim got upgraded to MORE confident, not corrected** — the SRM
+  section's "#1 reseller audit error" superlative, which the original audit explicitly said was
+  unsupported by the retrieved Practice Unit text, was rewritten in the §7e fix to read as if "the
+  reg's own audit guidance" confirms it — the opposite of the requested downgrade. Now re-hedged.
+- **The exact same unsupported symmetric 90% rule the audit flagged as a "repeated error in two
+  places" was only fixed in one of them.** Phase C's copy was corrected; the SSCM section's
+  identical claim ("if 90%+ are capitalizable, must allocate 100%") was missed entirely, sitting
+  directly under a section header that claims primary-source verification. Now fixed.
+- **A deliberately-hedged "low materiality, overstated inference" finding (§1.263A-11(e)'s
+  improvement-APE scoping) got flattened into unqualified "CONFIRMED, not speculative" language**
+  in both the fix and the write-up — the opposite of what the original finding asked to preserve.
+  Now re-hedged.
+- **Two more `EntityProfile` fields introduced elsewhere in the §7e edit (`sscm_ratio_method`,
+  `interest_afr_plus_3_election`) were absent from the "consolidated" field list that exists
+  specifically to fix this class of bug** — a second-order instance of the exact completeness gap
+  the list was created to close. Now scoped explicitly rather than left to look complete.
+- Minor: a pseudocode/declared-field-name mismatch in the SRM formula (shorthand names not
+  matching the newly-declared `EntityProfile` fields) — fixed.
+- Confirmed clean: no stray references to the four superseded dollar figures (323,571.43 /
+  176,250.00 / 147,321.43 / 143,000) were found anywhere outside explicit "superseded by" framing;
+  no leftover old-methodology (`day_fraction`/`APE_avg_i`) fragments were found in Phase D's Files,
+  Verification, or Effort & risk subsections; all ~30 of the other ~35 original findings were
+  incorporated faithfully with their original hedging level intact.
+
+**A candid, unfixed observation from the red-team, not itself acted on:** the cumulative effect of
+several audit rounds' worth of inline "CORRECTED 2026-07-08"/"GAP found"/"was stale" annotations
+directly inside the operative spec text (rather than in a separate changelog) is now a real
+readability cost — an implementer extracting "what do I actually build" for, e.g., Phase D, has to
+read through several sentences of revision-history narrative per bullet to reach the current rule.
+Not fixed in this pass; flagged as a candidate follow-up (move historical narrative to a changelog,
+leave the spec text as a clean current-state-only statement) if the document keeps accumulating
+audit rounds.
+
+**Standing lesson:** this is the second time in one day a confident "verified"/"no discrepancy
+found" claim in this document's own audit trail was itself wrong (the first being §7c's Phase-C
+claim, retracted earlier). Treat every verification entry in this file — including this one — as
+a claim to spot-check, not settled fact.
+
+---
+
 ### Reviewer summary
 - **7 bug fixes (§1):** all recommended **approve**; items #3 (EX-BID) and the scope items carry a "revisit scope" caveat.
 - **8 new-code groups / 10 codes (§2):** all recommended **approve** (SEC195-STARTUP and the SEC263A-IMPROVE/REPAIR keyword set carry minor-revisit notes).
@@ -547,4 +624,4 @@ verification gate, not a substitute for this one.
 - **27 hardening-pass corrections (§5):** found across four independent multi-agent audit rounds (initial, adversarial re-verification, previously-unaudited files + deeper taxonomy data, and end-to-end/lexicon/practitioner review), all fixed and regression-tested; items #16, #28, #35, #36, and #37 change computed dollar output — re-run any workpaper generated before this pass.
 - **8 red-team corrections (§6):** three adversarial agents (hostile input / tax-wrongness / single-source divergence). Two are security-class (formula injection #44, the =PY() NaN divergence #43); five change or bound computed dollar output (#45–#49). All fixed and regression-tested (93 tests). Highlights: an unbounded absorption ratio could show a **$50 billion** capitalized figure unflagged (#46); a NaN amount silently defeated the integrity tie-check (#45). Nothing further should be relied on for filing without SME sign-off on §3/§3a.
 - **Citation accuracy audit (§7):** 5 citations corrected (moderate-high confidence, still unverified), 6 flagged unverified/possibly fabricated rather than guess-corrected — most notably a suspected-fabricated Treasury Decision ("T.D. 10034") in BUILD_PLAN.md. **No citation in this tool should be relied on for a filing position without independent primary-source verification.**
-- **Primary-source verification passes (§7a-§7e):** §1.263A-1 (SSCM/UNICAP general), §1.263A-2 (MSPM), §1.263A-3 (SRM), §1.263A-4 (farming), and §§1.263A-7 through -15 (change in method + full interest-capitalization scheme) regulation text retrieved and cross-checked directly; four IRS LB&I Practice/Concept Units (resellers, interest capitalization, self-constructed-asset costs, producers) cross-checked as independent secondary confirmation, then re-audited a second time by four parallel subagents (§7e) specifically checking whether the plan's own "VERIFIED" claims actually held up. Found and fixed: one real citation bug ($50M rule); two real missing MSPM mechanics (residual pre-production, direct materials adjustment); one real missing SRM method-availability gate (SPM-only above de minimis production) plus several smaller SRM gaps (goods-valued-below-cost exclusion, inter-facility-shipment nuance, a mandatory-vs-elective mischaracterization); one real missing §263A(f) de minimis designated-property exclusion and mid-production-purchase APE rule; a **materially wrong core avoided-cost-method formula** in Phase D that understated the golden worked example by ~16% (corrected from $323,571.43 to $376,428.57); a **false verification claim in this very document** (§7c's Phase-C-cost-methods claim, retracted in §7e); and a genuine **self-contradiction** where Phase C silently misapplied SSCM to assets the plan's own SSCM section says likely don't qualify for it. Also resolved the "T.D. 10034" suspected-fabrication flag: the citation is real (§7d) — a reminder that unverified cuts both ways, and that this document's own past verification entries need spot-checking too, not just the underlying tax law.
+- **Primary-source verification passes (§7a-§7f):** §1.263A-1 (SSCM/UNICAP general), §1.263A-2 (MSPM), §1.263A-3 (SRM), §1.263A-4 (farming), and §§1.263A-7 through -15 (change in method + full interest-capitalization scheme) regulation text retrieved and cross-checked directly; four IRS LB&I Practice/Concept Units (resellers, interest capitalization, self-constructed-asset costs, producers) cross-checked as independent secondary confirmation, then re-audited a second time by four parallel subagents (§7e) specifically checking whether the plan's own "VERIFIED" claims actually held up, then **red-teamed a third time (§7f)** — including an agent given only raw facts, with no knowledge of any prior answer, to independently re-derive the hardest number from scratch. Found and fixed: one real citation bug ($50M rule); two real missing MSPM mechanics (residual pre-production, direct materials adjustment); one real missing SRM method-availability gate (SPM-only above de minimis production) plus several smaller SRM gaps; one real missing §263A(f) de minimis designated-property exclusion and mid-production-purchase APE rule; a **materially wrong core avoided-cost-method formula** in Phase D that understated the golden worked example by ~16% (corrected from $323,571.43 to $376,428.57, then independently re-confirmed from scratch in §7f); **two separate false verification claims in this very document's own audit trail** (§7c's Phase-C-cost-methods claim, and §7d's Phase-D-formula claim — both retracted); and a genuine **self-contradiction** where Phase C silently misapplied SSCM to assets the plan's own SSCM section says likely don't qualify for it (plus two more instances of that same "reuses SSCM" staleness found and fixed in §7f, elsewhere in the document). Also resolved the "T.D. 10034" suspected-fabrication flag: the citation is real (§7d). **Standing lesson from this whole sequence: confident "verified"/"no discrepancy found" language in this document's own audit trail has twice turned out to be wrong — every entry, including this one, is a claim to spot-check, not settled fact.**

@@ -18,7 +18,7 @@ Synthesized from four design specs (grounded in Reg §§1.263A-1..-15 and IRS Pr
 
 ## Where we start (already built)
 - Classifier + 133-code taxonomy whose `Classification.treatment` dict already carries the exact sub-bucket codes the engines aggregate (`mspm`: `471`/`471-Pre`/`I`/`I-Pre`/`C`/`M`/`E`/`N`; `resale`: `471`/`P`/`S`/`I`/…). **No new classification work — the engines are aggregation + arithmetic over `analyze()` output.** Current classification accuracy: ~78% raw / ~84% high-confidence precision on a 250-line messy labeled set (see README.md; re-check with `python -m financial_tools.cap263a.validation.validate` before relying on a stale number).
-- `analyze()` → waterfall buckets + `compute_unicap` (SPM only) + SSCM labor ratio (reused by MSPM/SRM/SCA).
+- `analyze()` → waterfall buckets + `compute_unicap` (SPM only) + SSCM labor ratio (reused by MSPM/SRM; **SCA reuse is GATED, not unconditional — see Phase C's `sscm_eligible` check below, added 2026-07-08 after this line was found stale relative to that fix**).
 - Reader with debit/credit netting; 5-tab report; tests; validation harness.
 - **Guardrail infrastructure already built and REUSE, don't duplicate:** `EntityProfile.LARGE_PRODUCER_THRESHOLD` (>$50M rule), the SSCM-ratio [0,1] clamp + warning pattern (`analysis.py` `compute_unicap`, ~line 220), the absorption-ratio->1 warning, and the `bucket_warnings`/`unicap["warnings"]` list pattern that surfaces computation caveats on the Summary tab. MSPM/SRM/SCA/§263A(f) must plug into this same warnings list, not invent a parallel mechanism — that's how a >100%-style bug gets caught instead of silently shipped again.
 - **SME decisions affecting Phase B, both RESOLVED 2026-07-08** (`docs/TAX_DECISIONS.md` §3 items 1 and 5): (1) `DM-*` direct-materials lines are correctly tagged `471-Pre` for the MSPM pre-production ratio — confirmed, no change needed, use as-is. (5) Additional-§263A-tier labor (purchasing/warehouse/buying) belongs in the SSCM labor ratio's numerator AND denominator, alongside §471 production labor — **already implemented in the shipped `compute_unicap`** (`analysis.py`, `CAPITALIZABLE_LABOR_TIERS`/`UNICAP_LABOR_TIERS`), so Phase B's MSPM/SRM engines inherit this correctly for free by reusing the same SSCM computation; no separate Phase B decision needed. Three items remain open and unresolved (§3 items 2-4: EX-BID successful-bids-only gating, §266 land-context auto-routing vs. confirmed election, repair-vs-improvement keyword scoping) — none of them block Phase A-D, since they're classifier-level, not engine-level, but resolve before relying on the classifier output those engines consume.
@@ -79,10 +79,20 @@ in both numerator/denominator per the verified formula above.
   the general method (below), not silently assume SSCM eligibility.
 - **90% de minimis department election (g)(4)(ii), NOT SSCM-specific — a general
   mixed-service-cost rule):** if 90%+ of a mixed-service *department's* costs are
-  deductible, taxpayer may elect not to allocate any of it; if 90%+ are
-  capitalizable, must allocate 100%. Under SSCM specifically, (h)(8) says an
-  electing department drops out of the SSCM ratio pool entirely (its costs bypass the
-  ratio, going straight to the qualifying activity). **Not implemented** — the
+  deductible, taxpayer may elect not to allocate any of it. **CORRECTED 2026-07-08 — the "if 90%+
+  are capitalizable, must allocate 100%" companion clause in a prior draft of this bullet is
+  UNCONFIRMED and should NOT be relied on:** COR-C-023 (the IRS Concept Unit on self-constructed-asset
+  costs) states only the one-sided version of this rule — "if 90% or more of a mixed service
+  department's costs are deductible service costs, a taxpayer may elect not to allocate any
+  portion... to property produced" — with no stated companion rule for the ≥90%-capitalizable case
+  anywhere in the retrieved text. This exact overstated symmetric framing was flagged as a repeated
+  error in the Phase C section too (now fixed there) and was missed here on the first pass; do not
+  implement a symmetric ≥90%→100%/≤10%→0% shortcut under this citation without further primary-source
+  verification. (Note: §1.263A-2(c)(3)(iii)(C)'s MSPM pre-production/production SSCM-split de minimis
+  rule IS genuinely two-sided, but that is a different provision entirely — see the MSPM section
+  below — and doesn't transfer to this general (g)(4)(ii) department-level election.) Under SSCM
+  specifically, (h)(8) says an electing department drops out of the SSCM ratio pool entirely (its
+  costs bypass the ratio, going straight to the qualifying activity). **Not implemented** — the
   current SSCM ratio treats all mixed-service costs uniformly with no per-department
   90% carve-out. Low priority (most cost-center-level mixed pools in a real TB won't
   cleanly split into single "departments" the way the regulation's factory-org-chart
@@ -230,16 +240,21 @@ already substantially correct in this plan before verification — unlike MSPM, 
 but the **method-availability gate** below was missing entirely and is a real, build-blocking constraint:
 
 ```
-purchasing_ratio       = purchasing_costs / current_year_471_costs               # beginning inv EXCLUDED
-storage_handling_ratio = storage_handling / (beginning_inv_471 + current_year_471)# beginning inv INCLUDED
+# variable names match the EntityProfile fields declared below exactly (fixed 2026-07-08 — a prior
+# draft used shorthand names here that didn't match the declared field names)
+purchasing_ratio       = purchasing_costs / current_year_471_costs                            # beginning inv EXCLUDED
+storage_handling_ratio = storage_handling_costs / (beginning_inventory_471 + current_year_471_costs) # beginning inv INCLUDED
 combined = purchasing_ratio + storage_handling_ratio
 add'l_to_inv = combined * ending_inventory_471
 ```
 Both denominators re-checked term-for-term against Practice Unit COR-P-021 Step 6 (`docs/TAX_DECISIONS.md` §7e):
 CONFIRMED exactly as written — the purchasing-ratio denominator omits beginning inventory, the storage-and-handling
-denominator includes it. This is the single most safety-critical formula in this section (the reg's own audit
-guidance calls the S&H denominator the source of the most common reseller error), so treat any future change to it
-as requiring the same re-verification rigor.
+denominator includes it. This is the single most safety-critical formula in this section — **the claim that it is
+"the #1"/"most common" reseller audit error is this plan's own characterization, RE-FLAGGED 2026-07-08 as still
+UNCONFIRMED: no sentence in the retrieved Practice Unit text ranks or names audit-error frequency.** The underlying
+mechanic (beginning inventory belongs in the S&H denominator only) is confirmed; the superlative framing around it
+is not, and should not be repeated as if it were a sourced fact. Treat any future change to the formula itself with
+the same re-verification rigor regardless of how the error is ranked.
 - Assert beginning inventory is in the S&H denominator only, never the purchasing denominator.
 - **Goods valued below cost excluded from the base (§1.263A-3(d)(3)(i)(C)(2), missing entirely until now):**
   `ending_inventory_471` for purposes of this formula does NOT include inventory the taxpayer has written down or
@@ -304,6 +319,12 @@ also referenced by the SRM formula but previously undeclared), `production_gross
 `inventory_method`, `lifo_layers`, HAR fields (`har_election`, `har_preprod_ratio`, `har_production_ratio`,
 `har_qualifying_year_index`), `mspm_mixed_split_method`, `production_activity_level`, `private_label_goods` (these
 last three were each proposed in the MSPM/SRM subsections above but missing from this consolidated list before).
+**Scope note added 2026-07-08 (a red-team pass found this list was still incomplete as "the" EntityProfile field
+reference, since it only ever claimed to consolidate Phase B's own fields): this list does NOT include
+`EntityProfile.sscm_ratio_method` (proposed in the SSCM section, before Phase B) or
+`EntityProfile.interest_afr_plus_3_election` / the `avg_gross_receipts_3yr_10m_test` helper (both proposed in Phase D)
+— those remain correctly scoped to their own sections above and below, respectively; do not treat this Phase-B list
+as a complete global `EntityProfile` field inventory.**
 `compute_mspm`/`compute_srm` return supersets of the SPM shape (same `additional_capitalized_to_inventory` key). UNICAP tab renders the method-specific ratio tables in IRS Practice-Unit format (numerator/denominator/ratio/applied $).
 
 ---
@@ -586,9 +607,16 @@ total = Σ units (traced_interest_period + each unit's possibly-prorated excess_
     the activity is a repair/maintenance item under §1.162-4(a) — this confirms `is_improvement` needs its own
     de-minimis and repair-carve-out checks, not just a flag.
   - §1.263A-11(e) (new): APE for an improvement is limited to costs required to be capitalized **with respect to
-    the improvement itself** — this is exactly the plan's prior `is_improvement` guess (narrow the APE to the
-    improvement's own costs) and is now CONFIRMED, not speculative. Implement as: when `is_improvement`, APE
-    excludes the pre-existing property's basis/APE entirely.
+    the improvement itself** — the regulation's own words are "consists of all direct and indirect costs required
+    to be capitalized with respect to the improvement." **Hedge restored 2026-07-08 (this bullet had overstated its
+    own certainty): the text is an affirmative SCOPING statement, not an explicit exclusion clause — it does not
+    itself say "excludes the pre-existing property's basis." The likely practical effect is the same (the
+    pre-existing basis is simply never counted as an improvement cost, so it's excluded by omission), but calling
+    this "CONFIRMED, not speculative" overstated what the cited text literally supports; it is a reasonable
+    inference from the text, not a directly confirmed exclusion rule.** Implement as: when `is_improvement`, APE is
+    scoped to costs capitalized with respect to the improvement itself (which in practice excludes the pre-existing
+    property's basis/APE, but treat that practical effect as inferred, not textually guaranteed, until a primary-text
+    example squarely on point is found).
   - §1.263A-11(f) (new, NOT previously in this plan at all): a **mid-production purchase** rule — if a taxpayer
     buys a unit of property for further production before placing it in service, APE includes the **full purchase
     price** of the purchased unit PLUS all additional direct/indirect production costs the taxpayer incurs
@@ -613,7 +641,10 @@ total = Σ units (traced_interest_period + each unit's possibly-prorated excess_
 
 1. **Phase A first** — the three schedules are the inputs every engine consumes; nothing numeric is possible without them.
 2. **Phase B (MSPM/SRM)** — pure arithmetic over existing classifier output; lowest risk, immediate value, no new schedules beyond inventory balances.
-3. **Phase C (SCA)** — needs FixedAsset/CIP + driver tables (Phase A) and reuses SSCM; produces `ape_by_asset`.
+3. **Phase C (SCA)** — needs FixedAsset/CIP + driver tables (Phase A) and **conditionally** reuses SSCM (gated on
+   the per-asset `sscm_eligible` check — most Phase C targets are expected to fail it, per the SSCM section's own
+   analysis; this line previously said "reuses SSCM" unconditionally, which was stale relative to that fix);
+   produces `ape_by_asset`.
 4. **Phase D (§263A(f))** — needs FixedAsset/CIP/Debt (Phase A) and SCA's APE hand-off (Phase C); hardest, so last.
 
 Each phase ships standalone value and keeps the waterfall tie-out.
