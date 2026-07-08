@@ -194,24 +194,26 @@ fact-checking pass fact-checked a sample against the auditing agent's own knowle
 Treasury Decision number. This is a materially more serious finding than a generic
 disclaimer conveys, so it gets its own section.
 
-**Corrected (moderate-to-high confidence; still not primary-source-verified):**
+**Corrected (moderate-to-high confidence; not primary-source-verified when originally logged
+2026-07-08 — see §7a for the subset since upgraded to VERIFIED against actual regulation text):**
 - `NO-OFFICER` (officer comp): §1.263A-1(e)(3)(ii)(**A**) → **(B)**. The indirect-cost list
   runs (A) indirect labor, (B) officers' comp, (C) pension/related costs, (D) benefits — the
-  original cite was off by one letter.
+  original cite was off by one letter. **Since VERIFIED correct, §7a.**
 - `DL-PENSION` (pension/benefits): §1.263A-1(e)(3)(ii)(**B)-(C**) → **(C)-(D)**. Same
   off-by-one-letter pattern, same direction — this looks systematic, not two independent typos.
+  **Since VERIFIED correct, §7a.**
 - `SEC263A-REPAIR` de minimis safe harbor: cited to §1.263(a)-**3(f)** → corrected to
   **§1.263(a)-1(f)** (the de minimis election lives in the general capitalization reg, not the
   tangible-property BAR-test reg). The routine-maintenance (-3(i)) and small-taxpayer (-3(h))
-  cites in the same entry were already in the right section.
+  cites in the same entry were already in the right section. Still not independently
+  re-verified (§1.263A-1(e) text was retrieved and read for §7a but not §1.263(a)-1/-3).
 - `EX-ABNORMAL` (abnormal spoilage): §1.263A-1(e)(3)(iii) → corrected to **§1.471-11(d)(2)(iii)**
-  (the abnormal-costs exclusion is in the full-absorption costing regs, not the general
-  non-capitalizable-costs list — a different provision from `BS-ASSET`'s §1.263A-1(e)(3)(iii)
-  citation two rows up, which IS the right section for ITS purpose and was left alone).
-- `NEG-263A` / the negative-pool warning (`analysis.py`, item #35/#48): **T.D. 9843 → T.D. 9942**.
-  The TCJA small-business simplified-methods final regs (including the >$50M-producer
-  negative-adjustment rule) were, to the auditing agent's recollection, finalized as T.D. 9942
-  (Jan. 2021), not T.D. 9843.
+  (a different regulation, §1.471-11, not retrieved in the §7a pass — still not
+  independently re-verified).
+- `NEG-263A` / the negative-pool warning (`analysis.py`, item #35/#48): the T.D. number guess
+  (T.D. 9843 → T.D. 9942) was itself never verified and is now dropped rather than repeated —
+  **the actual regulation pinpoint was wrong too and has since been corrected with real primary
+  text, see §7a.**
 
 **Flagged, deliberately NOT guess-corrected** (a wrong replacement citation is worse than an
 honest "unverified" label — these need a primary source, not a second guess):
@@ -221,12 +223,11 @@ honest "unverified" label — these need a primary source, not a second guess):
   (eliminating the associated-property rule, narrowing improvement interest) in the still-unbuilt
   §263A(f) engine. **Do not build tax-year cutover logic against this citation without first
   confirming, from a primary source, that the T.D. exists and says what's described.** Flagged
-  prominently in BUILD_PLAN.md itself.
-- `EX-BID` bidding-cost sub-letter (T) in §1.263A-1(e)(3)(ii)(T) — given the confirmed
-  transposition pattern on two other sub-letters in this same list, this one should be
-  re-verified, not trusted, before relying on the "(T)" pinpoint.
+  prominently in BUILD_PLAN.md itself. Still unresolved — §1.263A-8/-9/-12 (the §263A(f) regs)
+  were not part of the §7a retrieval.
 - `SEC266-INT`/`-OTHER` — §1.266-1(b)(1)(iii)-(iv): the carrying-charge list may only run
-  three items (taxes/interest/other), which would make "(iv)" nonexistent. Unconfirmed either way.
+  three items (taxes/interest/other), which would make "(iv)" nonexistent. Still unconfirmed
+  (§1.266-1 was not part of the §7a retrieval).
 - `SEC263A-INTANG` geological/geophysical keywords — likely mis-grouped under §1.263(a)-4/§197
   (general intangibles); G&G costs may instead be governed by the dedicated **§167(h)** 24-month
   amortization provision. Flagged for the SME to either split into a dedicated code or confirm
@@ -247,9 +248,64 @@ that was later found not to reconcile with its own formula and was corrected to 
 elsewhere in the same document (Phase D worked table, item #43-area). The checklist line was
 never updated to match; corrected in this pass.
 
+### §7a — Primary-source-verified corrections (2026-07-08, actual regulation text retrieved)
+
+Everything above this subsection was written from model recall or search-engine snippet
+summaries. The items below are different in kind: the **full text of 26 CFR §1.263A-1**
+was directly retrieved and read (not summarized by a search engine, not recalled from
+training) after `WebFetch` to Cornell LII/eCFR/Federal Register/govinfo.gov was found to be
+blocked at this environment's network-policy layer (confirmed via the proxy status endpoint —
+a gateway-level `403` on `CONNECT`, not those sites refusing the request). This is the first
+citation work in this project done against an actual primary source rather than a proxy for one.
+
+- **`EX-BID` bidding-cost citation CONFIRMED CORRECT, no longer flagged.** §1.263A-1(e)(3)(ii)(T)
+  is exactly right: *"Bidding costs are costs incurred in the solicitation of contracts...
+  ultimately awarded to the taxpayer... If the contract is not awarded to the taxpayer, bidding
+  costs are deductible..."* Unsuccessful-bid costs are separately confirmed at
+  §1.263A-1(e)(3)(iii)(J) ("Unsuccessful bidding expenses... are NOT required to capitalize").
+  This directly grounds the still-open §3 item 2 SME decision (successful-bids-only gating) — the
+  regulation text is now confirmed, only the implementation (a success/failure input) remains open.
+- **`NO-OFFICER` (e)(3)(ii)(**B**) and `DL-PENSION` (e)(3)(ii)(**C**)-(**D**) CONFIRMED CORRECT**
+  — the earlier moderate-confidence guesses were exactly right: *"(B) Officers' compensation...
+  (C) Pension and other related costs... (D) Employee benefit expenses..."*
+- **The $50M SPM negative-adjustment citation was WRONG in a way neither prior audit caught, now
+  fixed.** The rule lives at **§1.263A-1(d)(3)(ii)(B)(1)**, not `(d)(3)(ii)(C)` as shipped in
+  `analysis.py`/`categories.yaml` since the original build — `(C)` is a completely different rule
+  (bars negative adjustments for cash/trade discounts under §1.471-3(b)). Verified full text:
+  *"(B) Exception for certain taxpayers removing costs from section 471 costs... the following
+  taxpayers may... include negative adjustments... (1) A taxpayer using the simplified production
+  method... if... average annual gross receipts for the three previous taxable years... do not
+  exceed $50,000,000... (2) A taxpayer using the modified simplified production method... and
+  (3) A taxpayer using the simplified resale method..."* — this also **confirms MSPM and SRM have
+  NO size restriction on negative adjustments** (only SPM is capped at $50M), which BUILD_PLAN.md
+  had asserted but this project had never actually verified. Fixed in `analysis.py`, the
+  `NEG-263A` taxonomy entry, and the regression test that asserts the warning text. The exact T.D.
+  number for the underlying November 2018 amendment remains unconfirmed (the regulation's own
+  applicability note dates paragraphs (d)(2)-(3) to "taxable years beginning after November 20,
+  2018," matching Federal Register document 2018-24545 "Allocation of Costs Under the Simplified
+  Methods" — but that document's T.D. number was not independently retrieved, so no T.D. number
+  is cited in the fixed warning text).
+- **SSCM (§1.263A-1(h)) has two allocation-ratio options, not one — the shipped `compute_unicap`
+  implements only the labor-based ratio.** Full verified detail moved into `docs/BUILD_PLAN.md`'s
+  new dedicated SSCM section (placed before Phase B, since SSCM is shared infrastructure every
+  engine reuses). Headline: producers may elect either the labor-based ratio (`compute_unicap`'s
+  current implementation) or a much-broader production-cost ratio (denominator = essentially every
+  cost in the trade or business, including marketing/selling/distribution costs this tool
+  otherwise treats as walled-off `Excluded`); resellers are restricted to labor-based only. This
+  is genuinely new information this project did not have — not a citation fix, a scope gap.
+- **Still NOT covered by this retrieval** (different regulation sections, not fetched this pass):
+  §1.263(a)-1/-3 (de minimis/BAR-test citations), §1.471-11 (abnormal spoilage), §1.266-1 (§266
+  carrying charges), §1.263A-2/-3 (MSPM/SRM mechanics — including the still-open question of how
+  MSPM splits the SSCM-capitalized amount between its pre-production and production ratios),
+  §1.263A-8/-9/-12 (§263A(f) interest, including the "T.D. 10034" fabrication concern). These
+  remain at their prior confidence level — do not treat this pass as having verified the whole tool.
+
 **Bottom line for the SME/reviewer:** every citation in this tool should be treated as a
 starting point for research, not a verified filing position, until confirmed against a primary
-source — and the items above are the ones most likely to be wrong if spot-checked first.
+source. §7a shows the gap between "search-engine-plausible" and "actually reads the regulation"
+is not hypothetical — it found a real, previously-uncaught wrong citation in shipped code
+(the $50M rule's pinpoint cite) sitting right next to two guesses that turned out to be exactly
+right. Both outcomes are reasons to keep verifying, not stop.
 
 ---
 

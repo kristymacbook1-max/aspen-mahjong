@@ -2169,9 +2169,11 @@
   - estimating
   is_labor: false
   labor_type: ''
-  authority: '§1.263A-1(e)(3)(ii) — bidding costs (successful bids) [pinpoint sub-letter
-    (T) UNVERIFIED — two other sub-letter cites in this list (officer comp, pension)
-    were found transposed; re-verify this one vs primary source before relying on it]'
+  authority: '§1.263A-1(e)(3)(ii)(T) — bidding costs (successful bids). VERIFIED
+    2026-07-08 against primary regulation text: sub-letter (T) is correct as originally
+    cited. Unsuccessful-bid costs are separately addressed at (e)(3)(iii)(J) — NOT
+    required to capitalize (deductible); see TAX_DECISIONS.md §3 item 2 for the SME
+    decision on implementing a success/failure input to route between the two.'
   cap_vs_deduct: null
   allows_negative_adj: false
   designated_property: false
@@ -3923,8 +3925,9 @@
   cc_clues: []
   is_labor: false
   labor_type: ''
-  authority: '§1.263A-1(d)(3); T.D. 9942 negatives [corrected from T.D. 9843; UNVERIFIED,
-    confirm vs primary source]'
+  authority: '§1.263A-1(d)(3)(ii)(B) negatives [verified 2026-07-08 against primary
+    regulation text; corrected from earlier wrong pinpoint (d)(3)(ii)(C), a different
+    rule entirely; T.D. number for the underlying Nov. 2018 amendment still unconfirmed]'
   cap_vs_deduct: null
   allows_negative_adj: true
   designated_property: false

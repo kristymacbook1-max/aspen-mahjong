@@ -39,10 +39,21 @@ class EntityProfile:
 
     THRESHOLDS = {2024: Decimal("30000000"), 2025: Decimal("31000000"),
                   2026: Decimal("32000000")}
-    # Reg §1.263A-1(d)(3)(ii)(C) (T.D. 9942, not T.D. 9843 as earlier cited here —
-    # UNVERIFIED, confirm vs primary source): a producer with 3-yr average
-    # gross receipts over $50M may not include negative adjustments in
-    # additional §263A costs under the SPM (MSPM required).
+    # Reg §1.263A-1(d)(3)(ii)(B)(1) — VERIFIED 2026-07-08 against primary-source
+    # regulation text (26 CFR 1.263A-1, via Cornell LII). Corrected from two
+    # earlier wrong guesses: (d)(3)(ii)(C) is a DIFFERENT rule entirely (bars
+    # negative adjustments for cash/trade discounts, §1.471-3(b)); the real
+    # $50M SPM threshold lives in (d)(3)(ii)(B)(1), the first of three
+    # taxpayer types (B)(1) SPM ≤$50M / (B)(2) MSPM (no size limit) / (B)(3)
+    # SRM (no size limit) permitted to include negative adjustments. The T.D.
+    # number for the November 2018 amendment adding this text is still
+    # unconfirmed (reg's own applicability note (m)(5) dates it "taxable
+    # years beginning on or after November 20, 2018", matching Federal
+    # Register doc 2018-24545 "Allocation of Costs Under the Simplified
+    # Methods" — that document's T.D. number was not independently verified).
+    # A producer with 3-yr average gross receipts over $50M may not include
+    # negative adjustments in additional §263A costs under the SPM (MSPM
+    # required — and MSPM/SRM have NO size restriction on negative adjustments).
     LARGE_PRODUCER_THRESHOLD = Decimal("50000000")
 
     def __post_init__(self):
@@ -287,9 +298,9 @@ def compute_unicap(result: dict, profile: EntityProfile) -> dict:
         if profile.method == "SPM" and \
                 profile.avg_gross_receipts > profile.LARGE_PRODUCER_THRESHOLD:
             warnings_.append(
-                "T.D. 9942 (cite unverified) / Reg §1.263A-1(d)(3)(ii)(C): a producer with >$50M "
-                "average gross receipts may NOT include negative adjustments in "
-                "additional §263A costs under the SPM — use the MSPM.")
+                "Reg §1.263A-1(d)(3)(ii)(B)(1) (verified vs primary source; T.D. number "
+                "unconfirmed): a producer with >$50M average gross receipts may NOT include "
+                "negative adjustments in additional §263A costs under the SPM — use the MSPM.")
     if sec471_pool <= 0 and additional_pool:
         warnings_.append(
             f"§471 POOL IS {'ZERO' if sec471_pool == 0 else 'NEGATIVE'} while the "

@@ -23,6 +23,98 @@ Synthesized from four design specs (grounded in Reg §§1.263A-1..-15 and IRS Pr
 - **Guardrail infrastructure already built and REUSE, don't duplicate:** `EntityProfile.LARGE_PRODUCER_THRESHOLD` (>$50M rule), the SSCM-ratio [0,1] clamp + warning pattern (`analysis.py` `compute_unicap`, ~line 220), the absorption-ratio->1 warning, and the `bucket_warnings`/`unicap["warnings"]` list pattern that surfaces computation caveats on the Summary tab. MSPM/SRM/SCA/§263A(f) must plug into this same warnings list, not invent a parallel mechanism — that's how a >100%-style bug gets caught instead of silently shipped again.
 - **SME decisions affecting Phase B, both RESOLVED 2026-07-08** (`docs/TAX_DECISIONS.md` §3 items 1 and 5): (1) `DM-*` direct-materials lines are correctly tagged `471-Pre` for the MSPM pre-production ratio — confirmed, no change needed, use as-is. (5) Additional-§263A-tier labor (purchasing/warehouse/buying) belongs in the SSCM labor ratio's numerator AND denominator, alongside §471 production labor — **already implemented in the shipped `compute_unicap`** (`analysis.py`, `CAPITALIZABLE_LABOR_TIERS`/`UNICAP_LABOR_TIERS`), so Phase B's MSPM/SRM engines inherit this correctly for free by reusing the same SSCM computation; no separate Phase B decision needed. Three items remain open and unresolved (§3 items 2-4: EX-BID successful-bids-only gating, §266 land-context auto-routing vs. confirmed election, repair-vs-improvement keyword scoping) — none of them block Phase A-D, since they're classifier-level, not engine-level, but resolve before relying on the classifier output those engines consume.
 
+## SSCM — mixed service cost allocation (§1.263A-1(h)), verified against primary source 2026-07-08
+
+The shipped `compute_unicap` already computes an SSCM ratio, but it implements only
+**one of the options the regulation actually provides** — this section is grounded in
+the full text of 26 CFR §1.263A-1 (retrieved directly, not from search-engine summary
+or model recall — the two prior verification passes in this project both turned out
+to have real errors, so this is the first section of this plan built from an actual
+primary-source read).
+
+**General formula (§1.263A-1(h)(3)):** `capitalizable mixed service costs = allocation
+ratio × total mixed service costs`. Two ratio options exist, and which one a taxpayer
+may use depends on producer/reseller status — **this is a real election, not a single
+fixed formula**:
+
+- **Labor-based allocation ratio (h)(4)** — available to everyone, and the *only*
+  option available to resellers: `§263A labor costs / total labor costs`, where both
+  numerator and denominator explicitly EXCLUDE labor costs already counted inside
+  mixed service costs, and the denominator includes labor from every activity in the
+  trade or business (production AND resale, if the taxpayer does both) — not just
+  production. **This is what `compute_unicap` implements today.**
+- **Production cost allocation ratio (h)(5)) — producers only, not available to
+  resellers**: `§263A production costs / total costs`, where the denominator is
+  dramatically broader than the labor ratio's — "total costs" means literally every
+  cost of the trade or business excluding only mixed service costs, interest, and
+  income-based taxes: all direct/indirect production costs *and* R&E, *and*
+  marketing/selling/distribution costs that every other part of this tool treats as
+  `Excluded`-tier and walls off. **Not implemented; see below.**
+- **(h)(3)(ii), verified election rule:** *"A producer may elect one of two allocation
+  ratios, the labor-based allocation ratio or the production cost allocation ratio. A
+  reseller that satisfies the requirements for using the simplified resale method of
+  §1.263A-3(d) (whether or not that method is elected) may elect the simplified
+  service cost method, but must use a labor-based allocation ratio."* The choice is a
+  **method of accounting**, applied consistently at the trade-or-business level.
+
+**Build implication — this is buildable now, not gated on Phase A.** Unlike
+MSPM/SRM/SCA/§263A(f), the production cost ratio needs no new schedule: "total costs"
+is just every classified TB dollar except mixed-service and interest lines, which
+`analyze()` already buckets. Recommended task (can slot in ahead of or alongside Phase
+B): add `EntityProfile.sscm_ratio_method: Literal["labor", "production_cost"] =
+"labor"`; when `"production_cost"`, gate on `not profile.acquires_for_resale` (raise
+or warn — a reseller electing this is a regulation violation, not just a judgment
+call) and compute the ratio from `is_total` minus mixed-service and interest buckets
+in both numerator/denominator per the verified formula above.
+
+**Other verified SSCM mechanics not yet reflected in the shipped code:**
+- **Eligible property (h)(2):** SSCM applies to inventory, non-inventory held for
+  sale, and certain self-constructed assets *produced on a routine and repetitive
+  basis* (mass-produced, standardized/assembly-line, ≤3-year MACRS recovery period)
+  — with an explicit taxpayer election to EXCLUDE self-constructed assets from SSCM
+  entirely, in which case they fall back to the general (g)(4) method instead.
+  Relevant to Phase C (SCA): most self-constructed *capital* assets (the kind Phase C
+  targets — longer-lived, not mass-produced) likely do NOT qualify for SSCM's
+  routine/repetitive carve-in, meaning SCA's mixed-cost allocation should default to
+  the general method (below), not silently assume SSCM eligibility.
+- **90% de minimis department election (g)(4)(ii), NOT SSCM-specific — a general
+  mixed-service-cost rule):** if 90%+ of a mixed-service *department's* costs are
+  deductible, taxpayer may elect not to allocate any of it; if 90%+ are
+  capitalizable, must allocate 100%. Under SSCM specifically, (h)(8) says an
+  electing department drops out of the SSCM ratio pool entirely (its costs bypass the
+  ratio, going straight to the qualifying activity). **Not implemented** — the
+  current SSCM ratio treats all mixed-service costs uniformly with no per-department
+  90% carve-out. Low priority (most cost-center-level mixed pools in a real TB won't
+  cleanly split into single "departments" the way the regulation's factory-org-chart
+  model assumes), but worth a TODO.
+- **General (non-SSCM) alternative — (g)(4)(iii), if SSCM is not elected:** a
+  **direct reallocation method** (mixed-service costs pushed straight to
+  production/resale departments only, ignoring cross-mixed-service-department
+  benefit) or a **step-allocation method** (cascading allocation, broadest-benefiting
+  mixed-service department first, recognizing cross-mixed-service benefit). Full
+  worked numerical examples exist in the regulation text. **Out of scope** — this
+  tool implements SSCM only, consistent with its existing "combined
+  producer+reseller method... deferred" scope note below; document, don't build,
+  unless a future engagement specifically needs facts-and-circumstances allocation.
+- **Independent election (h)(9):** SSCM is elected separately from SPM/MSPM/SRM —
+  a taxpayer could pair SSCM with a facts-and-circumstances §471-cost method, or pair
+  the general (g)(4) mixed-service method with MSPM. `EntityProfile.method` (SPM/
+  MSPM/SRM) and the new `sscm_ratio_method` field above are correctly independent
+  axes — don't couple them.
+- **Multi-business apportionment (h)(7):** if mixed service costs span more than one
+  trade or business, apportion by "any reasonable method" before applying SSCM. Out
+  of scope for a single-entity-scoped tool; note only.
+
+**Still unverified — needs primary text this pass didn't retrieve:** how MSPM
+specifically splits the SSCM-capitalized total between its **pre-production** and
+**production** absorption ratios (Phase B, MSPM two-ratio math below). That mechanic
+lives in §1.263A-2(c), not §1.263A-1(h) (which only governs the *total* capitalizable
+mixed service cost amount, not its pre-production/production split). An earlier
+WebSearch-only pass (lower confidence than this section) suggested the split uses
+either a direct-material-to-§471-costs proportion or a pre-production-labor-to-total-
+labor proportion — **do not build Phase B's MSPM split against that claim until
+§1.263A-2(c) gets the same primary-source verification this section got.**
+
 ## Architecture of the extension
 
 ```
@@ -73,8 +165,8 @@ pre_production_ratio = preprod_additional_263A / preprod_471          # I-Pre / 
 production_ratio     = prod_additional_263A    / prod_471             # I    / 471     (+ mixed prod share)
 add'l_to_inv = pre_production_ratio*ending_inv_471_preprod + production_ratio*ending_inv_471_prod
 ```
-- Split additional & §471 pools pre-production vs production from the `mspm` codes; split SSCM `mixed_cap` by §471-labor (fallback: §471 base) proportion.
-- **Negatives + $50M rule:** SPM excludes negative §263A when `avg_gross_receipts_prior3 > $50M` (flag REVIEW → suggest MSPM); **MSPM allows negatives regardless**. Add `avg_gross_receipts_prior3`, `include_negative_263a`, `LARGE_PRODUCER_THRESHOLD=50_000_000`.
+- Split additional & §471 pools pre-production vs production from the `mspm` codes. **Splitting the SSCM-capitalized `mixed_cap` between pre-production and production is NOT yet verified against primary source** — see the "Still unverified" note in the SSCM section above; do not lock this in from the earlier WebSearch-only lead without confirming §1.263A-2(c) text first.
+- **Negatives + $50M rule (VERIFIED, §1.263A-1(d)(3)(ii)(B), see "Where we start"):** SPM excludes negative §263A when `avg_gross_receipts_prior3 > $50M` (already implemented as `LARGE_PRODUCER_THRESHOLD` + a warning — reuse it, don't recreate); **MSPM and SRM allow negatives with NO size restriction** (verified: (B)(2)/(B)(3) list MSPM/SRM with no dollar threshold, unlike (B)(1)'s SPM $50M cap). Add `avg_gross_receipts_prior3`, `include_negative_263a` fields to `EntityProfile`.
 - **HAR election:** 3-yr test period → frozen ratio(s) for a 6-yr qualifying period; recompute in yr 3; ±0.5% corridor. Fields: `har_election`, `har_ratios`, `har_prior_year_ratios`, `har_qualifying_year_index`.
 - Worked test: preprod 140k/1.0M=0.14, prod 360k/3.0M=0.12 → 0.14×250k + 0.12×900k = **143,000**.
 
