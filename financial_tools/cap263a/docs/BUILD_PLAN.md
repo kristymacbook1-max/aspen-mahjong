@@ -223,7 +223,12 @@ Implement as `EntityProfile.mspm_mixed_split_method: Literal["direct_material", 
   - Total ending inventory = $3,000,000 §471 + $284,400 = **$3,284,400**.
 - **SSCM-split worked tests, also verbatim from the regulation** ((c)(3)(vi) Examples 4-6): $200,000 capitalizable mixed service costs; direct-material method with $2,000,000 direct materials / $8,000,000 total §471 = 25% → **$50,000 pre-production / $150,000 production**; labor method with $1,000,000 pre-production labor / $10,000,000 total labor = 10% → **$20,000 pre-production / $180,000 production**; the labor-method case with a 90%+/production split → **100% to production** under the de minimis election.
 
-### SRM (Reg §1.263A-3(d)) — combined ratio (two denominators)
+### SRM (Reg §1.263A-3(d)) — combined ratio (two denominators), VERIFIED 2026-07-08 against primary-source text + cross-checked against IRS LB&I Practice Unit COR-P-021 "Examining a Reseller's IRC 263A Computation" (11/07/2024)
+
+Full text of §1.263A-3 was directly retrieved and read (see `docs/TAX_DECISIONS.md` §7c). The formula below was
+already substantially correct in this plan before verification — unlike MSPM, no missing mechanics were found —
+but the **method-availability gate** below was missing entirely and is a real, build-blocking constraint:
+
 ```
 purchasing_ratio       = purchasing_costs / current_year_471_costs               # beginning inv EXCLUDED
 storage_handling_ratio = storage_handling / (beginning_inv_471 + current_year_471)# beginning inv INCLUDED
@@ -231,7 +236,28 @@ combined = purchasing_ratio + storage_handling_ratio
 add'l_to_inv = combined * ending_inventory_471
 ```
 - The #1 reseller audit error is the S&H denominator — assert beginning inventory is in S&H denom only.
-- **1/3–2/3 purchasing-labor** rule; **90/10 dual-function storage** rule; **de minimis production 10%/10%** test (if it fails while method=SRM → return `method_conflict:True`, recommend SPM/MSPM).
+- **1/3–2/3 purchasing-labor** rule (§1.263A-3(c)(3)(ii)(A)) — election; if not elected, reasonably allocate.
+- **90/10 dual-function storage** rule (§1.263A-3(c)(5)(iii)(C)) — on-site/off-site facility deeming, ratio =
+  gross on-site sales / total gross sales of the facility.
+- **Method-availability gate (VERIFIED via Practice Unit COR-P-021, citing §1.263A-3(a)(2)(i)/(a)(4)(ii)/(a)(4)(iii)):
+  this is NOT just a "de minimis production" flag — it determines which method is even legal to use:**
+  - de minimis production activity → **not required** to capitalize additional §263A costs at all (§1.263A-3(a)(5)).
+  - de minimis production activity, but taxpayer chooses to capitalize resale+production costs anyway → **may use
+    SPM or SRM** ((a)(4)(ii)).
+  - **more than de minimis** production activity → **required** to capitalize resale+production costs, and **may
+    use SPM but NOT SRM** ((a)(2)(i)) — this is the real trigger for `method_conflict`, not a soft "recommend"
+    warning; SRM is simply unavailable to this taxpayer.
+  - **private-label goods** exception: reseller with private-label production is required to capitalize resale+
+    production costs but **may use SPM or SRM** ((a)(4)(iii)) — carves back out of the "more than de minimis" bar.
+  - Implement as `EntityProfile.production_activity_level: Literal["none", "de_minimis", "more_than_de_minimis"]`
+    + `EntityProfile.private_label_goods: bool`; `compute_srm` raises `method_conflict=True` (hard, not a
+    recommendation) when `production_activity_level == "more_than_de_minimis" and not private_label_goods`.
+  - De minimis production activities test itself (confirmed same-day in §7c from the primary reg text): <10% of
+    gross receipts from produced property AND <10% of labor costs on production activities.
+- Allocable mixed service costs per activity (purchasing / storage-and-handling), confirmed via Practice Unit
+  COR-P-021 Step 5 to use the **same SSCM labor-ratio structure** already implemented for the resale-vs-other-activities
+  split — `labor costs allocable to the activity / total labor costs`, both nets of MSC labor — reuse, don't
+  reimplement.
 - Worked test: 60k/2.0M=0.03 + 105k/2.4M=0.043750 = 0.073750 × 500k = **36,875**.
 
 ### LIFO
@@ -262,11 +288,30 @@ share(t) = driver_value(t) / Σ driver_value ; allocated(t) = round2(pool * shar
 
 New `engines/interest.py`, `compute_263Af(result, profile)`, called after `compute_unicap`.
 
-**1. Designated-property identification** (Reg §1.263A-8(b)), first match wins:
+**1. Designated-property identification** (Reg §1.263A-8(b)), first match wins — CONFIRMED 2026-07-08 against
+IRS LB&I Practice Unit COR-P-006 "Interest Capitalization for Self-Constructed Assets" (rev. 02/01/21), a
+secondary-authority audit-technique doc, not binding law, but a reliable cross-check on the reg mechanics:
 - real property → designated (Category 1);
 - TPP with class life ≥ 20 yrs (Cat 2) OR est. production period > 2 yrs (Cat 3) OR (> 1 yr AND cost > $1M) (Cat 4).
 - de minimis screen: TPP with cost ≤ $1M **and** period ≤ 2 yrs → not designated. `NEEDS-CLASSLIFE` flag when only MACRS recovery period (not class life) is available.
+- **Separate de minimis rule for ALL designated property, not just TPP** (§1.263A-8(b)(4), newly found in the
+  Practice Unit — not previously in this plan): a production period of **90 days or fewer** AND total production
+  expenditures **≤ $1,000,000 ÷ number of days in the production period** → excluded from designated property
+  entirely (e.g., a 10-day production period caps out at $100,000 of expenditures). Excludes the adjusted basis of
+  producing assets, land cost, and interest itself from the expenditure test. Implement as an early-out check
+  before the Category 1-4 tests, not after — a property can fail this even if it would otherwise be Category 1.
 - Scope: applies to designated property **still in CIP at year end** AND **placed in service during the year** — both computed; the only difference is where the production period ends.
+- **Eligible-taxpayer AFR-plus-3 election** (§1.263A-9(e), newly found): a taxpayer with avg. annual gross receipts
+  ≤ $10,000,000 for the prior 3 years (and every year since 1994) may elect to skip the weighted-average-interest-
+  rate computation entirely and use the highest Applicable Federal Rate + 3 percentage points for the year instead.
+  Cheap real simplification for small producers — implement as `EntityProfile.interest_afr_plus_3_election: bool`
+  gated on a `avg_gross_receipts_10yr_test` helper (distinct from the $25M/$26M §448(c) small-business test already
+  in `EntityProfile` — this is a separate, lower threshold specific to §263A(f)).
+- **Cessation-period election** (§1.263A-9/-12(g), newly found): if production activities cease for ≥120
+  consecutive days, taxpayer may elect to suspend interest capitalization for that period (with a caution: during
+  a cessation period, interest on debt otherwise "traced" to the paused unit may have to be capitalized as
+  nontraced interest for *other* units instead — it doesn't just disappear). Lower priority than the AFR-plus-3
+  election and de minimis rule above — flag as a Phase D stretch goal, not required for MVP.
 
 **2. Production period** (Reg §1.263A-12): start = first physical activity (real) / 5%-of-total-cost (TPP); end = ready for intended use (PIS). Mid-year PIS → prorate the sub-period by active days.
 

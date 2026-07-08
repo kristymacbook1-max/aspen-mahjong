@@ -341,6 +341,47 @@ right. Both outcomes are reasons to keep verifying, not stop.
 
 ---
 
+### §7c — IRS LB&I Practice Unit cross-checks (2026-07-08, same-day follow-up)
+
+The user supplied four IRS LB&I units (Practice Units and a Concept Unit) directly as PDFs:
+COR-P-021 "Examining a Reseller's IRC 263A Computation" (rev. 11/07/2024), COR-P-006 "Interest
+Capitalization for Self-Constructed Assets" (rev. 02/01/21), COR-C-023 "Section 263A Costs for
+Self-Constructed Assets" (07/15/21), and COR-P-020 "Producer's 263A Computation" (rev.
+11/07/2024). **These are LB&I audit-technique guides, not binding law** — each explicitly states
+"this document is not an official pronouncement of law, and cannot be used, cited or relied upon
+as such" — but they are IRS-authored secondary interpretation and a strong independent
+cross-check against §7a/§7b's primary-source regulation reads.
+
+- **SRM/SPM method-availability gate — a real gap, not just a citation issue.** COR-P-021 Step 2
+  (citing §1.263A-3(a)(2)(i)/(a)(4)(ii)/(a)(4)(iii)/(a)(5)) states a reseller with **more than de
+  minimis** production activity may use **SPM but NOT SRM** — this plan's SRM section previously
+  only had a soft `method_conflict:True`/"recommend SPM/MSPM" framing for a generic de minimis
+  test, not a hard method-availability bar. Also newly found: a **private-label goods carve-out**
+  that restores SRM eligibility even above the de minimis threshold. Both added to
+  `BUILD_PLAN.md`'s SRM section as a build-blocking gate, not a soft warning.
+- **§263A(f) de minimis designated-property exclusion — previously entirely missing.** COR-P-006
+  (citing §1.263A-8(b)(4)) confirmed a 90-day-or-fewer production period with total production
+  expenditures ≤ $1,000,000/days-in-period is excluded from designated property altogether — a
+  cheap, real early-out this plan had never included. Also newly found: the **eligible-taxpayer
+  AFR-plus-3 election** (§1.263A-9(e), $10M gross receipts test, distinct from the $25M/$26M
+  §448(c) small-business threshold already tracked) letting small producers skip the weighted-
+  average-interest-rate computation, and the **120-day cessation-period election** (lower
+  priority, flagged as a stretch goal). Both added to `BUILD_PLAN.md`'s Phase D.
+- **Confirmed, not changed:** COR-P-020 independently reproduces the exact SSCM labor-ratio and
+  production-cost-ratio formulas already verified from the primary §1.263A-1(h) text in an
+  earlier round of this session — no discrepancy found, a good sign the earlier primary-source
+  read was accurate. COR-C-023's three cost-allocation methods (specific identification, burden
+  rate, standard cost) and the 90% mixed-service-department de minimis election match what's
+  already in Phase C/the SSCM section; no changes made there beyond noting the match.
+- **Still not independently verified from these four units:** the §263A(f) compounding mechanic
+  and the traced/nontraced excess-expenditure math in `BUILD_PLAN.md`'s Phase D worked example
+  were cross-checked structurally against COR-P-006's own worked example (Corporation X, Units
+  A/B, avoided-cost sub-steps A-E) and match in structure and formula, but COR-P-006's numbers
+  were not re-derived by hand this pass — do that before treating Phase D's 323,571.43 fixture as
+  doubly-confirmed.
+
+---
+
 ### Reviewer summary
 - **7 bug fixes (§1):** all recommended **approve**; items #3 (EX-BID) and the scope items carry a "revisit scope" caveat.
 - **8 new-code groups / 10 codes (§2):** all recommended **approve** (SEC195-STARTUP and the SEC263A-IMPROVE/REPAIR keyword set carry minor-revisit notes).
@@ -349,3 +390,4 @@ right. Both outcomes are reasons to keep verifying, not stop.
 - **27 hardening-pass corrections (§5):** found across four independent multi-agent audit rounds (initial, adversarial re-verification, previously-unaudited files + deeper taxonomy data, and end-to-end/lexicon/practitioner review), all fixed and regression-tested; items #16, #28, #35, #36, and #37 change computed dollar output — re-run any workpaper generated before this pass.
 - **8 red-team corrections (§6):** three adversarial agents (hostile input / tax-wrongness / single-source divergence). Two are security-class (formula injection #44, the =PY() NaN divergence #43); five change or bound computed dollar output (#45–#49). All fixed and regression-tested (93 tests). Highlights: an unbounded absorption ratio could show a **$50 billion** capitalized figure unflagged (#46); a NaN amount silently defeated the integrity tie-check (#45). Nothing further should be relied on for filing without SME sign-off on §3/§3a.
 - **Citation accuracy audit (§7):** 5 citations corrected (moderate-high confidence, still unverified), 6 flagged unverified/possibly fabricated rather than guess-corrected — most notably a suspected-fabricated Treasury Decision ("T.D. 10034") in BUILD_PLAN.md. **No citation in this tool should be relied on for a filing position without independent primary-source verification.**
+- **Primary-source verification passes (§7a-§7c):** §1.263A-1 (SSCM/UNICAP general), §1.263A-2 (MSPM), and §1.263A-3 (SRM) regulation text retrieved and cross-checked directly; four IRS LB&I Practice/Concept Units (resellers, interest capitalization, self-constructed-asset costs, producers) cross-checked as independent secondary confirmation. Found and fixed one real citation bug ($50M rule), two real missing MSPM mechanics (residual pre-production, direct materials adjustment), one real missing SRM method-availability gate (SPM-only above de minimis production), and one real missing §263A(f) de minimis designated-property exclusion — none of these were caught by the four prior audit rounds in §5/§6 because those rounds worked from model recall, not primary text.
