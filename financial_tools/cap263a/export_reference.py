@@ -27,29 +27,41 @@ def _cat_row(c):
             c.get("note", "")]
 
 
+def _blank(v):
+    """A blank cell reads back as None via openpyxl's iter_rows, but as
+    float('nan') via the =PY() workbook's pandas `xl(...).values.tolist()`
+    path. NaN is truthy AND `nan != nan`, so `str(v or "")` neutralizes None
+    but NOT NaN — which reintroduced the ["None"]-class corruption as ['nan']
+    (36 phantom keyword/clue entries) on the ONE path that actually runs in
+    Excel. Treat both as empty."""
+    return v is None or v != v          # v != v is True only for NaN
+
+
+def _s(v):
+    return "" if _blank(v) else str(v)
+
+
 def _row_to_cat(row):
     d = dict(zip(_CAT_COLS, row))
-    # A blank Excel cell reads back as None, not "" — str(None) == "None" would
-    # otherwise survive the "|" split and truthy-filter below, corrupting every
-    # originally-empty keywords/cc_clues list into ["None"] and polluting the
-    # keyword/clue index for every category that legitimately has none.
+
     def _list(v):
-        return [k for k in str(v or "").split("|") if k]
+        return [k for k in _s(v).split("|") if k]
     return {
         "code": d["code"], "tier1": d["tier1"],
-        "tier2": d["tier2"] or "", "tier3": d["tier3"] or "",
+        "tier2": _s(d["tier2"]), "tier3": _s(d["tier3"]),
         "treatment": {"mspm": d["mspm"], "resale": d["resale"],
                       "self_const": d["self_const"], "interest": d["interest"]},
-        "priority": int(d["priority"] or 0),
+        "priority": int(d["priority"]) if not _blank(d["priority"]) else 0,
         "keywords": _list(d["keywords"]),
         "cc_clues": _list(d["cc_clues"]),
-        "is_labor": bool(d["is_labor"]), "labor_type": d["labor_type"] or "",
-        "cap_vs_deduct": d["cap_vs_deduct"] or None,
-        "allows_negative_adj": bool(d["allows_negative_adj"]),
-        "designated_property": bool(d["designated_property"]),
-        "election_required": bool(d["election_required"]),
-        "authority": d["authority"] or "",
-        "note": d.get("note") or "",
+        "is_labor": bool(d["is_labor"]) and not _blank(d["is_labor"]),
+        "labor_type": _s(d["labor_type"]),
+        "cap_vs_deduct": _s(d["cap_vs_deduct"]) or None,
+        "allows_negative_adj": bool(d["allows_negative_adj"]) and not _blank(d["allows_negative_adj"]),
+        "designated_property": bool(d["designated_property"]) and not _blank(d["designated_property"]),
+        "election_required": bool(d["election_required"]) and not _blank(d["election_required"]),
+        "authority": _s(d["authority"]),
+        "note": _s(d.get("note")),
     }
 
 

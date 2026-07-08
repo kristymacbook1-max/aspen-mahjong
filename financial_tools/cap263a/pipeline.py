@@ -31,7 +31,9 @@ class CapitalizationPipeline:
         # An unsanitized entity name (e.g. "Acme/Sub LLC" or "../../etc") could
         # otherwise create unintended subdirectories or write outside output_dir
         # via os.path.join — collapse anything that isn't a word char/hyphen.
-        tag = _UNSAFE_TAG_CHARS.sub("_", tag).strip("_") or "entity"
+        # Cap the length too: a very long client name would blow past the OS's
+        # 255-char filename limit and raise OSError.
+        tag = (_UNSAFE_TAG_CHARS.sub("_", tag).strip("_") or "entity")[:100]
         ts = timestamp or datetime.now().strftime("%Y%m%d_%H%M%S")
         out = os.path.join(self.output_dir, f"{tag}_cap263a_{ts}.xlsx")
         CapitalizationReport().generate(result, out)

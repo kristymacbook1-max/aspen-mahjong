@@ -167,6 +167,19 @@ def test_construction_loan_interest_reaches_263af_layer():
     assert r2.tier1 == "Non-Operating"
 
 
+def test_abnormal_spoilage_excluded_but_normal_scrap_stays_471():
+    """Abnormal spoilage/rework/casualty is DEDUCTIBLE (excluded from §471 per
+    Reg §1.263A-1(e)(3)(iii)); the department zone bonus must not pull it into
+    the §471 scrap pool. Normal scrap stays §471."""
+    for desc in ["Abnormal spoilage - production", "Abnormal rework", "Casualty loss - flood"]:
+        r = classify(acct_desc=desc, cc_desc="Manufacturing")
+        assert r.code == "EX-ABNORMAL"
+        assert r.tier1 == "Excluded"
+    for desc in ["Scrap recovery", "Spoilage", "Rework labor"]:
+        r = classify(acct_desc=desc, cc_desc="Manufacturing")
+        assert r.tier1 == "§471 Cost", f"{desc} normal scrap should stay §471"
+
+
 def test_goodwill_balance_vs_amortization_split():
     """A bare "Goodwill" TB line (a balance, present on every acquisitive
     company's TB) classified as a capitalizable §263(a) transaction cost;

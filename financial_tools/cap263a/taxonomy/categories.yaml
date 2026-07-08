@@ -2046,6 +2046,38 @@
   allows_negative_adj: false
   designated_property: false
   election_required: false
+- code: EX-ABNORMAL
+  tier1: Excluded
+  tier2: Abnormal Costs
+  tier3: Abnormal Spoilage / Casualty
+  treatment:
+    mspm: E
+    resale: E
+    self_const: E
+    interest: E
+  priority: 3
+  keywords:
+  - abnormal spoilage
+  - abnormal rework
+  - abnormal waste
+  - abnormal scrap
+  - excess spoilage
+  - casualty loss
+  - abnormal yield loss
+  - abnormal shrinkage
+  cc_clues:
+  - production
+  - manufacturing
+  is_labor: false
+  labor_type: ''
+  authority: 'Reg §1.263A-1(e)(3)(iii)(abnormal amounts excluded from §471/§263A)'
+  cap_vs_deduct: null
+  allows_negative_adj: false
+  designated_property: false
+  election_required: false
+  note: 'Abnormal spoilage/rework/casualty is DEDUCTIBLE (excluded from §471); only
+    NORMAL spoilage stays in the §471 pool (FO-SCRAP). See TAX_DECISIONS §3a — in a
+    production cost center, department context may still pull to §471; review flagged.'
 - code: EX-RD
   tier1: Excluded
   tier2: R&D

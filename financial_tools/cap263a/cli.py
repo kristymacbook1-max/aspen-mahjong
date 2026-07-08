@@ -7,6 +7,7 @@
 import argparse
 import sys
 import zipfile
+import xml.etree.ElementTree as ET
 from decimal import Decimal
 
 from .analysis import EntityProfile
@@ -51,10 +52,17 @@ def main(argv=None):
         result = CapitalizationPipeline(args.out_dir).run(args.tb_path, profile,
                                                           company_tag=args.entity or None,
                                                           sheet=args.sheet)
-    except (FileNotFoundError, ValueError, zipfile.BadZipFile) as e:
+    except (FileNotFoundError, ValueError, zipfile.BadZipFile, OSError,
+            ET.ParseError) as e:
         print(f"error: {e}", file=sys.stderr)
         return 1
-    for w in (result["unicap"].get("warnings") or []) + (result.get("data_quality") or []):
+    except Exception as e:                    # never dump a raw traceback at the CLI boundary
+        print(f"error: unexpected failure processing {args.tb_path}: "
+              f"{type(e).__name__}: {e}", file=sys.stderr)
+        return 1
+    for w in ((result["unicap"].get("warnings") or [])
+              + (result.get("bucket_warnings") or [])
+              + (result.get("data_quality") or [])):
         print(f"WARNING: {w}", file=sys.stderr)
     b = result["bucket_totals"]
     print(f"Workbook: {result['_output_path']}")
@@ -66,7 +74,10 @@ def main(argv=None):
     for bucket in b:
         if b[bucket]:
             print(f"  {bucket:22} ${b[bucket]:>14,.0f}")
-    print(f"Tie check (must be 0): ${result['tie_check']:,.0f}")
+    # Structural partition invariant (0 by construction) — NOT a correctness
+    # check. It confirms every dollar landed in exactly one bucket; it does not
+    # validate the classifications.
+    print(f"Partition invariant (structural, 0): ${result['tie_check']:,.0f}")
     return 0
 
 

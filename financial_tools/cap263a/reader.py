@@ -43,13 +43,16 @@ _EXCLUDED_SHEET_TITLES = ("instructions", "classification results",
 _FORMULA_ERRORS = {"#ref!", "#n/a", "#div/0!", "#name?", "#null!", "#num!", "#value!"}
 _HEADER_SCAN_ROWS = 100   # real ERP exports (SAP/Oracle/NetSuite) commonly have
                           # 20-40 rows of preamble before the header row
+_MAX_BLANK_RUN = 1000     # stop scanning after this many consecutive blank rows
+                          # (guards against a stray cell inflating max_row to ~1M)
 
 
 def _to_decimal(v):
     if v is None:
         return Decimal("0")
     if isinstance(v, (int, float)):
-        return Decimal(str(v))
+        d = Decimal(str(v))
+        return d if d.is_finite() else Decimal("0")
     s = str(v).strip().replace(",", "").replace("$", "").strip()
     neg = s.startswith("(") and s.endswith(")")
     s = s.strip("()")
@@ -58,6 +61,10 @@ def _to_decimal(v):
     try:
         d = Decimal(s)
     except InvalidOperation:
+        return Decimal("0")
+    # Reject NaN/±Infinity (parseable by Decimal but they poison every total,
+    # blank out in the workbook, and silently defeat the tie-check).
+    if not d.is_finite():
         return Decimal("0")
     return -d if neg else d
 
@@ -143,13 +150,24 @@ def read_trial_balance(path, sheet=None):
             f"No account-number column detected on '{ws.title}' (header row {header_row}); "
             f"acct_num will be blank for every line.", stacklevel=2)
 
+    # A single stray cell far down the sheet inflates ws.max_row to ~1,048,576
+    # and makes this loop grind for millions of empty rows. Stop after a long
+    # run of blank description cells rather than trusting max_row.
+    last_row = ws.max_row
+    blank_run = 0
     lines = []
-    for r in range(header_row + 1, ws.max_row + 1):
+    for r in range(header_row + 1, last_row + 1):
         def cell(field):
             ci = cols.get(field)
             return ws.cell(r, ci).value if ci else None
         desc = str(cell("acct_desc") or "").strip()
-        if (not desc or desc.lower() in _SECTION_HEADERS or desc == "0"
+        if not desc:
+            blank_run += 1
+            if blank_run >= _MAX_BLANK_RUN:
+                break     # trailing empty region — stop scanning to max_row
+            continue
+        blank_run = 0
+        if (desc.lower() in _SECTION_HEADERS or desc == "0"
                 or desc.lower() in _FORMULA_ERRORS):
             continue
         if has_amount:

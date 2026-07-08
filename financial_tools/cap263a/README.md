@@ -63,7 +63,7 @@ many same-account-different-department pairs, cost centers spanning production,
 warehouse, sales, R&D, corporate, banking, and land contexts). Current measure:
 
 - Tier-1 agreement **~78% raw / ~82% incl. documented judgment differences**
-- High-confidence **precision ~83%**, with a **~35% review queue** (confidence is
+- High-confidence **precision ~84%**, with a **~35% review queue** (confidence is
   calibrated so weak/zone-only matches — including cost-center reclassifications
   driven only by department context, with no direct keyword hit — are flagged,
   not auto-accepted)

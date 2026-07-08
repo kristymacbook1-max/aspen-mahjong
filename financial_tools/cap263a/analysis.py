@@ -144,6 +144,21 @@ def analyze(lines: List[TBLine], profile: Optional[EntityProfile] = None) -> dic
     mixed = totals["Mixed (allocable)"]
     deductible = totals["Deductible"] + totals["Non-Operating"]
 
+    # Capitalization is an addition to basis; a NEGATIVE capitalized bucket
+    # (contra/reversal lines net below zero) is economically invalid and must
+    # be surfaced. The compute_unicap guard only saw the §263A pools; catch the
+    # §263(a) / §266 / §263A(f) buckets and the aggregate here too.
+    bucket_warnings = []
+    for b in CAPITALIZED_BUCKETS:
+        if totals[b] < 0:
+            bucket_warnings.append(
+                f"NEGATIVE '{b}' BUCKET (${totals[b]:,.0f}): capitalization cannot be "
+                f"negative — contra/reversal lines classified here need review.")
+    if capitalized < 0:
+        bucket_warnings.append(
+            f"TOTAL CAPITALIZED IS NEGATIVE (${capitalized:,.0f}) — the workbook would "
+            f"show a negative addition to basis. Review the contributing lines.")
+
     result = {
         "profile": profile,
         "rows": rows,
@@ -154,6 +169,12 @@ def analyze(lines: List[TBLine], profile: Optional[EntityProfile] = None) -> dic
         "deductible_total": deductible,
         "review_count": sum(1 for r in rows if r.cls.review),
         "flagged_count": sum(1 for r in rows if r.cls.flags),
+        "bucket_warnings": bucket_warnings,
+        # NOTE: partition invariant, NOT a reconciliation. Every IS line is
+        # assigned to exactly one bucket, so this is 0 by construction — it
+        # catches a bucketing/refactor bug, it does NOT validate that any line
+        # is classified correctly. (The Summary's live tie row, which reacts to
+        # analyst Cap% overrides, is the meaningful check.)
         "tie_check": is_total - (capitalized + mixed + deductible),
     }
     result["unicap"] = compute_unicap(result, profile)
@@ -195,10 +216,25 @@ def compute_unicap(result: dict, profile: EntityProfile) -> dict:
                       if r.cls.is_labor and r.cls.tier1 == "§471 Cost"), Decimal("0"))
     total_labor = sum((r.line.amount for r in rows
                        if r.cls.is_labor and r.cls.tier1 in UNICAP_LABOR_TIERS), Decimal("0"))
+    ratio_warn = None
     if profile.mixed_alloc_ratio is not None:
         ratio = profile.mixed_alloc_ratio
+        if not (Decimal("0") <= ratio <= Decimal("1")):
+            ratio_warn = (f"SSCM ALLOCATION RATIO OVERRIDE = {ratio} is outside [0,1] — a "
+                          f"service-cost allocation ratio is a fraction; clamped to "
+                          f"[0,1] for the computation. Check the input.")
     else:
         ratio = (prod_labor / total_labor) if total_labor else Decimal("0")
+        if not (Decimal("0") <= ratio <= Decimal("1")):
+            ratio_warn = (f"SSCM LABOR RATIO = {ratio.quantize(Decimal('0.0001'))} is outside "
+                          f"[0,1] (production labor {prod_labor:,} / UNICAP labor {total_labor:,}) "
+                          f"— likely a negative/contra labor line; clamped to [0,1]. Review.")
+    # A service-cost allocation ratio is definitionally a fraction; clamp so a
+    # bad input can't over- or negatively-capitalize the mixed pool.
+    if ratio < 0:
+        ratio = Decimal("0")
+    elif ratio > 1:
+        ratio = Decimal("1")
     ratio = ratio.quantize(Decimal("0.000001"))
     mixed = result["mixed_total"]
     mixed_cap = _q(mixed * ratio)
@@ -210,11 +246,30 @@ def compute_unicap(result: dict, profile: EntityProfile) -> dict:
     add_to_inv = _q(profile.ending_inventory_471 * absorption)
 
     warnings_ = []
+    if ratio_warn:
+        warnings_.append(ratio_warn)
     if profile.method != "SPM":
         warnings_.append(
             f"METHOD: profile.method={profile.method!r} is not implemented — this "
             f"computation is SPM. Do not sign an {profile.method} workpaper off these "
             f"numbers (MSPM/SRM are Phase B of the build plan).")
+    # SPM absorption ratio > 1 means the additional §263A pool exceeds the ENTIRE
+    # §471 base — almost always a data error (e.g. a tiny §471 pool). Not clamped
+    # (rare edge cases exist) but always surfaced.
+    if absorption > 1:
+        warnings_.append(
+            f"ABSORPTION RATIO = {absorption} (>100%): the additional §263A pool "
+            f"(${additional_pool:,.0f}) exceeds the entire §471 base (${sec471_pool:,.0f}). "
+            f"Verify the §471 classifications — this is almost always a data error.")
+    # ending_inventory_471 is a free-typed input; if it dwarfs the §471 pool the
+    # capitalized-to-inventory figure is meaningless (the pool is the ceiling on
+    # the year's §471 cost).
+    if profile.ending_inventory_471 > sec471_pool and sec471_pool > 0:
+        warnings_.append(
+            f"ENDING §471 INVENTORY (${profile.ending_inventory_471:,.0f}) EXCEEDS THE "
+            f"§471 COST POOL (${sec471_pool:,.0f}): the amount capitalized to inventory "
+            f"scales off an input inconsistent with the trial balance — verify the "
+            f"ending-inventory figure.")
     if additional_pool < 0:
         warnings_.append(
             "NEGATIVE ADDITIONAL §263A POOL: the absorption ratio and the amount "

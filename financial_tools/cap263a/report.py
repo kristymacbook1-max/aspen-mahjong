@@ -28,6 +28,18 @@ from .analysis import BUCKETS, CAPITALIZED_BUCKETS
 # (The shared style module's format has no negative section.)
 FMT_CURRENCY = '"$"#,##0;("$"#,##0)'
 
+
+def _defuse(v):
+    """Spreadsheet-injection defense: a trial balance comes from an untrusted
+    source, and openpyxl stores any string beginning with =, +, -, or @ as an
+    ACTIVE FORMULA — so a client account description like
+    =HYPERLINK("http://evil","click") would execute when a reviewer opens the
+    workbook. Prefix a formula-guard apostrophe (Excel's standard neutralizer;
+    it renders the text literally and marks the cell text-typed)."""
+    if isinstance(v, str) and v[:1] in ("=", "+", "-", "@"):
+        return "'" + v
+    return v
+
 TB_SHEET = "Classified TB"
 _TB_HEADERS = [
     "Account #", "Account Description", "Cost Center", "Amount", "Bucket",
@@ -80,7 +92,7 @@ class CapitalizationReport:
         return cell
 
     def _label(self, ws, r, c, v, bold=False):
-        cell = ws.cell(r, c, v)
+        cell = ws.cell(r, c, _defuse(v))
         cell.font = FONT_BODY_BOLD if bold else FONT_BODY
         cell.alignment = ALIGN_LEFT
         return cell
@@ -228,10 +240,12 @@ class CapitalizationReport:
 
         apply_section_header(ws, row, 1, 4, "Checks")
         row += 1
-        self._label(ws, row, 1, "Tie check: adjusted − classified deductible (0 = no overrides)", bold=True)
+        self._label(ws, row, 1, "Override check: adjusted − classified deductible "
+                    "(0 = no analyst Cap%/Bucket overrides; ≠0 flags overrides)", bold=True)
         tie = self._money(ws, row, 3, None, fill=FILL_HIGHLIGHT_ORANGE)
-        # adjusted deductible should equal Deductible + Non-Operating buckets when
-        # no Cap % has been overridden; a non-zero value flags analyst overrides.
+        # This live formula DOES react to analyst edits (the Python-side
+        # partition tie_check is 0 by construction and is not a correctness
+        # check). A non-zero value here flags Cap%/Bucket overrides.
         ded = self._sumifs("Deductible", "D")[1:] + "+" + self._sumifs("Non-Operating", "D")[1:]
         tie.value = f"=C{adjusted_row}-(" + ded + ")"
         row += 1
@@ -244,6 +258,7 @@ class CapitalizationReport:
 
         # --- warnings the workpaper must document (computation + data quality) ---
         cautions = list(self._r["unicap"].get("warnings", []) or [])
+        cautions += list(self._r.get("bucket_warnings", []) or [])
         cautions += list(self._r.get("data_quality", []) or [])
         if cautions:
             apply_section_header(ws, row, 1, 4, "Cautions — resolve before signing")

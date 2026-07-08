@@ -22,6 +22,11 @@ except Exception:                       # pragma: no cover
 
 _LEADING_ACCT = re.compile(r"^[\s]*[\d\-\.]+[\s:·\-]+")
 _PARENS = re.compile(r"\([^)]*\)")
+
+# Excluded-tier codes whose keywords are explicit deduction/exclusion triggers
+# (not department-ambiguous) — treated like the specialized regime codes so a
+# department zone bonus can't override them when the phrase is present.
+EXPLICIT_EXCLUSION_CODES = frozenset({"EX-ABNORMAL"})
 # IRC-section shorthand ("401(k)", "403(b)", "457(b)") is not a narrative aside —
 # the blanket parens-stripper below was eating the "(k)"/"(b)" entirely, turning
 # "401(k) contribution" into "401 contribution" and losing the "401k" keyword.
@@ -132,6 +137,7 @@ def classify(acct_num="", acct_desc="", cc_num="", cc_desc="", tax=None):
     for t1 in _SPECIALIZED_TIERS:
         specialized_codes |= tax.codes_by_tier1.get(t1, set())
     specialized_codes |= {c["code"] for c in tax.categories if c.get("allows_negative_adj")}
+    specialized_codes |= EXPLICIT_EXCLUSION_CODES & set(tax.by_code)
     specialized_desc_hit = any(
         any(_phrase_in(k.lower(), desc) for k in tax.by_code[sc].get("keywords", []))
         for sc in (specialized_codes & cand))
@@ -166,10 +172,15 @@ def classify(acct_num="", acct_desc="", cc_num="", cc_desc="", tax=None):
         # signal (keyword or cost-center clue) so a bare in-zone code cannot win
         # on department membership alone — that phantom-win pulled balance-sheet
         # and specific accounts into a department's Mixed-Service default.
+        # Suppressed for a NON-specialized code when the line's description
+        # explicitly hits a specialized/exclusion keyword: "abnormal spoilage"
+        # in a production dept must not be pulled to the §471 scrap pool by the
+        # department's zone bonus (same principle as the immune suppression).
         if (zone_tier1 and c["tier1"] == zone_tier1
                 and (kw_hit or clue_hits)
                 and code not in tax.generic_codes
-                and c["tier1"] not in IMMUNE_TIERS):
+                and c["tier1"] not in IMMUNE_TIERS
+                and not (specialized_desc_hit and code not in specialized_codes)):
             score += 20; method.append("zone")
 
         # Layer 2: fuzzy (only when no exact keyword hit and still weak)

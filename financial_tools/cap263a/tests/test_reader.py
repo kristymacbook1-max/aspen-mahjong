@@ -81,6 +81,42 @@ def test_accounting_negative_with_dollar_sign_and_space():
     assert _to_decimal("$(1,234,567.89)") == Decimal("-1234567.89")
 
 
+def test_nan_and_infinity_amounts_are_neutralized():
+    """NaN/±Infinity are parseable by Decimal but poison every total, blank out
+    in the workbook, and silently defeat the tie-check. They must read as 0."""
+    for v in ["NaN", "nan", "Infinity", "-Infinity", "inf", float("nan"), float("inf")]:
+        assert _to_decimal(v) == Decimal("0"), v
+
+
+def test_nan_amount_does_not_defeat_tie_check(tmp_path):
+    """End-to-end: a NaN amount cell must not make is_total/tie_check NaN."""
+    import os
+    from financial_tools.cap263a.analysis import analyze, EntityProfile
+    wb = Workbook(); ws = wb.active; ws.title = "TB"
+    ws.append(["Account Number", "Account Description", "Amount"])
+    ws.append(["5000", "Direct labor", None])
+    cell = ws.cell(2, 3); cell.value = "NaN"; cell.data_type = "s"
+    p = os.path.join(tmp_path, "nan.xlsx"); wb.save(p)
+    r = analyze(read_trial_balance(p), EntityProfile())
+    assert r["tie_check"] == Decimal("0")
+    assert r["is_total"] == Decimal("0")
+
+
+def test_stray_far_cell_does_not_blow_up_row_scan(tmp_path):
+    """A single cell at a huge row inflates ws.max_row to ~1M; the reader must
+    stop after a long blank run rather than iterate to max_row."""
+    import os, time
+    wb = Workbook(); ws = wb.active; ws.title = "TB"
+    ws.append(["Account Number", "Account Description", "Amount"])
+    ws.append(["5000", "Direct labor", 100000])
+    ws.cell(1_000_000, 1, "stray")     # inflate max_row
+    p = os.path.join(tmp_path, "sparse.xlsx"); wb.save(p)
+    t0 = time.time()
+    lines = read_trial_balance(p)
+    assert time.time() - t0 < 3.0
+    assert len(lines) == 1
+
+
 def test_title_sheet_plus_one_tb_sheet_is_not_ambiguous(tmp_path):
     """A cover/title sheet with no TB-shaped columns must not count toward
     ambiguity — only raise when 2+ candidates actually look like a trial

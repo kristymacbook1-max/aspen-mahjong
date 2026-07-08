@@ -147,7 +147,10 @@ def build_pyexcel_workbook(output_path: str, sample_rows=None) -> str:
     tb.append(["Account Number", "Account Description", "Cost Center",
                "Cost Center Description", "Amount"])
     for r in (sample_rows or []):
-        tb.append(r)
+        # Spreadsheet-injection defense: a =/+/-/@-leading text cell is stored
+        # as an active formula. Prefix a formula-guard apostrophe.
+        tb.append([("'" + c) if isinstance(c, str) and c[:1] in ("=", "+", "-", "@")
+                   else c for c in r])
     _add_table(tb, "RawTB")
 
     wb.create_sheet("Classify")

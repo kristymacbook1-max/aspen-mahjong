@@ -5,7 +5,7 @@ and the assembled engine blob classify IDENTICALLY to the canonical CLI engine,
 so the four-engine divergence problem cannot recur.
 """
 
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 
 from financial_tools.cap263a import classify, get_taxonomy
 from financial_tools.cap263a.export_reference import (
@@ -46,6 +46,48 @@ def test_roundtrip_preserves_empty_lists_and_empty_strings():
             assert c["tier3"] == "", f"{c['code']}: tier3 lost empty-string identity"
         if orig.get("tier2", "") == "":
             assert c["tier2"] == "", f"{c['code']}: tier2 lost empty-string identity"
+
+
+def test_pandas_nan_path_matches_cli_the_production_surface():
+    """The =PY() workbook rebuilds the taxonomy via pandas
+    `xl(...).values.tolist()`, where BLANK cells become float('nan') — not
+    None. NaN is truthy AND nan != nan, so the None-based scrubber missed it,
+    reintroducing the ['nan'] phantom-keyword corruption and diverging every
+    classified row from the CLI on cap_vs_deduct/authority/labor_type. This is
+    the surface that actually runs in Excel; body()/iter_rows (None) never
+    exercised it."""
+    import pandas as pd
+    from financial_tools.cap263a.build_pyexcel import build_pyexcel_workbook
+    from financial_tools.cap263a.export_reference import reference_data_from_rows
+    from financial_tools.cap263a.taxonomy import Taxonomy
+    import tempfile, os
+
+    with tempfile.TemporaryDirectory() as d:
+        path = os.path.join(d, "py.xlsx")
+        build_pyexcel_workbook(path)
+        wb = load_workbook(path)
+
+        def rows_via_pandas(sheet):                 # mimic xl(name+"[#All]", headers=True)
+            data = [[c.value for c in row] for row in wb[sheet].iter_rows()]
+            return pd.DataFrame(data[1:], columns=data[0]).values.tolist()
+
+        data = reference_data_from_rows(
+            rows_via_pandas("_Categories"), rows_via_pandas("_CCZones"),
+            rows_via_pandas("_CCReclass"), rows_via_pandas("_GenericMap"),
+            rows_via_pandas("_Lexicon"))
+        tax_py = Taxonomy.from_data(**data)
+
+    # no phantom 'nan' keyword/clue got indexed
+    for c in tax_py.categories:
+        assert "nan" not in [k.lower() for k in c["cc_clues"]], c["code"]
+        assert "nan" not in [k.lower() for k in c["keywords"]], c["code"]
+
+    # full-field parity vs the canonical engine across the golden set
+    for acct, cc, code, tier1 in GOLDEN:
+        a = classify(acct_desc=acct, cc_desc=cc, tax=tax_py)
+        b = classify(acct_desc=acct, cc_desc=cc)
+        assert (a.code, a.confidence, a.cap_vs_deduct, a.authority, a.labor_type, a.tier3) == \
+               (b.code, b.confidence, b.cap_vs_deduct, b.authority, b.labor_type, b.tier3), acct
 
 
 def test_roundtrip_preserves_note_field():

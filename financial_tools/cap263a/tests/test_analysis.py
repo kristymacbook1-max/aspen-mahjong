@@ -62,6 +62,43 @@ def test_unicap_exempt_when_small():
     assert r["unicap"]["additional_capitalized_to_inventory"] == D("0")
 
 
+def test_absorption_over_100pct_and_bad_ending_inventory_warn():
+    """A tiny §471 pool with a large additional pool gives an absorption ratio
+    >100%, and a free-typed ending inventory inconsistent with the pool makes
+    the capitalized-to-inventory figure meaningless — both must warn."""
+    lines = [TBLine("5000", "Raw materials", "100", "Production", amount=Decimal("100")),
+             TBLine("6000", "Purchasing dept salaries", "200", "Procurement", amount=Decimal("500000"))]
+    r = analyze(lines, EntityProfile(avg_gross_receipts=Decimal("100000000"),
+                                     ending_inventory_471=Decimal("10000000")))
+    joined = " ".join(r["unicap"]["warnings"])
+    assert "ABSORPTION RATIO" in joined and ">100%" in joined
+    assert "EXCEEDS THE" in joined
+
+
+def test_sscm_ratio_override_and_labor_are_clamped_to_unit_interval():
+    """A mixed_alloc_ratio override > 1 (or a negative labor-derived ratio)
+    must be clamped to [0,1] and warned — a service-cost ratio is a fraction."""
+    lines = [TBLine("1", "Officer compensation", "", "Executive", amount=Decimal("300000")),
+             TBLine("2", "Raw materials", "", "Production", amount=Decimal("1000000"))]
+    r = analyze(lines, EntityProfile(avg_gross_receipts=Decimal("100000000"),
+                                     mixed_alloc_ratio=Decimal("3.5")))
+    assert r["unicap"]["mixed_alloc_ratio"] == Decimal("1.000000")
+    assert r["unicap"]["mixed_capitalized"] == Decimal("300000.00")   # not 1,050,000
+    assert any("OVERRIDE" in w for w in r["unicap"]["warnings"])
+
+
+def test_negative_capitalized_buckets_are_flagged():
+    """A contra/reversal line driving §263(a) Mandatory (or any capitalized
+    bucket) negative is economically invalid and must be surfaced — the
+    original negative-pool guard only saw the §263A pools."""
+    lines = [TBLine("1", "Facilitative transaction cost", "", "", amount=Decimal("100000")),
+             TBLine("2", "Trademark cost refund", "", "", amount=Decimal("-900000")),
+             TBLine("3", "Raw materials", "", "Production", amount=Decimal("1000000"))]
+    r = analyze(lines, EntityProfile(avg_gross_receipts=Decimal("100000000")))
+    assert r["bucket_totals"]["§263(a) Mandatory"] < 0
+    assert any("NEGATIVE" in w and "263(a) Mandatory" in w for w in r["bucket_warnings"])
+
+
 def test_small_business_exemption_covers_263af_interest():
     """§263A(i) exempts from ALL of §263A including (f) — a §263A(f)-coded
     interest line must fall to Deductible for an exempt entity, not stay in
