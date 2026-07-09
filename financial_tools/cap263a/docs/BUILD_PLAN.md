@@ -1,8 +1,8 @@
-# Build Plan — Complete §263A Computation Tool (MSPM · SRM · SCA · §263A(f))
+# Build Plan — Complete §263A/§263(a)/§266/§174/§59(e) Capitalization Tool (MSPM · SRM · SCA · §263A(f) · R&E · Intangibles · Qualified Expenditures)
 
-**Goal:** extend `cap263a` from a classifier + SPM inventory calc into a complete tool that accurately computes §263A inventory under **MSPM** and **SRM**, §263A for **self-constructed assets (SCA)** using reasonable allocation factors, and a full **§263A(f)** interest capitalization for designated property (in CIP and placed in service mid-year), including automatic designated-property identification.
+**Goal:** extend `cap263a` from a classifier + SPM inventory calc into a complete tool that accurately computes §263A inventory under **MSPM** and **SRM**, §263A for **self-constructed assets (SCA)** using reasonable allocation factors, and a full **§263A(f)** interest capitalization for designated property (in CIP and placed in service mid-year), including automatic designated-property identification — **plus, ADDED 2026-07-09 per direct scope-expansion request, §174/§174A research & experimental expenditure capitalization (Phase F), §1.263(a)-4/-5 intangibles/transaction costs and §195/§248/§709 start-up/organizational costs (Phase G), and §59(e) elective qualified-expenditure amortization (Phase H)** — every mandatory AND elective capitalization provision under §263(a)/§174/§266/§59(e) this plan could identify, not §263A alone.
 
-**Today the tool accepts exactly one input — a trial balance — and that is the ceiling on what it can compute.** SCA and §263A(f) are mathematically impossible from a trial balance alone — they need schedules 3-5 below. MSPM/SRM are gated only on inventory-balance/on-hand scalar inputs (`EntityProfile` fields, no new schedule) — **corrected 2026-07-09: an earlier draft of this paragraph said all four engines "need four more schedules" and that "nothing in Phase B/C/D can run until Phase A exists," which contradicted the sequencing section's own (accurate) statement that Phase B needs "no new schedules beyond inventory balances." Phase B is NOT gated on Phase A; Phases C/D are.** The complete tool takes **five inputs**:
+**Today the tool accepts exactly one input — a trial balance — and that is the ceiling on what it can compute.** SCA and §263A(f) are mathematically impossible from a trial balance alone — they need schedules 3-5 below. MSPM/SRM are gated only on inventory-balance/on-hand scalar inputs (`EntityProfile` fields, no new schedule) — **corrected 2026-07-09: an earlier draft of this paragraph said all four engines "need four more schedules" and that "nothing in Phase B/C/D can run until Phase A exists," which contradicted the sequencing section's own (accurate) statement that Phase B needs "no new schedules beyond inventory balances." Phase B is NOT gated on Phase A; Phases C/D are.** The complete tool takes **eight inputs** (inputs 6-8 ADDED 2026-07-09, see Phases F/G/H below — the plan's scope was §263A-only; it now also covers §174/§174A, §1.263(a)-4/-5 + §195/§248/§709, and §59(e), per direct user request):
 
 | # | Input | Feeds | Status |
 |---|---|---|---|
@@ -11,8 +11,11 @@
 | 3 | **Fixed asset schedule** | Per-asset basis/class-life/PIS date → SCA allocation target + §263A(f) designated-property ID | ❌ Phase A |
 | 4 | **CIP (construction-in-progress) detail** | Cumulative production expenditure over time → the core §263A(f) APE input | ❌ Phase A |
 | 5 | **Debt/interest schedule** | Traced vs. non-traced debt, principal, rates → the other half of §263A(f) | ❌ Phase A |
+| 6 | **R&E (§174) expenditure schedule** — ADDED 2026-07-09 | Domestic/foreign split, project-level detail → Phase F's amortization schedule + catch-up computation | ❌ Phase F |
+| 7 | **Intangibles & transaction-cost schedule** — ADDED 2026-07-09 | Per-transaction/per-intangible facts (covered-transaction status, facilitative-cost detail, start-up/organizational totals) → Phase G | ❌ Phase G |
+| 8 | **§59(e) qualified-expenditure schedule** — ADDED 2026-07-09 | Per-item IDC/mining/circulation/domestic-R&E expenditures eligible for the elective 10-yr/60-month AMT-preference-avoidance amortization → Phase H | ❌ Phase H |
 
-Phase A below builds the ingestion for inputs 2-5. Phases C/D are the calculation engines inputs 3-5 feed and cannot run until Phase A exists; Phase B needs only the new `EntityProfile` scalars. **Input 2 consumer, spec'd 2026-07-09 (a review pass found the BTD schedule was an orphan — ingested by Phase A but consumed by nothing in Phases B-D):** the BTD schedule feeds (a) the negative-§263A pipeline — book-tax differences embedded in §471 costs (book-over-tax depreciation in overhead, §174 timing, etc.) become negative additional-§263A costs when `include_negative_263a` is set, entering the MSPM/SRM numerators per §1.263A-1(d)(3); and (b) an M-1-style reconciliation block on the Summary tab tying book expense to the post-capitalization deductible total. If neither lands in the phase that ships BTD ingestion, defer input 2 explicitly rather than shipping a reader with no consumer.
+Phase A below builds the ingestion for inputs 2-5. Phases C/D are the calculation engines inputs 3-5 feed and cannot run until Phase A exists; Phase B needs only the new `EntityProfile` scalars. **Input 2 consumer, spec'd 2026-07-09 (a review pass found the BTD schedule was an orphan — ingested by Phase A but consumed by nothing in Phases B-D):** the BTD schedule feeds (a) the negative-§263A pipeline — book-tax differences embedded in §471 costs (book-over-tax depreciation in overhead, §174 timing, etc.) become negative additional-§263A costs when `include_negative_263a` is set, entering the MSPM/SRM numerators per §1.263A-1(d)(3); and (b) an M-1-style reconciliation block on the Summary tab tying book expense to the post-capitalization deductible total. If neither lands in the phase that ships BTD ingestion, defer input 2 explicitly rather than shipping a reader with no consumer. Inputs 6-8 are their own ingestion targets, built alongside Phases F/G/H respectively (not folded into Phase A, since none of Phases F/G/H depend on the §263A input 2-5 schedules or vice versa).
 
 Synthesized from four design specs (grounded in Reg §§1.263A-1..-15 and IRS Practice Units COR-P-020/-021/-006/COR-C-023). **Status as of 2026-07-08 (see `docs/TAX_DECISIONS.md` §7a-§7f for the full history): the core formulas for SSCM, MSPM, SRM, and §263A(f) designated-property/avoided-cost mechanics have since been verified directly against primary regulation text** (with real bugs found and fixed along the way — see the phase sections below, each individually marked VERIFIED/CONFIRMED/CORRECTED with a date). What remains genuinely unverified: pinpoint citations for `§1.471-11`, and any Practice Unit document-ID/revision-date detail not independently cross-checked. (Previously on this list, all since verified: the §448(c) threshold — $32,000,000 for 2026 per Rev. Proc. 2025-32, matching `EntityProfile.THRESHOLDS`; and `§1.263(a)-1/-3` and `§1.266-1` — verified 2026-07-09 against complete authoritative eCFR text supplied directly into this project, see the full-text status update below.) Do not treat this plan as a finished filing position regardless of verification status — it is a build spec, not tax advice — but do not read the blanket "unverified" framing that appeared in earlier drafts of this paragraph as still accurate; it is not.
 
@@ -30,6 +33,7 @@ Synthesized from four design specs (grounded in Reg §§1.263A-1..-15 and IRS Pr
 - Reader with debit/credit netting; 5-tab report; tests; validation harness.
 - **Guardrail infrastructure already built and REUSE, don't duplicate:** `EntityProfile.LARGE_PRODUCER_THRESHOLD` (>$50M rule), the SSCM-ratio [0,1] clamp + warning pattern (`analysis.py` `compute_unicap`, ~line 220), the absorption-ratio->1 warning, and the `bucket_warnings`/`unicap["warnings"]` list pattern that surfaces computation caveats on the Summary tab. MSPM/SRM/SCA/§263A(f) must plug into this same warnings list, not invent a parallel mechanism — that's how a >100%-style bug gets caught instead of silently shipped again.
 - **SME decisions affecting Phase B, both RESOLVED 2026-07-08** (`docs/TAX_DECISIONS.md` §3 items 1 and 5): (1) `DM-*` direct-materials lines are correctly tagged `471-Pre` for the MSPM pre-production ratio — confirmed, no change needed, use as-is. (5) Additional-§263A-tier labor (purchasing/warehouse/buying) belongs in the SSCM labor ratio's numerator AND denominator, alongside §471 production labor — implemented in the shipped `compute_unicap` (`analysis.py`, `CAPITALIZABLE_LABOR_TIERS`/`SSCM_DENOM_EXCLUDED_TIERS`; the denominator rule itself was CORRECTED 2026-07-09 per §1.263A-1(h)(4) — see the SSCM section below and `docs/TAX_DECISIONS.md` §9 — but item 5's inclusion decision is unaffected), so Phase B's MSPM/SRM engines inherit this correctly for free by reusing the same SSCM computation; no separate Phase B decision needed. Three items remain open and unresolved (§3 items 2-4: EX-BID successful-bids-only gating, §266 land-context auto-routing vs. confirmed election, repair-vs-improvement keyword scoping) — none of them block Phase A-D, since they're classifier-level, not engine-level, but resolve before relying on the classifier output those engines consume.
+- **Taxonomy already has partial coverage for Phases F/G/H, found 2026-07-09 while scoping those phases — reuse, don't re-tag:** `taxonomy/categories.yaml` (3,958 lines) already contains `EX-RD` (R&D/R&E costs, tier1 `Excluded`), `EX-174AMORT` (the §174 amortization deduction line item, also tier1 `Excluded`), `SEC263A-TXN` (§1.263(a)-5 transaction/facilitative costs), `SEC263A-INTANG` (§1.263(a)-4/§197 intangibles), and `SEC195-STARTUP` (§195/§248/§709 start-up/organizational costs) — both under a `§263(a) Transaction/Intangible` tier1. **The gap Phases F/G/H close is downstream of classification, not classification itself:** `analysis.py`'s `bucket_of()` (~line 126) routes every `§263(a) Transaction/Intangible`-tier line to a single flat `"§263(a) Mandatory"` bucket total, and `EX-RD`/`EX-174AMORT` both route to `"Deductible"` unconditionally — neither distinguishes the sub-treatments each actually requires (domestic R&E expensed vs. elected-capitalized vs. mandatorily-capitalized foreign R&E; §197-eligible acquired intangibles vs. other capitalized intangibles; the 12-month-rule/bright-line-date/success-fee mechanics; the $5,000/$50,000 start-up phase-out; syndication's permanent non-amortization). No per-item amortization schedule exists for any of it. Also found: `SEC263A-INTANG`'s own `authority` field already flags a likely mis-citation (geological/geophysical costs keyworded alongside §1.263(a)-4/§197 items when they're probably §167(h) instead) — carry that flag into Phase G's build, don't silently re-tag it.
 
 ## SSCM — mixed service cost allocation (§1.263A-1(h)), verified against primary source 2026-07-08
 
@@ -185,18 +189,34 @@ pre-production-labor proportion) turned out to be exactly right, word for word.
 
 ```
 readers.py (new)      multi-sheet: TB + BTD + FixedAsset + CIP + Debt -> EngagementData
+                       + R&E schedule + Intangible/Txn schedule + §59(e) schedule (Phases F/G/H)
 model.py (extend)     BookTaxDifference, FixedAsset, CIPProject(+CIPExpenditure),
                       DebtInstrument, SelfConstructedAsset, CostPool, DriverRow, Driver,
                       EngagementData, ValidationReport
+                      + AmortizableItem (ADDED 2026-07-09 — generalizes the "Asset Basis
+                        Schedule" concept below into the one shared basis/amortization
+                        record Phases C/F/G/H all post into: basis, recovery period,
+                        convention, amortization-start date, disposal handling)
+                      + REExpenditure, IntangibleItem, TransactionCostItem,
+                        StartupOrgCostPool, QualifiedExpenditureElection (Phases F/G/H)
 analysis.py (extend)  EntityProfile fields; compute_unicap -> dispatcher:
                         compute_spm (existing) | compute_mspm | compute_srm
 engines/ (new)        sca.py (compute_sca), interest.py (compute_263Af)
+                      + re_capitalization.py (compute_174, Phase F)
+                      + intangibles.py (compute_263a4_5, Phase G)
+                      + qualified_expenditures.py (compute_59e, Phase H)
 taxonomy/ (new data)  sca_drivers.yaml  (pool-category -> allowed/preferred driver matrix)
+                      + qualified_expenditure_periods.yaml (§59(e) category -> period
+                        table: circulation 3yr / R&E 10yr / IDC 60mo / mining exp+dev
+                        10yr each — see Phase H)
 report.py (extend)    per-asset Asset Basis; real §263A(f) tab; MSPM/SRM ratio tables;
                       Data Quality tab; waterfall wiring
+                      + generalized into a Basis & Amortization Schedule tab covering
+                        tangible assets, R&E pools, intangibles, and §59(e) elections
+                        (Phases F/G/H); §59(e) Election Tracker tab
 ```
 
-Contract that keeps the waterfall stable: **every inventory method returns `additional_capitalized_to_inventory` and `adjusted_deductible_post`** (the keys the Summary already consumes), so MSPM/SRM need no waterfall change.
+Contract that keeps the waterfall stable: **every inventory method returns `additional_capitalized_to_inventory` and `adjusted_deductible_post`** (the keys the Summary already consumes), so MSPM/SRM need no waterfall change. Phases F/G/H follow the same discipline: each returns amounts into the existing `CAPITALIZED_BUCKETS`/`BUCKETS` waterfall (a new `"§174 Capitalized"` bucket for Phase F; existing `"§263(a) Mandatory"` refined, not replaced, for Phase G — see below) plus a per-item row on the shared Basis & Amortization Schedule, so the Summary tie-check keeps working by construction rather than by a parallel total.
 
 ---
 
@@ -1001,13 +1021,113 @@ total = Σ units (traced_interest_period + each unit's possibly-prorated excess_
 
 ---
 
+## Phase F — §174/§174A research & experimental expenditure capitalization (ADDED 2026-07-09)
+
+**Scope addition, direct user request 2026-07-09:** the plan's title and scope were §263A-only; the user asked whether §263(a)/§266 were covered (yes, Gate 4/Gate 5) and whether §174 and §59(e) were (no — added here and in Phases G/H). This phase is fully SEPARATE from §263A: R&E costs are categorically EXCLUDED from the §263A additional-cost pool (§1.263A-1(e)(3)(ii), already reflected in `EX-RD`'s `Excluded` tier1) — §174/§174A is its own mandatory-and-elective capitalization regime running in parallel, not a UNICAP sub-rule.
+
+**Mandatory vs. elective split (VERIFIED against concordant secondary sources — see `docs/TAX_DECISIONS.md` §13 for full sourcing; primary-text pull recommended before filing use, per that section's methodology note):**
+- **Foreign research** (§174(a), as it stands after OBBBA carved domestic research out into new §174A): MANDATORY capitalization, amortized straight-line over **15 years**, mid-year convention (half a year's amortization in the first year regardless of when in the year the cost was incurred). No election out.
+- **Domestic research** (new §174A(a), added by OBBBA/P.L. 119-21 §70302, effective for tax years beginning after 12/31/2024): DEFAULT is current-year expensing (full deduction, no amortization). **Elective alternative** (§174A(c)): the taxpayer may instead elect to capitalize and amortize domestic research ratably over **not less than 60 months**, taxpayer's choice of period ≥60 months — METHOD-OF-ACCOUNTING. This is the mechanic that also matters for Phase H: electing 60-month-plus capitalization here is a DIFFERENT thing from the §59(e) election (Phase H) to amortize over exactly 10 years to avoid an individual-AMT preference — a taxpayer could theoretically face both decisions on the same domestic-research dollar, and the tool must not conflate them (see Phase H's build note on this interaction).
+- **Software development costs**: current guidance treats software development as "specified research or experimental expenditures" subject to the same §174/§174A domestic/foreign, mandatory/elective framework as other R&E — no separate regime. Flag rather than hard-code, since the exact scope line (e.g., routine debugging/maintenance vs. capitalizable development) is a facts-and-circumstances call per Notice 2023-63/Rev. Proc. 2024-9-era guidance that this plan has not independently verified against primary text.
+
+**2022-2024 transition (VERIFIED at the structural level):** for the period between TCJA's original mandatory-capitalization effective date (tax years beginning after 12/31/2021) and OBBBA's 2025 restoration of domestic expensing, DOMESTIC research was mandatorily capitalized and amortized over 5 years (foreign stayed at 15 years, unaffected by OBBBA). OBBBA provides transition relief for those 2022-2024 domestic amounts still being amortized as of the 2025 changeover:
+- **Catch-up election**: a taxpayer may deduct the entire remaining unamortized 2022-2024 domestic-R&E basis in ONE YEAR (2025) or SPREAD IT OVER TWO YEARS (2025-2026) — a real, material election affecting the current-year deductible total, not just a bookkeeping mechanic.
+- **Small-business retroactive election**: taxpayers meeting the §448(c) gross-receipts test (Rev. Proc. 2025-28 sets the threshold at the historical $31M/2025 figure — cross-check against `EntityProfile.THRESHOLDS` for the applicable year, don't hard-code a second copy of the same number) may instead amend 2022-2024 returns entirely, retroactively applying current-expensing treatment as if OBBBA had always been in effect. Amended-return deadline: **July 6, 2026** (Rev. Proc. 2025-28) — a hard filing-window fact the interview must surface, not bury in a footnote, since it lapses.
+
+**§174(d) disposal/retirement/abandonment (VERIFIED on the core rule and the foreign/domestic-expensed split; UNCERTAIN on one sub-case — flag, don't guess):** no loss deduction is allowed for unamortized capitalized R&E costs remaining in a disposed/retired/abandoned property's basis — the taxpayer must continue the amortization schedule as if the disposition never happened, rather than recognizing a §165 loss for the unamortized remainder.
+- Currently-expensed domestic research under §174A's default: the rule has nothing to bite on — no capitalized basis remains once the cost was expensed, so it's moot for that category.
+- Foreign research (still mandatorily capitalized under §174(a)): the rule squarely applies — confirmed.
+- **UNCERTAIN, flag for SME/primary-text review before building**: whether the post-OBBBA §174(d) (amended by P.L. 119-21 §70302(b)(1)(C), effective for dispositions after May 12, 2025) still reaches domestic research the taxpayer elected to capitalize under §174A(c)'s ≥60-month alternative — secondary-source commentary frames the amended rule around "foreign research expenditures" specifically, which raises a real question the tool should not silently resolve either way. Build the disposal-loss-disallowance check for foreign R&E and elected-domestic-capitalization R&E identically for now (the conservative reading), with a `§174D-DOMESTIC-ELECTIVE-UNVERIFIED` warning flag on any disposal event touching elected-capitalization domestic R&E basis, rather than asserting the rule applies (or doesn't) with false confidence.
+- **This tool tracks the amortization-continuation mechanic and flags disposal events touching R&E basis — it does NOT build a general §165 loss-computation engine.** Same scoping discipline as the rest of this plan: flag facts that feed a computation out of scope, don't silently absorb them into scope.
+
+**Build:**
+- `REExpenditure` schedule (input 6): per-project/cost-pool amount, domestic/foreign flag, tax year, and (for 2022-2024 layers still amortizing) original 5-year schedule start date.
+- `compute_174(profile, re_expenditures) -> ...`: routes each item by domestic/foreign and the elected treatment; builds a 15-year (foreign) or ≥60-month (domestic-elected) amortization schedule with mid-year convention; computes the 2022-2024 catch-up deduction under whichever method was elected; emits `§174D-DOMESTIC-ELECTIVE-UNVERIFIED` and small-business-deadline warnings as applicable.
+- New waterfall bucket `"§174 Capitalized"` (added to `CAPITALIZED_BUCKETS`/`BUCKETS` in `analysis.py`) for foreign-mandatory and domestic-elected-capitalization amounts; currently-expensed domestic research stays `"Deductible"` (as `EX-RD`/`EX-174AMORT` already route it — correct as-is for that one sub-case, per the "Taxonomy already has partial coverage" note above).
+- Posts each capitalized R&E item to the shared `AmortizableItem`/Basis & Amortization Schedule (see Architecture above), not a bespoke R&E-only ledger — this is the "allocate to assets" mechanic the user asked for, generalized rather than duplicated across Phases C/F/G/H.
+- Outputs: an **R&E Amortization tab** (domestic/foreign split, 2022-2024 catch-up detail, 15-yr/≥60-mo schedules) feeding the shared Basis & Amortization Schedule and the new `§174 Capitalized` waterfall bucket.
+
+---
+
+## Phase G — §1.263(a)-4/-5 intangibles, transaction costs, and start-up/organizational costs (ADDED 2026-07-09)
+
+**Scope addition, same trigger as Phase F.** The existing Gate 4/§1.263(a)-1/-3 coverage in this plan is the TANGIBLE-property repair regs only. §1.263(a)-4 (intangibles) and §1.263(a)-5 (transaction costs facilitating an acquisition/reorganization/capital transaction) are a separate, equally-mandatory §263(a) regime this plan never covered — closing that gap is the point of this phase. §195/§248/§709 (start-up and organizational costs) are doctrinally adjacent (the same INDOPCO future-benefit lineage) though technically their own Code sections, not §263(a) itself; grouped here because the existing taxonomy already groups them under one `§263(a) Transaction/Intangible` tier1 and they share the "capitalize, then amortize over a fixed statutory period" shape.
+
+**§1.263(a)-4 — created/acquired intangibles (VERIFIED at the mechanics level — see `docs/TAX_DECISIONS.md` §13):**
+- **12-month rule ((f))**: no capitalization required for a right/benefit that does not extend beyond the **EARLIER OF** (a) 12 months after the taxpayer first realizes the right/benefit, or (b) the end of the taxable year following the year of payment. Both prongs must independently hold — it is the more restrictive of the two dates that governs, not the more permissive ("later of" is a documented common drafting error this plan is explicitly avoiding).
+- **$5,000 facilitative-cost de minimis ((e)(4)) — a CLIFF, not a per-dollar exclusion, and NOT the same $5,000 already in this plan's Gate 4.1**: amounts (other than employee compensation, overhead, and commissions — commissions are categorically excluded from this de minimis regardless of amount) paid to investigate/pursue a transaction that facilitates acquiring/creating an intangible are treated as non-facilitative (currently deductible) IF their aggregate does not exceed $5,000 per transaction. If the aggregate EXCEEDS $5,000, the ENTIRE amount becomes capitalizable — there is no "$5,000 exempt, excess capitalized" partial relief. Separately, a taxpayer may ELECT to treat employee compensation/overhead/de-minimis-eligible costs AS facilitative (voluntarily capitalize) per transaction — the inverse of the usual safe-harbor shape. **This is legally and mechanically distinct from `EntityProfile.de_minimis_ceiling`/Gate 4.1's $5,000-AFS/$2,500-non-AFS tangible-property safe harbor** — same dollar figure, unrelated provisions, do not let one `EntityProfile` field or one interview answer serve both.
+- **Categories requiring capitalization (confirmed at the policy level; exact subparagraph citations flagged UNCERTAIN — see `docs/TAX_DECISIONS.md` §13, verify against full eCFR text before citing a specific letter in a workpaper)**: financial interests (equity/debt instruments, forward contracts, options); contract rights (leases, licenses, service contracts, and payments to induce another party to enter/renew/renegotiate an agreement); memberships and privileges (trade/business league, professional-organization dues to obtain the membership itself, not ongoing dues); certain governmental rights (trademarks, trade names, copyrights, licenses, permits, franchises from a government agency); certain benefits from real property transfers (easements, life estates, mineral interests, timber rights, zoning variances, rights of first refusal); and a residual catch-all — broader for ACQUIRED intangibles ("any other intangible acquired from another person") than for CREATED intangibles (only future benefits the IRS/Treasury identify in SUBSEQUENT PUBLISHED GUIDANCE — a narrower, guidance-dependent residual, not a general catch-all; the tool should not silently capitalize a "some other future benefit" created-intangible cost absent an identified authority).
+- **Routing**: an intangible acquired as part of acquiring a trade or business generally becomes a §197 intangible (15-year straight-line amortization, anti-churning rules apply — already in this plan's "Related regimes" authority list, `authority_databases/cost_capitalization.py` lines 377-390). An intangible NOT acquired with a business, or a created (not acquired) intangible, is capitalized under §1.263(a)-4 but is NOT automatically a §197 intangible — its amortization period (if any) depends on the specific asset (a fixed contract term, an indefinite life with no amortization until disposal, etc.) — flag for SME determination per item rather than defaulting to a period.
+
+**§1.263(a)-5 — transaction/facilitative costs (already has a working Phase-1 classifier + authority base to build on — `financial_tools/transaction_costs/`, confirmed reusable 2026-07-09; NEEDS ADAPTATION, not built from scratch):**
+- Reuse `transaction_costs/technical_authority/authorities/transaction_cost_authorities.py` (covered-transactions list, inherently-facilitative-costs list, the bright-line-date rule, the §1.263(a)-5(g) employee-compensation carve-out, Rev. Proc. 2011-29's success-based-fee safe harbor, Rev. Rul. 73-580 abandoned-transaction treatment) as the authority source — it is already solid and should not be re-derived.
+- Reuse `transaction_costs/phase1/ten_k_analyzer.py`'s `TransactionCostAnalyzer._classify_costs()` rule shape (inherently-facilitative cost TYPES — investment banking/regulatory/financing/due-diligence → capitalize; legal → allocate; integration → deduct; non-facilitative → deduct under §162) as the starting classification logic for cap263a's own engine, adapted from that tool's 10-K/public-data Phase-1 scope to cap263a's engagement-level per-transaction scope.
+- **Build what that tool flagged as its own unbuilt Phase 2 roadmap items** (confirmed still unbuilt 2026-07-09): the bright-line-date field/logic (investigatory costs before the bright-line date are generally deductible unless inherently facilitative; costs after are capitalized) and the Rev. Proc. 2011-29 success-based-fee 70/30 election (in lieu of documenting the non-facilitative portion of a success-based fee in a covered transaction, elect to treat 70% as deductible and capitalize 30% — irrevocable, per-transaction).
+- Routing: capitalized transaction costs attach to whatever they facilitate — an asset acquisition's facilitative costs add to the acquired asset's basis (post to the shared `AmortizableItem`); a stock/debt issuance's costs amortize under their own rules (debt issuance costs: Treas. Reg. §1.446-5, already in the reused authority file); a taxable trade-or-business acquisition's capitalized costs generally become part of acquired goodwill/going-concern value (§197, 15-year). An ABANDONED transaction's capitalized-to-date costs become a deductible loss (Rev. Rul. 73-580) — flag, don't silently leave stranded in a capitalized bucket.
+
+**§195/§248/§709 — start-up and organizational costs (authority text already correct and reusable; the $5,000/180-month computation itself is unbuilt anywhere in the repo — confirmed 2026-07-09):**
+- Mechanic: **$5,000 immediate deduction** in the year the trade or business begins, **phased out dollar-for-dollar** for total start-up/organizational costs above **$50,000** (fully phased out at $55,000) — a real cliff-adjacent computation the tool must actually run, not just describe. The remainder (after the $5,000/phase-out) amortizes **straight-line over 180 months**, beginning with the month the active trade or business begins.
+- **Partnership SYNDICATION costs (§709(b) fees to promote/sell partnership interests) are PERMANENTLY CAPITALIZED — no $5,000 deduction, no 180-month amortization, no deduction ever except on complete liquidation of the partnership.** This is a real trap (the existing `SEC195-STARTUP` code's keyword list includes `"syndication"` alongside `"start-up"`/`"organizational cost"` with NO distinction in treatment) — the engine must route syndication costs to a separate no-amortization bucket, not the same $5,000/180-month schedule as genuine start-up/organizational costs.
+- Corporate organizational costs (§248) and partnership organizational costs (§709(a), non-syndication) follow the same $5,000/$50,000/180-month mechanic as §195 start-up costs; distinguish only for the syndication carve-out and for entity-type-appropriate election language (Gate 0's `entity_type` already available).
+
+**Build:**
+- `IntangibleItem` and `TransactionCostItem` schedules (input 7): per-item facts (covered-transaction flag, inherently-facilitative flag, bright-line date, facilitative-cost aggregate for the $5,000 (e)(4) test, 12-month-rule dates, intangible category, §197-eligibility flag) plus a `StartupOrgCostPool` (aggregate start-up/organizational total, business-commencement date, syndication flag).
+- `compute_263a4_5(profile, intangibles, transaction_costs, startup_pools) -> ...`: applies the 12-month rule; the (e)(4) cliff test; the bright-line-date/inherently-facilitative classification (adapted from `transaction_costs/`); the success-fee 70/30 election when made; the $5,000/$50,000-phase-out/180-month start-up computation; routes syndication costs to permanent non-amortization; routes §197-eligible intangibles to 15-year amortization and other capitalized intangibles to per-item SME-flagged treatment.
+- **Refines, not replaces, the existing `"§263(a) Mandatory"` bucket**: `bucket_of()`'s flat `if t == "§263(a) Transaction/Intangible": return "§263(a) Mandatory"` (analysis.py ~line 126) stays the top-level waterfall bucket (no waterfall/tie-check change needed), but each line additionally posts a typed row (intangible / transaction cost / start-up-org / syndication) to the shared Basis & Amortization Schedule with its own amortization treatment, rather than landing as an undifferentiated lump sum with no further computation, which is the actual gap being closed.
+- Outputs: an **Intangibles & Transaction Costs tab** (per-item facilitative determination, 12-month-rule/de-minimis test results, success-fee election detail) and a **Start-up/Organizational Costs block** (the $5,000/phase-out computation, 180-month schedule, syndication flag) — both feeding the shared Basis & Amortization Schedule.
+
+---
+
+## Phase H — §59(e) elective qualified-expenditure amortization (AMT-preference avoidance) (ADDED 2026-07-09)
+
+**Scope addition, same trigger.** §59(e) lets a taxpayer ELECT straight-line amortization for certain "qualified expenditures" instead of the otherwise-available (faster) treatment, specifically to avoid having the difference treated as an AMT preference/adjustment item. This is a cross-cutting ELECTION layered on top of five distinct underlying Code provisions, not its own cost-classification tier — model it as an election overlay, not a sixth flat bucket.
+
+**Qualified expenditures and periods (VERIFIED against Cornell LII text — see `docs/TAX_DECISIONS.md` §13):**
+
+| Category | Underlying provision | §59(e) elective period | Taxonomy status |
+|---|---|---|---|
+| Circulation expenditures | §173 | 3 years | **No taxonomy code exists — build from scratch** |
+| Domestic research & experimental | §174A(a) (NOT old §174(a) — see below) | 10 years | `EX-RD`/`EX-174AMORT` exist but don't model this election |
+| Intangible drilling costs (IDC) | §263(c) | 60 months | **No taxonomy code exists — build from scratch** |
+| Mining exploration expenditures | §617(a) | 10 years | **No taxonomy code exists — build from scratch** |
+| Mining development expenditures | §616(a) | 10 years | **No taxonomy code exists — build from scratch** |
+
+**Election mechanics:** item-by-item (any PORTION of a qualified expenditure may be elected, not an all-or-nothing entity-wide election), made by a statement attached to the original or amended return for the year amortization begins, IRREVOCABLE except by IRS consent in rare/unusual circumstances via letter ruling. `EntityProfile`/schedule shape: a list of `QualifiedExpenditureElection` records (category, amount, election year), not a single flag — same per-item pattern as the other new schedules in this phase set.
+
+**CRITICAL gating fact this plan would have gotten wrong without verification (VERIFIED 2026-07-09, materially changes who should even be offered this election):**
+- §59(e)(2)(B) was ITSELF amended by OBBBA to point at new **§174A(a)** (domestic R&E), not old §174(a) — table above reflects the current cite.
+- The R&E prong of §59(e) is **NOT a dead/vestigial provision** for current-law purposes, though it genuinely was moot for 2022-2024 (when §174 already mandated capitalization at a pace equal to or slower than any AMT-required rate, leaving no "faster" write-off to create a preference). OBBBA's 2025 restoration of domestic-R&E current expensing under §174A REVIVED the preference: §56(b)(2) (as amended) now requires INDIVIDUAL (non-corporate) AMT taxpayers to capitalize/amortize over 10 years both foreign R&E and any domestic R&E expensed under §174A's default — reactivating exactly the situation §59(e)'s R&E election exists to pre-empt.
+- **The CORPORATE alternative minimum tax was repealed by TCJA (2018) and NOT replaced by anything using §59(e)/§57 preference items.** The 2022 Inflation Reduction Act's Corporate Alternative Minimum Tax (CAMT, §55/§56A) is a structurally different regime — it starts from Adjusted Financial Statement Income (book income from the taxpayer's AFS) with its own closed adjustment list under §56A, not from regular taxable income plus §57 preferences. §59(e) has no bearing on CAMT liability. (Confidence: verified at the structural/mechanical level; not a direct primary-source quote stating this in so many words — see `docs/TAX_DECISIONS.md` §13 for the "verified-by-inference" flag.)
+- **Build consequence: Gate 10 (below) must ask the taxpayer's entity type / AMT exposure FIRST and gate the whole election on it, not offer §59(e) uniformly.** A C-corp with no individual owners reporting K-1 preference items has no live use case for this election at all under current law; an individual, or a pass-through entity whose owners could face §55/§56/§57 individual AMT, does.
+- **UNCERTAIN, flagged not guessed:** the exact §57(a) subparagraph for the mining exploration/development AMT preference (IDC's is confirmed at §57(a)(2); mining's numbered citation could not be confirmed against primary text this pass) — flag `§57-MINING-CITE-UNVERIFIED` rather than asserting a specific subparagraph.
+- **Also uncertain:** whether the §59(e) election interacts with a §174A(c) domestic-research capitalization election on the SAME dollars (both are real, both produce multi-year amortization, but over different periods — 10 years under §59(e) vs. the taxpayer's chosen ≥60-month period under §174A(c)). This plan does not resolve which one governs if a taxpayer tries to make both; flag `§59E-174A-ELECTION-CONFLICT` and route to SME review rather than silently picking one.
+
+**Build:**
+- `QualifiedExpenditureElection` schedule (input 8) + `taxonomy/qualified_expenditure_periods.yaml` (the table above, as data, not hard-coded constants — mirrors the `sca_drivers.yaml` pattern).
+- New taxonomy codes needed (none exist today, confirmed 2026-07-09): circulation expenditures, IDC (a distinct code from the existing generic §263(a)/§263A cost pools — IDC is oil & gas operator-specific and this plan has no oil & gas coverage at all today), mining exploration, mining development.
+- `compute_59e(profile, elections) -> ...`: gates on the entity-type/AMT-exposure screen above; for each elected item, builds the category-appropriate straight-line schedule from `qualified_expenditure_periods.yaml`; posts to the shared Basis & Amortization Schedule; emits `§57-MINING-CITE-UNVERIFIED` and `§59E-174A-ELECTION-CONFLICT` warnings where applicable.
+- **Explicitly out of scope: computing the taxpayer's overall AMT or CAMT liability.** This phase tracks the preference-avoidance AMORTIZATION ELECTION and its schedule — a real, dollar-moving computation — not the full AMT/CAMT return. Same scoping boundary this plan already applies elsewhere (e.g., §1.263A-7's revaluation/§481(a) computation is flagged, not built).
+- Outputs: a **§59(e) Election Tracker tab** (per-category, per-item elections and their amortization schedules) feeding the shared Basis & Amortization Schedule.
+
+---
+
 ## Phase E — Interview layer: the question inventory and decision tree (ADDED 2026-07-09)
+
+**Ordering note:** Phase E appears here, after F/G/H, not because it's built last — its Gate 0-2 core builds
+EARLY, per "Sequencing & why" below — but because it's a cross-cutting layer that populates `EntityProfile` for
+EVERY engine phase (A-D and F-H alike), and reading it after all the engines it serves is easier to follow than
+reading it between D and F, which would visually suggest it only serves the §263A engines. The letter "E" reflects
+when it was first added to this plan (right after Phase D existed), not its position in this document.
 
 **Gap this phase closes:** every engine above consumes `EntityProfile` fields and schedules but nothing specified how
 they get populated. A user cannot be handed a 40-field dataclass; the tool needs an interview that asks only the
 questions the taxpayer's prior answers make relevant, distinguishes facts from elections from methods of accounting,
 and emits a fully-populated `EntityProfile` + schedule requirements list + warnings. This section is the
 authoritative question inventory; the engines' sections above remain the authority for each rule's mechanics.
+Gates 8-10 (ADDED 2026-07-09, alongside Phases F/G/H above) extend this to §174/§174A, §1.263(a)-4/-5 +
+§195/§248/§709, and §59(e) — **these three gates have NOT been through the field-reachability/golden-example/
+adversarial validation pass described immediately below, since that pass predates them; treat Gates 8-10 as
+first-draft, not validated, until a follow-up pass covers them the same way Gates 0-7 were covered.**
 
 **VALIDATION PASS 2026-07-09 (before any code exists):** three independent agents pressure-tested this section as
 written — (1) a field-reachability audit cross-checking every engine-declared input against a Gate 0-7 question,
@@ -1228,6 +1348,68 @@ known, not on Gate 5's own fixed position in the sequence — implementers shoul
 - Q7.22 15-day repayment toggle (per-period, NOT a method) → FACT.
 - Q7.23 (`ask_when`: Q0.1 = partnership) Guaranteed payments for use of capital ((c)(2)(iii)) → FACT.
 
+**Gate 8 — §174/§174A research & experimental expenditures (ask if R&E-tagged costs exist; per project/pool):**
+- Q8.1 Domestic or foreign research (or both, per project)? → `re_domestic_or_foreign`. FACT.
+- Q8.2 (domestic) Elect ≥60-month capitalization instead of current expensing, per §174A(c)? If yes, elected period
+  (≥60 months) → `re_capitalization_election`, `re_capitalization_period_months`. METHOD-OF-ACCOUNTING.
+- Q8.3 (if the taxpayer has 2022-2024 domestic R&E still being amortized under the old 5-year schedule) Catch-up
+  method: 1-year (all in 2025) or 2-year (split 2025-2026)? → `re_catchup_method`. METHOD-OF-ACCOUNTING.
+- Q8.4 (if `avg_gross_receipts` ≤ the applicable §448(c) small-business threshold — reuse Q0.4's answer, do not
+  re-ask) Elect the small-business RETROACTIVE amendment instead of the catch-up (Q8.3)? Amended-return deadline
+  July 6, 2026 — surface this date directly, not as a footnote → `re_small_business_retroactive_election`.
+  METHOD-OF-ACCOUNTING; mutually exclusive with Q8.3.
+- Q8.5 Software development costs among these expenditures? (routes to the same domestic/foreign, mandatory/
+  elective framework — flag for SME scope confirmation per the Phase F note, not an automated determination) →
+  FACT, review-queue flag.
+- Q8.6 (per disposal/retirement/abandonment event touching R&E-basis-bearing property) Was any capitalized R&E
+  basis remaining? → FACT; triggers the `§174D-DOMESTIC-ELECTIVE-UNVERIFIED` flag from Phase F for elected-
+  capitalization domestic R&E, or the confirmed-applicable rule for foreign R&E.
+
+**Gate 9 — §1.263(a)-4/-5 intangibles, transaction costs, and start-up/organizational costs (ask if flagged
+transaction/intangible-tagged costs exist; per transaction / per intangible / per start-up-cost pool):**
+- Q9.1 Is this a covered transaction (acquisition of a trade/business, reorganization, or capital-structure/
+  capital transaction per §1.263(a)-5(e)(1))? → FACT.
+- Q9.2 (if covered transaction) Bright-line date established? Cost incurred before or after it? Inherently
+  facilitative (investment banking, appraisal, title/transfer, regulatory, financing — always capitalized
+  regardless of timing)? → FACT, feeds the classification adapted from `transaction_costs/`.
+- Q9.3 (if a success-based fee in a covered transaction) Elect the Rev. Proc. 2011-29 70/30 safe harbor (70%
+  deductible / 30% capitalized) instead of documenting the actual facilitative portion? → ELECTION, irrevocable,
+  per-transaction.
+- Q9.4 (per intangible) 12-month rule: does the right/benefit extend beyond the EARLIER OF 12 months from first
+  realizing it or the end of the following tax year? → FACT. If no (within the window) → not required to capitalize.
+- Q9.5 (per intangible, if not exempted by Q9.4) Facilitative-cost aggregate for this transaction ≤ $5,000 ((e)(4)
+  — separate from Gate 4.1's tangible-property de minimis, do NOT reuse that answer)? → FACT (cliff test, not a
+  partial exclusion). Elect to treat compensation/overhead/de-minimis-eligible costs as facilitative anyway? →
+  ELECTION.
+- Q9.6 (per intangible requiring capitalization) Category (financial interest / contract right / membership or
+  privilege / governmental right / real-property-transfer benefit / residual) and acquired-with-a-trade-or-
+  business flag (routes to §197 15-year amortization if yes) → FACT.
+- Q9.7 Start-up or organizational cost pool present? Total costs (for the $5,000/$50,000 phase-out test) and the
+  date the active trade or business began (amortization start) → `startup_org_total`, `business_commencement_date`.
+  FACT.
+- Q9.8 (partnerships only, from Q0.1) Any portion representing SYNDICATION costs under §709(b) (fees to promote/
+  sell partnership interests)? → FACT. If yes, routes to PERMANENT non-amortization, not the $5,000/180-month
+  schedule — a real trap the interview must not silently miss (see Phase G's build note on the existing taxonomy
+  code's undifferentiated keyword list).
+
+**Gate 10 — §59(e) elective qualified-expenditure amortization (ask if IDC/mining/circulation/domestic-R&E-
+tagged costs exist AND the entity-type/AMT-exposure screen below indicates the election could matter):**
+- Q10.1 **GATING QUESTION, asked first:** is the taxpayer an individual, or a pass-through entity whose owners may
+  report AMT preference items (§55/§56/§57 individual AMT)? → FACT. If the taxpayer is a C-corp with no
+  individual-AMT-exposed owners, SKIP the rest of this gate — under current law the corporate AMT was repealed by
+  TCJA and the CAMT (§55/§56A, Inflation Reduction Act 2022) does not use §59(e)/§57 preference items at all (see
+  Phase H's build note); offering this election to a pure C-corp with no flow-through owners has no live use case.
+- Q10.2 (if Q10.1 = yes) Per qualified expenditure: category (circulation §173 / domestic R&E §174A(a) / IDC
+  §263(c) / mining exploration §617(a) / mining development §616(a)), amount, and elect §59(e) amortization
+  (item-by-item, any portion, irrevocable except by IRS consent)? → `QualifiedExpenditureElection` record.
+  METHOD-OF-ACCOUNTING.
+- Q10.3 (if the elected category is domestic R&E AND Gate 8's Q8.2 §174A(c) capitalization election was ALSO made
+  on the same dollars) Flag `§59E-174A-ELECTION-CONFLICT` and route to SME review — this plan does not resolve
+  which period (10 years under §59(e) vs. the Q8.2-elected ≥60-month period) governs when both elections are made
+  on the same expenditure.
+- Q10.4 (if the elected category is mining exploration or development) Surface the `§57-MINING-CITE-UNVERIFIED`
+  flag noted in Phase H — the exact AMT-preference subparagraph citation was not confirmed against primary text.
+
 **Build/test notes:** the interview emits (a) a populated `EntityProfile`, (b) the list of schedules Phase A must
 ingest for this taxpayer (only what the answers require), (c) the election/3115 summary for the workpaper, and (d)
 warnings. Tests: graph-validation tests (every engine field reachable; no orphan questions), path tests (exempt
@@ -1259,12 +1441,24 @@ retire them.
    populates `EntityProfile` for every engine and what tells Phase A which schedules a given taxpayer even needs;
    Gates 3-7 land with their corresponding engine phases (Gate 3 with B, Gate 6 with C, Gate 7 with D). Gates 4-5
    can ship any time — they gate classifier-level decisions, not engines.
+6. **Phases F/G/H (§174/§174A, §1.263(a)-4/-5 + §195/§248/§709, §59(e)) — ADDED 2026-07-09, fully INDEPENDENT of
+   Phases A-D and each other:** none of the three touch §263A at all (R&E is categorically excluded from the
+   UNICAP pools; intangibles/transaction costs and start-up costs are their own §263(a)/§195/§248/§709 regime;
+   §59(e) is an election layered on five separate underlying provisions), and none of the three depend on Phase
+   A's BTD/FixedAsset/CIP/Debt schedules or on each other's schedules — they can build in any order, or in
+   parallel, whenever prioritized. Phase G's §1.263(a)-5 piece has a head start (reusable Phase-1 classifier +
+   authorities already exist in `transaction_costs/`, confirmed 2026-07-09 — see Phase G above), making it the
+   lowest-effort of the three to start; Phase H (§59(e)) is gated first on the entity-type/AMT-exposure screen
+   (Gate 10, Q10.1) before any per-item election logic matters, so build that gate first within Phase H regardless
+   of build order relative to F/G. Their corresponding interview gates (8/9/10) land with them, same pattern as
+   Gates 3/6/7 landing with B/C/D.
 
 Each phase ships standalone value and keeps the waterfall tie-out.
 
 ## Files
 - **New:** `readers.py`, `engines/sca.py`, `engines/interest.py`, `taxonomy/sca_drivers.yaml`, `interview.py` + `taxonomy/interview.yaml` (Phase E), tests `test_readers.py`/`test_mspm_srm.py`/`test_sca.py`/`test_interest.py`/`test_interview.py`.
-- **Extend:** `model.py` (schedule + SCA dataclasses, `EngagementData`, `ValidationReport`), `analysis.py` (EntityProfile fields, dispatcher, `compute_mspm/srm/sca`, call `compute_263Af`), `report.py` (per-asset Asset Basis, §263A(f) tab, MSPM/SRM tables, Data Quality tab, waterfall wiring).
+- **New, ADDED 2026-07-09 (Phases F/G/H):** `engines/re_capitalization.py`, `engines/intangibles.py`, `engines/qualified_expenditures.py`, `taxonomy/qualified_expenditure_periods.yaml`, tests `test_re_capitalization.py`/`test_intangibles.py`/`test_qualified_expenditures.py`.
+- **Extend:** `model.py` (schedule + SCA dataclasses, `EngagementData`, `ValidationReport`, plus `AmortizableItem`/`REExpenditure`/`IntangibleItem`/`TransactionCostItem`/`StartupOrgCostPool`/`QualifiedExpenditureElection` — Phases F/G/H), `analysis.py` (EntityProfile fields, dispatcher, `compute_mspm/srm/sca`, call `compute_263Af`; plus the `"§174 Capitalized"` bucket and Phase F/G/H field additions), `report.py` (per-asset Asset Basis generalized into the shared Basis & Amortization Schedule, §263A(f) tab, MSPM/SRM tables, Data Quality tab, waterfall wiring; plus R&E Amortization tab, Intangibles & Transaction Costs tab, §59(e) Election Tracker tab), `taxonomy/categories.yaml` (new circulation/IDC/mining-exploration/mining-development codes for Phase H — none exist today; the R&E/intangible/start-up codes Phases F/G consume already exist, per the "Taxonomy already has partial coverage" note above).
 
 ## Verification
 - Unit tests from each worked example — **figures CORRECTED 2026-07-08 to match the actual worked-example sections above** (a prior draft of this checklist had gone stale relative to formula corrections made earlier in the same document): MSPM **284,400** additional §263A / **$3,284,400** total ending inventory (the regulation's own Example 1 — NOT the superseded 143,000 hand-built figure); SRM 36,875; SCA 55k/asset + conservation + guardrail/degenerate; §263A(f) **376,428.57** = traced **180,000.00** + avoided/excess-expenditure **196,428.57** (NOT the superseded 323,571.43 figure, which used an incorrect open/close-averaging methodology — see the Phase D section above and `docs/TAX_DECISIONS.md` §7e). Also confirm MSPM's rounding convention explicitly before coding the test: the regulation's own Example 1 arrives at exactly $284,400 only if the 10.22% production ratio is rounded to two decimal places BEFORE multiplying by ending inventory (unrounded, 920,000/9,000,000 × $2,000,000 = $204,444.44, giving $284,444.44 total) — MSPM should round the ratio to match the IRS's own presentation, which is a DIFFERENT convention from Phase D's "exact Decimal arithmetic, not rounded intermediates" rule; document this per-engine rather than assuming one global rounding rule applies everywhere.
@@ -1273,12 +1467,33 @@ Each phase ships standalone value and keeps the waterfall tie-out.
 - End-to-end: `read_engagement` on a multi-sheet sample → all engines → workbook with zero formula errors, every tab ties, and `formulas`-library evaluation of the live cells (LibreOffice is blocked in this sandbox).
 - Extend `validation/validate.py` to report per-engine tie-outs alongside classification accuracy.
 - **Synthetic-data stress test, done 2026-07-08 (`docs/TAX_DECISIONS.md` §8; scripts were throwaway, not committed — see that section for the full inputs/outputs of each run):** every formula (SPM against the real code; MSPM/SRM/SCA/§263A(f) against this document's formulas, via standalone scripts) was run against non-trivial synthetic datasets exceeding the size/complexity of the worked examples above, with exact `Decimal`/`Fraction` arithmetic — all passed. (**Staleness note 2026-07-09:** the §8 SPM run's recorded ratio figures (0.578915 etc.) reflect the PRE-correction SSCM denominator rule and are a point-in-time record, not current expected outputs — the §1.263A-1(h)(4) denominator fix in `docs/TAX_DECISIONS.md` §9 changes SPM's computed ratios.) This is validation-by-larger-example, not implementation testing (MSPM/SRM/SCA/§263A(f) still have no engine code); when `test_mspm_srm.py`/`test_sca.py`/`test_interest.py` are actually built in Phase B/C/D, they should include, IN ADDITION TO the regulation's own tiny example, an analogous larger/multi-entity fixture exercising: MSPM's negative-residual and negative-on-hand floors; SRM's multi-facility combination and write-down-scope decisions; SCA's mixed-SSCM-eligibility-within-one-pool gate; and Phase D's per-source sequential consumption tracking under a NOT-fully-exhausted interest pool (the one branch this pass didn't exercise, since the worked test deliberately hits the proration branch instead) — these are exactly the cases the tiny golden examples are too small to catch a regression in.
+- **Phases F/G/H — HONESTY NOTE, ADDED 2026-07-09: unlike Phases B/C/D, these three phases have NO hand-derived or IRS-sourced golden worked example yet.** Before coding `compute_174`/`compute_263a4_5`/`compute_59e`, build at least one worked numeric example per phase the same way MSPM's Example 1 and SRM's fixture were built — Phase F: a domestic + foreign R&E fact pattern exercising the mid-year-convention 15-year and elected-≥60-month schedules plus a 2022-2024 catch-up computation; Phase G: a covered-transaction fact pattern exercising the bright-line date, the 70/30 success-fee election, and a separate start-up-cost fact pattern exercising the $5,000/$50,000 phase-out and 180-month schedule (with a syndication sub-case to confirm the permanent-non-amortization routing doesn't leak into the amortized bucket); Phase H: a qualified-expenditure fact pattern exercising at least the IDC 60-month and one 10-year category, gated correctly by the entity-type/AMT-exposure screen. Do not treat Phases F/G/H as build-ready until each has a fixture with independently-verifiable arithmetic, matching the discipline every other phase in this plan was held to.
 
 ## Effort & risk
 Four phases, each comparable to the classifier rebuild. Highest risk: §263A(f) — **not because T.D. 10034 is unverified (it's confirmed real, see Phase D above and `docs/TAX_DECISIONS.md` §7d/§7e), and not because the core mechanics are unvalidated math (the snapshot-vs-average formula, the eligible-debt exclusions, the sourcing order, and the multi-unit proration all now check out against a larger synthetic multi-loan/multi-unit scenario, per §8/§8d above) — but because NONE of it has been implemented as actual code yet.** Every MSPM/SRM/SCA/§263A(f) formula in this plan, however many times re-verified against primary text and stress-tested against synthetic data, is still a specification, not a running engine — `engines/interest.py`, `engines/sca.py`, and the MSPM/SRM branches of `compute_unicap`'s dispatcher do not exist in the codebase today. Treat "validated by primary text" and "validated by synthetic-data stress test" as necessary, not sufficient — implementation risk (a coding mistake in translating a now-correct formula into Python) remains fully open until Phase A-D actually ship, and each phase needs its own implementation-level test suite built from these worked examples (see "Verification" above for which additional larger-scale fixtures each engine's golden tests should include beyond the regulation's own tiny examples). Also high-risk: data ingestion quality (real TBs/asset registers are messy — the Data Quality tab is the mitigation). Classification accuracy (~78% raw / ~84% high-confidence precision, ~35% review queue on messy data — re-verify against a live `validate.py` run, this number moves as the taxonomy is hardened) means asset/CIP inputs should be reviewed, not blindly trusted — the review-queue + Data Quality tab surface this. Remaining unverified-citation risk (see the opening disclaimer above): `§1.471-11` only — `§1.263(a)-1/-3` and `§1.266-1` were verified 2026-07-09 against complete authoritative eCFR text supplied in-session, and the §448(c) threshold against Rev. Proc. 2025-32. The §9 mirrored/search-channel provenance caveat is LIFTED for everything covered by the in-session text (§§1.261-1..1.266-1 and §§1.263A-0..-15); it survives only for material sourced exclusively from the earlier mirror/snippet retrievals (principally the PRE-T.D.-10034 old §1.263A-11(e) associated-property text underlying the pre/post-2025 dual-regime note, which by definition is not in the current text).
 
+**Phases F/G/H risk profile, ADDED 2026-07-09 — different shape from A-D's, not comparable severity:** these three
+were researched via WebSearch (the canonical primary-source hosts — Cornell LII, eCFR, IRS.gov — returned 403s at
+the network/proxy level even via WebFetch this pass, an org egress-policy restriction, not a site-specific block;
+see `docs/TAX_DECISIONS.md` §13 for the full methodology note), not a direct primary-text pull the way §§1.263A-1
+through -15 eventually were (`docs/TAX_DECISIONS.md` §10). Confidence is markedly lower as a result. Specific open
+items, do not resolve silently when building: (1) `§174D-DOMESTIC-ELECTIVE-UNVERIFIED` — whether post-OBBBA
+§174(d)'s disposal-loss-disallowance rule reaches domestic R&E capitalized under the §174A(c) elective (as opposed
+to mandatorily-capitalized foreign R&E, where it clearly applies); (2) `§57-MINING-CITE-UNVERIFIED` — the exact
+§57(a) subparagraph for the mining exploration/development AMT preference; (3) `§59E-174A-ELECTION-CONFLICT` —
+which period governs when a taxpayer elects both §59(e) (10-year) and §174A(c) (≥60-month) capitalization on the
+same domestic-R&E dollars; (4) exact subparagraph lettering within Reg. §1.263(a)-4(c)/(d) for each intangible
+category (the category list itself is confirmed at the policy level; the citations are not). **Recommend one
+direct pull of 26 U.S.C. §§59, 174, 56, 57 and Reg. §1.263(a)-4 from a licensed research tool (Checkpoint/CCH/
+Bloomberg Tax) before Phases F/G/H are built from this spec**, the same way the §263A regulations were eventually
+pulled in full for Phases A-D. Separately, and independent of citation confidence: **no golden worked example
+exists yet for any of the three** (see the "Verification" section's honesty note above) — that gap is a build
+blocker in its own right, regardless of citation confidence, since every other phase in this plan was required to
+clear that bar before being declared build-ready.
+
 ## Deferred / out of scope
 Combined producer+reseller method; farming (§1.263A-4, see `docs/TAX_DECISIONS.md` §7d); the §1.263A-7 revaluation/§481(a) COMPUTATION (see the corrected method-change bullet below); the general (g)(4)(iii) non-SSCM mixed-service-cost alternative (direct reallocation / step-allocation methods — see the SSCM section above); multi-business mixed-service-cost apportionment (§1.263A-1(h)(7) — see the SSCM section above); live Form 3115 DCN mapping to the current Rev. Proc.; the EY-platform modules (§168(n), §163(j) as a standalone module — though §163(j)'s INTERACTION with §263A(f) ordering is now in-scope for Phase D, see above — §45X/§48D, cost seg). (§§1.263A-5/-6 are reserved sections with no content — confirmed 2026-07-09 against the §1.263A-0 outline and their published reserved titles ("qualified creative expenses" and "rules for foreign persons"), nothing there to scope in or out. §1.263A-13 (oil & gas) and §1.263A-14 (related-person average-excess-expenditure allocation) are also out of scope, noted 2026-07-09 for completeness; the §1.263A-9(g)(5) consolidated-group intercompany-lending rules are likewise out of scope for a single-entity tool, added 2026-07-09 full-text pass.)
+**ADDED 2026-07-09, alongside Phases F/G/H:** computing the taxpayer's overall AMT (individual, §55/§56/§57) or CAMT (corporate, §55/§56A) LIABILITY — Phase H tracks the §59(e) preference-avoidance amortization ELECTION and its schedule, a real dollar-moving computation, but not the full AMT/CAMT return; the general oil & gas regime beyond the bare IDC §59(e)-election tracking (percentage depletion, other O&G-specific provisions — this tool has no oil & gas coverage otherwise, per §1.263A-13's existing out-of-scope note above, and Phase H does not change that); the §174(d) disposal-LOSS computation itself beyond flagging that a disposal event touches R&E-basis-bearing property (same boundary discipline as the §1.263A-7 revaluation computation above); indefinite-life/no-fixed-period intangible amortization determinations under §1.263(a)-4 (per-item SME call, not automated); and the exact scope line between capitalizable software development costs and routine debugging/maintenance under §174/§174A (flagged for SME review per Phase F, not automated).
 **§266/§1.266-1 VERIFIED 2026-07-09 full-text pass** (this was one of the plan's three remaining unverified citations): §1.266-1(b)(1) confirms the classifier's §266 tier structure — electively capitalizable carrying charges are (i) annual taxes/mortgage interest/other carrying charges on UNIMPROVED AND UNPRODUCTIVE real property (an ANNUAL election, year-by-year); (ii) interest, employment taxes, materials taxes, and other necessary expenditures for real-property development/construction (election sticks until the work completes); (iii) transport/installation-related taxes and interest for personal property (until later of installation or first use); (iv) other, with Commissioner approval. Election mechanics ((c)(3)): statement filed with the ORIGINAL return — consistent with the classifier's `election_required` flag and the still-open §3 item 3 (auto-routing vs. confirmed election). Also confirmed from the §266 side: §1.266-1(a)(2) applies §§1.263A-8..-15 FIRST, then permits a §266 election for designated property "provided a computation... is not thereby materially distorted" — the mirror image of Phase D's (g)(1)(i) ordering rule, now confirmed from both directions.
 **Corrected 2026-07-08:** partnership guaranteed-payment interest sourcing (§1.263A-9(c)(2)(iii)) was previously
 listed here as "interest on flow-through entities (§1.263A-15)" — that citation was wrong (§1.263A-15 is effective

@@ -627,6 +627,7 @@ a claim to spot-check, not settled fact.
 - **Primary-source verification passes (§7a-§7f):** §1.263A-1 (SSCM/UNICAP general), §1.263A-2 (MSPM), §1.263A-3 (SRM), §1.263A-4 (farming), and §§1.263A-7 through -15 (change in method + full interest-capitalization scheme) regulation text retrieved and cross-checked directly; four IRS LB&I Practice/Concept Units (resellers, interest capitalization, self-constructed-asset costs, producers) cross-checked as independent secondary confirmation, then re-audited a second time by four parallel subagents (§7e) specifically checking whether the plan's own "VERIFIED" claims actually held up, then **red-teamed a third time (§7f)** — including an agent given only raw facts, with no knowledge of any prior answer, to independently re-derive the hardest number from scratch. Found and fixed: one real citation bug ($50M rule); two real missing MSPM mechanics (residual pre-production, direct materials adjustment); one real missing SRM method-availability gate (SPM-only above de minimis production) plus several smaller SRM gaps; one real missing §263A(f) de minimis designated-property exclusion and mid-production-purchase APE rule; a **materially wrong core avoided-cost-method formula** in Phase D that understated the golden worked example by ~16% (corrected from $323,571.43 to $376,428.57, then independently re-confirmed from scratch in §7f); **two separate false verification claims in this very document's own audit trail** (§7c's Phase-C-cost-methods claim, and §7d's Phase-D-formula claim — both retracted); and a genuine **self-contradiction** where Phase C silently misapplied SSCM to assets the plan's own SSCM section says likely don't qualify for it (plus two more instances of that same "reuses SSCM" staleness found and fixed in §7f, elsewhere in the document). Also resolved the "T.D. 10034" suspected-fabrication flag: the citation is real (§7d). **Standing lesson from this whole sequence: confident "verified"/"no discrepancy found" language in this document's own audit trail has twice turned out to be wrong — every entry, including this one, is a claim to spot-check, not settled fact.**
 - **Synthetic-data full-calculation stress test + final decisions (§8):** every formula (SPM/MSPM/SRM/SCA/§263A(f)) run end-to-end against non-trivial synthetic datasets by five parallel subagents; a real shipped-code taxonomy bug found and fixed (§8, intro); four genuine specification gaps found and closed with explicit adopted decisions (§8a-§8d). `BUILD_PLAN.md` updated throughout and declared final/buildable as of 2026-07-08.
 - **Full-text reconciliation, §§1.261-1..1.266-1 + §§1.263A-0..-15 (§10, 2026-07-09 second pass):** complete authoritative eCFR text supplied in-session — §9's provenance caveat lifted for everything it covers, and every §9 correction it covers confirmed verbatim. One §9 hedge reversed (the (h)(5) income-tax exclusion IS in the reg — partial retrieval of a correct paragraph had produced a false hedge); one adopted SME decision reversed (SRM 90/10 threshold = the (c)(5)(iii)(B) sales ratio, not an independent cost study); §1.263A-3(a)(4)(iv) resolved (production costs flow through the SRM formula itself); §1.263(a)-1/-3 and §1.266-1 verified (closing two of the three remaining unverified citations — only §1.471-11 remains); and ~10 genuinely new mechanics entered the plan (financial-statement-based §471 definition, MSPM+LIFO combined ratio, SRM handling exclusions incl. pick-and-pack, §1.263A-10 unit/common-feature rules, §1.263A-11(c) contract-payment APE rules, §1.263A-9(d) no-tracing election, aged-property production periods, de minimis safe harbor $2,500-authority note). Suite: 96 passing.
+- **Scope expansion: §174/§174A, §1.263(a)-4/-5 + §195/§248/§709, and §59(e) added (§13, 2026-07-09):** direct request to cover all mandatory/elective capitalization provisions under §263(a)/§174/§266/§59(e), not §263A alone. Repo-mining found existing (previously unknown-to-this-plan) taxonomy codes and a reusable §1.263(a)-5 classifier in `transaction_costs/`, but confirmed no amortization-schedule engine exists anywhere for any of it. WebSearch-based verification (WebFetch to all canonical hosts blocked this session) reversed a working assumption that §59(e)'s R&E prong was vestigial — OBBBA revived it for 2025+ — and confirmed the corporate AMT/CAMT does not use §59(e) at all, gating the new Gate 10 accordingly. Added three new phases (F/G/H), three new interview gates (8/9/10), extended the input table to 8, and added a shared `AmortizableItem` basis/amortization mechanic generalizing the existing per-asset concept. Explicitly flagged, not silently built: Gates 8-10 are unvalidated (no §12-style pass yet), no golden worked example exists for any of the three phases, and several citation specifics (§174(d)'s reach on elective-domestic R&E, the exact §57(a) mining-preference subparagraph, the §59(e)/§174A(c) election-conflict resolution) are UNCERTAIN pending a licensed-research-tool primary-text pull. Suite: 96 passing (docs-only).
 - **Pre-build completeness validation of the interview layer (§12, 2026-07-09):** three parallel agents (field-reachability audit, golden-example dry run, adversarial fresh-eyes gap hunt) pressure-tested Phase E as a spec, before any interview code exists. Two of the four golden worked examples FAILED as originally written — SRM's own `ending_inventory_471` multiplier (confirmed independently by two agents) and MSPM's `DM_purchased_during_year` were both silently un-asked — plus a load-bearing Gate 0/1 contradiction (an undefined `none-noncompliant` prior-method path) and 8 further Gate-7 per-unit/per-debt gaps (aged-property periods, producing-asset APE inputs, T.D. 10034 mid-production purchase price, pre-2025 associated-property inputs, `production_complete` vs. placed-in-service, AFR-plus-3's since-1994 look-back, the A/P fold-in sub-election, related-person activities-vs-costs). All fixed inline in Phase E, including a same-day follow-up that numbered Gates 3/5/6/7 into individual `Q#.#` nodes (Q3.1-Q3.22, Q5.1-Q5.3, Q6.1-Q6.5, Q7.1-Q7.23), closing the one item initially left as documentation debt.
 - **Interview layer / question decision tree (§11, 2026-07-09):** review found the plan had no user-facing question inventory or conditional-ask logic (engine-first, fields scattered as implementation notes; three required questions absent entirely). Added BUILD_PLAN.md Phase E: declarative question graph (`taxonomy/interview.yaml` + `interview.py`), seven gates with exemption short-circuiting, FACT/ELECTION/METHOD-OF-ACCOUNTING tagging feeding the Form 3115 warning, per-facility/per-asset/per-unit/per-line sub-trees, and graph-validation + path tests.
 - **Full regulation-by-regulation review, §§1.263A-1..-15 (§9, 2026-07-09):** five parallel agents, clause-by-clause against retrieved regulation text (mirrored/search channels — canonical hosts blocked; provenance in §9). Five MATERIAL findings, all fixed: the shipped SSCM labor-ratio denominator was backwards on two counts vs (h)(4) (code + tests fixed — prior workpapers used a wrong ratio); the "one-sided 90% rule" correction from §7e was itself wrong (both sides exist at (g)(4)(ii), asymmetrically); Phase D's §1221 carve-out misread an eCFR rendering artifact as a nonexistent "§1221(l) patent provision" (it's the §1221(a)(1) inventory carve-out); the dropped "associated property rule eliminated" claim was actually TRUE (restored, with a pre/post-Oct-2025 dual-regime implication); a day-proration sentence contradicted the (f)(2)(iii) measurement-date convention. Plus: the SRM (a)(4)(ii)-vs-(a)(5) open question RESOLVED (taxpayer size), the MSC sub-split found prescribed at (d)(3)(i)(F), the §1.263A-7 method-change gap partially in-scoped, the §448(c) 2026 threshold verified ($32M), a tax-shelter bar added to the exemption, and ~30 smaller citation/scope corrections. Suite: 96 passing. Four standing lessons recorded (§9.8).
@@ -1238,5 +1239,101 @@ independently-confirmed load-bearing gaps in worked examples this same document 
 "verified" as buildable (§8/§10/§11) — a reminder that "the formula is correct" and "the
 interview that's supposed to gather the formula's inputs actually gathers them" are separate
 claims, and this document's prior passes had only ever tested the former.
+
+Suite: 96 passing (docs-only change; no code touched this pass).
+
+## §13 — Scope expansion: §174/§174A, §1.263(a)-4/-5 + §195/§248/§709, and §59(e) added (2026-07-09)
+
+**Trigger:** direct user question — "does this only include 263A or are 263(a), 174, 266 included" — followed
+by an explicit instruction to research prior sessions' work in this repo and add ALL mandatory and elective
+capitalization provisions under §263(a)/§174/§266/§59(e) to both the interview questions and the calculation
+engine/report. §263(a) (Gate 4) and §266 (Gate 5) were already in scope. §174 and §59(e) were not in scope at
+all — confirmed by grep: §174 appeared only once, in passing, as an example book-tax-difference item; §59(e)
+did not appear anywhere in `BUILD_PLAN.md`/`TAX_DECISIONS.md`/`analysis.py`.
+
+**Research methodology, two parallel tracks:**
+1. **Repo-mining** — a background agent read `financial_tools/authority_databases/cost_capitalization.py` (721
+   lines, a well-researched TechnicalAuthority citation database covering §266/§263(a)/§263A/§174/§197/
+   §195/§248/§709/§263(c)/§59(e)/§263(g)/§461(g)/§168(k)/§179 — built in an earlier session, not part of
+   cap263a), `authority_databases/inventory_detail/unicap_authorities.py`,
+   `expense_recognition/technical_authority/authorities/research_development.py`, and the working
+   `transaction_costs/` and `fixed_assets/` tools, to find what prior sessions had already built that could be
+   reused. I read `cost_capitalization.py` directly myself in parallel (see the full citation list it contains,
+   now the seed for Phases F/G/H's authority coverage).
+2. **Primary-source verification** — a second agent used WebSearch (WebFetch to Cornell LII/eCFR/IRS.gov/
+   govinfo.gov and even non-government sites returned 403s at the network/proxy level this session — an
+   org egress-policy restriction confirmed across multiple domains, not a site-specific block) to verify §59(e)'s
+   full mechanics and current relevance, §174(d)'s disposal rules, and Reg. §1.263(a)-4's 12-month-rule/de-minimis
+   mechanics — the three areas where my own recollection was least confident and where the repo-mining pass found
+   the least existing coverage.
+
+**Repo-mining findings (full detail in the agent's report; summarized here):**
+- `taxonomy/categories.yaml` (cap263a's own, 3,958 lines) already has `EX-RD`/`EX-174AMORT` (§174), `SEC263A-TXN`
+  (§1.263(a)-5), `SEC263A-INTANG` (§1.263(a)-4/§197), and `SEC195-STARTUP` (§195/§248/§709) as classifier codes —
+  **classification-level coverage already existed and was previously unknown to this plan.** But `analysis.py`'s
+  `bucket_of()` routes every one of them to a single flat bucket total (`"§263(a) Mandatory"` or `"Deductible"`)
+  with no amortization schedule, no domestic/foreign R&E split, no 12-month-rule/bright-line-date/success-fee
+  logic, and no $5,000/$50,000 start-up phase-out computation — confirmed by reading `analysis.py` directly
+  (`bucket_of`, ~line 126). **The gap is downstream of classification, not classification itself** — this
+  materially changed the shape of Phases F/G — they extend/refine existing buckets rather than building
+  classification from nothing.
+- `financial_tools/transaction_costs/` is a working (if Phase-1-only) tool with a solid `§1.263(a)-5` authority
+  file and a real `TransactionCostAnalyzer._classify_costs()` rule engine — REUSABLE, adapted into Phase G rather
+  than rebuilt. Its own Phase-2 roadmap already flagged the bright-line-date logic and the Rev. Proc. 2011-29
+  success-fee election as unbuilt — confirmed still unbuilt, now Phase G's job to build.
+- No asset-basis / per-item depreciation-schedule mechanic exists anywhere in the repo (`fixed_assets/`,
+  `cost_capitalization/`) — confirms and generalizes the gap cap263a's own Phase C "Asset Basis Schedule" already
+  flagged; Phases F/G/H's `AmortizableItem` design generalizes that one gap into a single shared mechanic instead
+  of three more bespoke ones.
+- §59(e) existed in the repo only as a single narrow IDC-only fragment (`authority_databases/cost_capitalization.py`
+  lines 407-419) — the other four qualified-expenditure categories (circulation, mining exploration, mining
+  development, and R&E's own §59(e) prong) had zero prior coverage anywhere.
+
+**Primary-source verification findings (WebSearch-sourced, not a direct primary-text pull — see the confidence
+caveat below):**
+- **§59(e)'s qualified-expenditure list and periods CONFIRMED**: circulation (§173, 3 yr), R&E (10 yr), IDC
+  (§263(c), 60 mo), mining exploration (§617(a), 10 yr), mining development (§616(a), 10 yr).
+- **Important correction to the working assumption going in**: §59(e)(2)(B) was itself amended by OBBBA to point
+  at NEW §174A(a) (domestic R&E), not old §174(a) — and the R&E prong of §59(e), which was genuinely moot for
+  2022-2024 (when §174 already mandated capitalization at a pace equal to or slower than the AMT rate), was
+  REVIVED by OBBBA's 2025 restoration of domestic-R&E current expensing (§56(b)(2), as amended, now requires
+  individual AMT taxpayers to capitalize/amortize domestic R&E expensed under §174A's default). This directly
+  contradicted my working assumption that the R&E prong was likely vestigial — verification reversed that
+  assumption before it could be written into the spec as a false claim.
+- **The corporate AMT was repealed by TCJA and the CAMT (§55/§56A, IRA 2022) does NOT use §59(e)/§57 preference
+  items** — verified at the structural/mechanical level (not a single primary-source sentence stating this
+  outright — flagged "verified-by-inference" in the agent's report). This means §59(e) is relevant only to
+  individuals/pass-through owners, not to a pure C-corp — a material gating fact now built into Gate 10 (Q10.1)
+  rather than offering the election uniformly.
+- **§174(d)'s disposal-loss-disallowance rule** confirmed on the core mechanic and the foreign-R&E case;
+  UNCERTAIN on whether it reaches domestic R&E capitalized under the §174A(c) elective — flagged
+  `§174D-DOMESTIC-ELECTIVE-UNVERIFIED` rather than guessed either way.
+- **Reg. §1.263(a)-4's 12-month rule confirmed as "earlier of"** (not "later of," a documented common drafting
+  error the plan is now explicitly avoiding); the $5,000 facilitative-cost de minimis at (e)(4) confirmed as a
+  CLIFF test (not a partial exclusion) and confirmed DISTINCT from the plan's existing $5,000/$2,500 tangible-
+  property de minimis safe harbor (Gate 4.1) despite the coincidental shared dollar figure.
+- One additional uncertain item surfaced and flagged rather than resolved: the exact §57(a) subparagraph for the
+  mining AMT preference (`§57-MINING-CITE-UNVERIFIED`), and whether a taxpayer electing BOTH §59(e) (10-yr) and
+  §174A(c) (≥60-mo) capitalization on the same domestic-R&E dollars has a defined governing period
+  (`§59E-174A-ELECTION-CONFLICT` — this plan does not resolve it, routes to SME review).
+
+**Confidence caveat, stated explicitly per this document's established discipline:** this section's findings rest
+on WebSearch result snippets that in most cases directly quote Cornell LII/eCFR/Bloomberg Tax/IRS text, NOT on a
+direct pull of the full primary document the way §§1.263A-1 through -15 eventually were (§10 above) — WebFetch to
+every canonical host tested (Cornell LII, eCFR, IRS.gov, govinfo.gov, even non-government sites) returned 403s at
+the network/proxy level this session. Phases F/G/H in `BUILD_PLAN.md` carry this same caveat inline and recommend
+one direct pull from a licensed research tool (Checkpoint/CCH/Bloomberg Tax) before being treated as build-ready.
+This is a DIFFERENT provenance tier than §9/§10's eventual full-text verification, not a repeat of the same
+discipline — flagged as such rather than presented with matching confidence.
+
+**What changed in `BUILD_PLAN.md`:** three new phases (F: §174/§174A, G: §1.263(a)-4/-5 + §195/§248/§709, H:
+§59(e)), three new interview gates (8/9/10), the input table extended from 5 to 8 inputs, the Architecture block
+extended with a shared `AmortizableItem`/Basis & Amortization Schedule generalizing the existing per-asset concept
+across Phases C/F/G/H, three new report tabs (R&E Amortization, Intangibles & Transaction Costs, §59(e) Election
+Tracker), Sequencing/Files/Verification/Effort & risk/Deferred all updated, and the document's title/goal line
+updated to reflect the tool now covers §263A/§263(a)/§266/§174/§59(e), not §263A alone. Explicitly noted inline:
+Gates 8-10 have NOT been through the same field-reachability/golden-example/adversarial validation pass Gates 0-7
+went through (§12 above) — that is a follow-up item, not done this pass. No golden worked example exists yet for
+Phases F/G/H — also flagged as a build blocker in its own right, independent of citation confidence.
 
 Suite: 96 passing (docs-only change; no code touched this pass).
