@@ -627,6 +627,7 @@ a claim to spot-check, not settled fact.
 - **Primary-source verification passes (§7a-§7f):** §1.263A-1 (SSCM/UNICAP general), §1.263A-2 (MSPM), §1.263A-3 (SRM), §1.263A-4 (farming), and §§1.263A-7 through -15 (change in method + full interest-capitalization scheme) regulation text retrieved and cross-checked directly; four IRS LB&I Practice/Concept Units (resellers, interest capitalization, self-constructed-asset costs, producers) cross-checked as independent secondary confirmation, then re-audited a second time by four parallel subagents (§7e) specifically checking whether the plan's own "VERIFIED" claims actually held up, then **red-teamed a third time (§7f)** — including an agent given only raw facts, with no knowledge of any prior answer, to independently re-derive the hardest number from scratch. Found and fixed: one real citation bug ($50M rule); two real missing MSPM mechanics (residual pre-production, direct materials adjustment); one real missing SRM method-availability gate (SPM-only above de minimis production) plus several smaller SRM gaps; one real missing §263A(f) de minimis designated-property exclusion and mid-production-purchase APE rule; a **materially wrong core avoided-cost-method formula** in Phase D that understated the golden worked example by ~16% (corrected from $323,571.43 to $376,428.57, then independently re-confirmed from scratch in §7f); **two separate false verification claims in this very document's own audit trail** (§7c's Phase-C-cost-methods claim, and §7d's Phase-D-formula claim — both retracted); and a genuine **self-contradiction** where Phase C silently misapplied SSCM to assets the plan's own SSCM section says likely don't qualify for it (plus two more instances of that same "reuses SSCM" staleness found and fixed in §7f, elsewhere in the document). Also resolved the "T.D. 10034" suspected-fabrication flag: the citation is real (§7d). **Standing lesson from this whole sequence: confident "verified"/"no discrepancy found" language in this document's own audit trail has twice turned out to be wrong — every entry, including this one, is a claim to spot-check, not settled fact.**
 - **Synthetic-data full-calculation stress test + final decisions (§8):** every formula (SPM/MSPM/SRM/SCA/§263A(f)) run end-to-end against non-trivial synthetic datasets by five parallel subagents; a real shipped-code taxonomy bug found and fixed (§8, intro); four genuine specification gaps found and closed with explicit adopted decisions (§8a-§8d). `BUILD_PLAN.md` updated throughout and declared final/buildable as of 2026-07-08.
 - **Full-text reconciliation, §§1.261-1..1.266-1 + §§1.263A-0..-15 (§10, 2026-07-09 second pass):** complete authoritative eCFR text supplied in-session — §9's provenance caveat lifted for everything it covers, and every §9 correction it covers confirmed verbatim. One §9 hedge reversed (the (h)(5) income-tax exclusion IS in the reg — partial retrieval of a correct paragraph had produced a false hedge); one adopted SME decision reversed (SRM 90/10 threshold = the (c)(5)(iii)(B) sales ratio, not an independent cost study); §1.263A-3(a)(4)(iv) resolved (production costs flow through the SRM formula itself); §1.263(a)-1/-3 and §1.266-1 verified (closing two of the three remaining unverified citations — only §1.471-11 remains); and ~10 genuinely new mechanics entered the plan (financial-statement-based §471 definition, MSPM+LIFO combined ratio, SRM handling exclusions incl. pick-and-pack, §1.263A-10 unit/common-feature rules, §1.263A-11(c) contract-payment APE rules, §1.263A-9(d) no-tracing election, aged-property production periods, de minimis safe harbor $2,500-authority note). Suite: 96 passing.
+- **Finalization pass: runtime pipeline, basis reconciliation, elective menu, completeness sweep (§14, 2026-07-09, `/goal` directive):** the plan was fully spec'd by Code section but never stated the runtime order the finished tool actually computes in — a `/goal` directive with three parallel subagents found and fixed this, plus two real structural gaps: no mechanic anywhere reconciled book-already-capitalized basis against tax-required capitalization (confirmed correctly N/A for inventory, but genuinely missing for interest/intangibles/R&E, and Gate 4's tangible-property improvements had NO per-asset posting mechanism at all — the most consequential single finding); and no consolidated list of the plan's ~15+ elections existed, conflating three different kinds of election. A fourth research pass found one material new gap (§1060/Form 8594 purchase-price allocation for business acquisitions) and one small one (§280B demolition-to-land-basis), with several other candidates (§263(g), §461(g), §616/§617 mandatory baseline, §194) researched and explicitly deferred rather than silently dropped. New sections added: Runtime Pipeline, Basis Reconciliation, Elective Capitalization Menu, plus a materialized Tax-Basis TB deliverable in Phase A. Suite: 96 passing (docs-only).
 - **Scope expansion: §174/§174A, §1.263(a)-4/-5 + §195/§248/§709, and §59(e) added (§13, 2026-07-09):** direct request to cover all mandatory/elective capitalization provisions under §263(a)/§174/§266/§59(e), not §263A alone. Repo-mining found existing (previously unknown-to-this-plan) taxonomy codes and a reusable §1.263(a)-5 classifier in `transaction_costs/`, but confirmed no amortization-schedule engine exists anywhere for any of it. WebSearch-based verification (WebFetch to all canonical hosts blocked this session) reversed a working assumption that §59(e)'s R&E prong was vestigial — OBBBA revived it for 2025+ — and confirmed the corporate AMT/CAMT does not use §59(e) at all, gating the new Gate 10 accordingly. Added three new phases (F/G/H), three new interview gates (8/9/10), extended the input table to 8, and added a shared `AmortizableItem` basis/amortization mechanic generalizing the existing per-asset concept. Explicitly flagged, not silently built: Gates 8-10 are unvalidated (no §12-style pass yet), no golden worked example exists for any of the three phases, and several citation specifics (§174(d)'s reach on elective-domestic R&E, the exact §57(a) mining-preference subparagraph, the §59(e)/§174A(c) election-conflict resolution) are UNCERTAIN pending a licensed-research-tool primary-text pull. Suite: 96 passing (docs-only).
 - **Pre-build completeness validation of the interview layer (§12, 2026-07-09):** three parallel agents (field-reachability audit, golden-example dry run, adversarial fresh-eyes gap hunt) pressure-tested Phase E as a spec, before any interview code exists. Two of the four golden worked examples FAILED as originally written — SRM's own `ending_inventory_471` multiplier (confirmed independently by two agents) and MSPM's `DM_purchased_during_year` were both silently un-asked — plus a load-bearing Gate 0/1 contradiction (an undefined `none-noncompliant` prior-method path) and 8 further Gate-7 per-unit/per-debt gaps (aged-property periods, producing-asset APE inputs, T.D. 10034 mid-production purchase price, pre-2025 associated-property inputs, `production_complete` vs. placed-in-service, AFR-plus-3's since-1994 look-back, the A/P fold-in sub-election, related-person activities-vs-costs). All fixed inline in Phase E, including a same-day follow-up that numbered Gates 3/5/6/7 into individual `Q#.#` nodes (Q3.1-Q3.22, Q5.1-Q5.3, Q6.1-Q6.5, Q7.1-Q7.23), closing the one item initially left as documentation debt.
 - **Interview layer / question decision tree (§11, 2026-07-09):** review found the plan had no user-facing question inventory or conditional-ask logic (engine-first, fields scattered as implementation notes; three required questions absent entirely). Added BUILD_PLAN.md Phase E: declarative question graph (`taxonomy/interview.yaml` + `interview.py`), seven gates with exemption short-circuiting, FACT/ELECTION/METHOD-OF-ACCOUNTING tagging feeding the Form 3115 warning, per-facility/per-asset/per-unit/per-line sub-trees, and graph-validation + path tests.
@@ -1335,5 +1336,84 @@ updated to reflect the tool now covers §263A/§263(a)/§266/§174/§59(e), not 
 Gates 8-10 have NOT been through the same field-reachability/golden-example/adversarial validation pass Gates 0-7
 went through (§12 above) — that is a follow-up item, not done this pass. No golden worked example exists yet for
 Phases F/G/H — also flagged as a build blocker in its own right, independent of citation confidence.
+
+Suite: 96 passing (docs-only change; no code touched this pass).
+
+## §14 — Finalization pass: the runtime pipeline, basis reconciliation, elective-provision menu, and a final
+completeness sweep (2026-07-09, `/goal` directive)
+
+**Trigger:** an explicit `/goal` directive, run with subagents, describing the finished tool's required runtime
+shape in five steps: ingest a department/cost-center trial balance; adjust it for book-tax differences to a
+tax-basis department/cost-center TB; apply MANDATORY capitalization by asset category (real property, tangible
+property, personal property, intangible property, CIP, inventory) — starting from what's already capitalized and
+finding what's still on the TB that legally must join it; calculate the ALLOCATION of those costs to specific
+assets; then identify and apply ELECTIVE capitalization provisions. The directive named §263A/§263(a)/§266/§174/
+§59(e) explicitly and asked for "anything else."
+
+**Methodology — three parallel subagents, then a fourth research agent for the completeness sweep:**
+1. **Pipeline-shape audit** — read the entire `BUILD_PLAN.md` (1,517 lines at the time) and determined whether
+   the document already states this 5-step runtime order explicitly, or only implies it, scattered across
+   Phase-letter/Code-section organization.
+2. **Book-vs-required gap-mechanic audit** — determined whether the "look at what's already capitalized, find
+   what's still required and missing" mechanic the directive described exists anywhere, per asset category.
+3. **Additional-provisions research** — a WebSearch-based sweep for any other mandatory/elective capitalization-
+   to-basis provision the plan's existing §263A/§263(a)/§266/§174/§59(e)/§195/§248/§709 scope might be missing.
+
+**Findings, Agent 1 (pipeline shape) — the runtime pipeline was NOT explicit anywhere.** The document's only
+ordering statement, "Sequencing & why," is a BUILD order (what to code first), not a RUNTIME order (what the
+finished tool computes first) — confirmed these were at real risk of being confused. Book-tax-difference handling
+(Phase A, input 2) never materialized an actual tax-basis TB — it fed only the negative-§263A pipeline and an M-1
+reconciliation NOTE. No section organizes mandatory capitalization by the six asset categories the user named —
+everything is Code-section-organized. Allocation-to-specific-assets was confirmed real for Phases C/F/G/H but
+Phase B (inventory) was confirmed to post one pool total by design (correct — UNICAP absorption ratios are
+inherently pool-based under the regulations themselves, not a gap), while Gate 4's BAR-flagged tangible-property
+improvements were confirmed to have NO posting mechanism to any asset at all — a real, previously undetected hole.
+No consolidated elective-provision list existed, and the document conflated (without ever naming the distinction)
+three conceptually different kinds of "election": method-of-accounting choices that don't change what's required
+(just how it's computed), incremental voluntary add-on capitalization, and safe-harbor-outs that legitimately
+reduce a mandatory amount.
+
+**Findings, Agent 2 (basis-reconciliation gap) — split verdict by asset category, precisely matching Agent 1's
+independent conclusion.** For inventory/§263A, the "book-vs-required delta" framing is the WRONG mental model —
+confirmed correct as currently built: additional §263A costs are BY DEFINITION costs the taxpayer's own books
+never capitalized (still P&L expense lines), so there's no pre-existing basis to reconcile against; the
+classifier's per-line detection plus absorption-ratio math IS the complete, correct mechanic. For self-constructed
+assets (Phase C), the three-bucket structure (book cost / additional §263A / interest) IS this mechanic, but its
+one open hole — whether a cost is already reflected in the book CIP ledger before the pool-allocation mechanism
+re-adds it — remains genuinely unresolved (previously flagged, not re-solved by this pass). For everything else —
+§263A(f) interest already capitalized on the books under ASC 835-20, existing intangible basis, book-capitalized
+R&E, and (again) Gate 4's tangible-property improvements — NO reconciliation mechanic existed anywhere, explicit
+or implicit.
+
+**Findings, Agent 3 (additional provisions) — one clear, material gap found; several correctly deferred.**
+§1060/Form 8594's residual-method purchase price allocation (7 statutory asset classes, both parties must report
+consistently) is a real, distinct, previously entirely-absent mechanic — it governs how the PURCHASE PRICE ITSELF
+of an acquired trade or business becomes the initial basis of every acquired asset across all four categories this
+tool targets, separate from §1.263(a)-5's coverage of only the acquirer's facilitative/transaction costs. §280B
+(demolition of structures — cost + remaining basis capitalize to LAND, not a deductible loss) is a small, real,
+well-defined mandatory rule common in real-property/CIP fact patterns, also previously absent. §263(g) (straddle
+interest), §461(g) (prepaid interest/points — on close reading, confirmed to be a deduction-TIMING rule, not a
+basis-capitalization provision at all), §616/§617's mandatory-baseline-plus-recapture cycle beyond the already-
+in-scope §59(e) angle, and §194 (reforestation) were all researched and are real but niche/out-of-scope-adjacent —
+recommended DEFER-BUT-NOTE rather than build, and documented as such rather than silently dropped.
+
+**What changed in `BUILD_PLAN.md`:** a new "Runtime Pipeline" section (the authoritative 5-step statement, kept
+explicitly distinct from the build-order "Sequencing & why"); a new "Basis Reconciliation" section generalizing
+Phase C's bucket structure to every asset category, closing five real gaps (interest, intangibles, R&E, and most
+consequentially Gate 4's tangible-property improvements, which previously had no per-asset posting mechanism at
+all) while explicitly confirming inventory needs NO such mechanic (a documented non-gap, not silently ignored); a
+new "Elective Capitalization Menu" section — a single table of every election in the plan, tagged by the three-way
+(a)/(b)/(c) taxonomy (method-choice / add-on / safe-harbor-out) that had never been named before; a new §1060
+Purchase Price Allocation mechanic and a new §280B demolition rule (both added to Phase G, with new Gate 9
+questions); a materialized Tax-Basis TB deliverable added to Phase A; and Deferred/Sequencing/Files/Verification/
+Effort & risk all updated to reflect the new mechanics, including an explicit honesty note that none of the three
+new mechanics (Tax-Basis TB, Basis Reconciliation, §1060) has a golden worked example yet — the same discipline
+already applied to Phases F/G/H.
+
+**What was deliberately NOT resolved, flagged instead:** Phase C's book-CIP-vs-bucket-B double-count rule (carried
+forward unresolved, as before — this pass generalized the PATTERN to other categories without solving the
+original instance); the exact scope of "anything else" (four additional Code sections researched and explicitly
+deferred with reasons, not silently omitted); no new golden worked examples were built this pass (flagged as the
+next build blocker, consistent with the discipline already applied to Phases F/G/H in §13).
 
 Suite: 96 passing (docs-only change; no code touched this pass).
