@@ -1017,10 +1017,10 @@ interview would actually reconstruct their assumed inputs, (3) an adversarial ru
 year on a just-switched method) not covered by any existing example. Two of the four golden traces FAILED as
 originally written (MSPM and SRM — both silently missing a required input), and the adversarial run surfaced a
 load-bearing contradiction at Gate 0/1. All findings below are fixed inline; see `docs/TAX_DECISIONS.md` §12 for
-the full report. **Known remaining documentation debt (not fixed this pass, flagged so it isn't lost):** Gates 0,
-1, 2, and 4 use individually numbered `Q#.#` questions; Gates 3, 5, 6, and 7 are still unnumbered prose/topic lists.
-That's tolerable for a spec but must be resolved into real `Q#.#` node IDs before `taxonomy/interview.yaml` is
-authored, since the YAML's node-`id` values are exactly what the loader validates for reachability.
+the full report. **Documentation debt closed 2026-07-09 (same pass):** Gates 3, 5, 6, and 7 were unnumbered
+prose/topic lists at first; all four are now individually numbered `Q#.#` questions matching the style already
+used in Gates 0, 1, 2, and 4, so every node referenced anywhere in this section (including the newly-added ones
+above) now has a stable ID the `taxonomy/interview.yaml` loader's reachability validation can target.
 
 **Architecture:** `interview.py` + `taxonomy/interview.yaml`. The YAML is a declarative question graph — each node:
 `id`, `question`, `answer_type` (bool/enum/decimal/date/per-item), `maps_to` (EntityProfile field / schedule
@@ -1097,24 +1097,50 @@ default; every `ask_when` references defined nodes (same validate-at-load discip
   §471/Additional tier split? On TD 9843 elective methods ((d)(2)(iii)/(iv)/(v))? → review-queue flags, not fields
   (flag-don't-model per Phase B). FACT.
 
-**Gate 3 — Balance and cost-pool inputs (menu strictly follows Q2.2):** SPM → `ending_inventory_471`. MSPM → the
-current-year-incurred on-hand set (pre-/production incurred and on-hand, DM-not-in-production begin/end — with the
-input-contract language from the MSPM DECISION block) **plus, ADDED 2026-07-09, `DM_purchased_during_year` asked as
-its own question** — a golden-example dry run found this fact is distinct from BOTH the aggregate pre-production-
-incurred figure AND the DM-not-in-production begin/end stock figures (it feeds `direct_materials_adjustment`
-directly, per the MSPM formula block above) and was silently un-asked. SRM → **`current_year_471_costs`
-(the reg's "current year's purchases," the purchasing-ratio DENOMINATOR) and `purchasing_costs` (the purchasing-
-DEPARTMENT cost pool, the purchasing-ratio NUMERATOR) as two SEPARATE questions — ADDED/DISAMBIGUATED 2026-07-09,
-see the naming-disambiguation note in the SRM formula block above**, beginning inventory (LIFO carrying value if
-Q2.1=LIFO), **`ending_inventory_471` (the §471 costs remaining on hand at year end — the direct multiplicand of
-`add'l_to_inv`; ADDED 2026-07-09 — both the field-reachability audit and the golden-example dry run independently
-found this, the single most consequential number in the SRM formula, was never asked)**, 1/3-2/3 purchasing-labor
-election (ELECTION, all-or-nothing), write-down carve-out, permissible-variation flags (`srm_variation_a/b`,
-METHOD-OF-ACCOUNTING), then a **per-facility sub-tree**: attached to retail facility? → integral part? →
-exclusively retail on-site sales (the (E)(2) four-part test if non-retail customers exist)? → dual-function →
-on-site sales $ and total gross sales $ INCLUDING inter-facility shipments (the (B) ratio; 90/10 deeming applied to
-it per the reversed decision above); handling-cost exclusion prompts (store-level handling, distribution,
-custom-order, pick-and-pack) per the (c)(4) bullet.
+**Gate 3 — Balance and cost-pool inputs (menu strictly follows Q2.2; per-facility sub-tree repeats per facility) —
+NUMBERED 2026-07-09 (was an unnumbered prose list; see the documentation-debt note above):**
+
+*SPM (ask_when: Q2.2 = SPM):*
+- Q3.1 §471 costs remaining in ending inventory → `ending_inventory_471`. FACT.
+
+*MSPM (ask_when: Q2.2 = MSPM):*
+- Q3.2 Pre-production §471 costs incurred during the year (direct material + resale) → `pre_production_471`. FACT.
+- Q3.3 Production §471 costs incurred during the year → `production_471`. FACT.
+- Q3.4 Pre-production additional §263A costs incurred → `pre_production_additional_263A`. FACT.
+- Q3.5 Production additional §263A costs incurred → `production_additional_263A`. FACT.
+- Q3.6 Pre-production §471 costs on hand at year end (current-year-incurred only, per (c)(3)(ii)(C)/(E) — see the
+  input-contract note in the MSPM DECISION block above) → `pre_production_471_on_hand`. FACT.
+- Q3.7 Production §471 costs on hand at year end (same current-year-incurred limitation) → `production_471_on_hand`. FACT.
+- Q3.8 Beginning direct materials not yet in production → `beginning_DM_not_yet_in_production`. FACT.
+- Q3.9 Ending direct materials not yet in production → `ending_DM_not_yet_in_production`. FACT.
+- Q3.10 Direct materials purchased during the year → `DM_purchased_during_year`. FACT. **ADDED 2026-07-09** — a
+  golden-example dry run found this fact, distinct from both Q3.2's aggregate and Q3.8/Q3.9's stock figures, was
+  silently un-asked despite feeding `direct_materials_adjustment` directly.
+
+*SRM (ask_when: Q2.2 = SRM):*
+- Q3.11 Current year's purchases — §471 costs incurred on property acquired for resale during the year (the
+  purchasing-ratio DENOMINATOR) → `current_year_471_costs`. FACT. **DISAMBIGUATED 2026-07-09** from Q3.12 —
+  see the naming-disambiguation note in the SRM formula block above.
+- Q3.12 Purchasing-department cost pool (the purchasing-ratio NUMERATOR) → `purchasing_costs`. FACT. **ADDED
+  2026-07-09** — previously conflated with Q3.11 under Gate 3's old bare "purchases" wording.
+- Q3.13 Storage & handling costs → `storage_handling_costs`. FACT.
+- Q3.14 Beginning inventory §471 costs (LIFO carrying value if Q2.1 = LIFO) → `beginning_inventory_471`. FACT.
+- Q3.15 §471 costs remaining on hand at year end (LIFO: current-year increment, unless Q3.18's Variation B is
+  elected) → `ending_inventory_471`. FACT. **ADDED 2026-07-09** — both the field-reachability audit and the
+  golden-example dry run independently found this, the direct multiplicand of `add'l_to_inv`, was never asked.
+- Q3.16 1/3–2/3 purchasing-labor election → ELECTION (all-or-nothing).
+- Q3.17 Write-down carve-out scope (which write-downs are excluded from the S&H cost pool) → FACT.
+- Q3.18 Permissible-variation elections: (A) exclude beginning inventory from the S&H denominator; (B) LIFO
+  taxpayer multiplies by total ending-inventory §471 costs instead of the increment → `srm_variation_a`/
+  `srm_variation_b`. METHOD-OF-ACCOUNTING.
+
+*Per-facility sub-tree (SRM only; repeats per facility):*
+- Q3.19 Attached to a retail facility? Integral part of it? → FACT.
+- Q3.20 Exclusively retail on-site sales? (the (E)(2) four-part test if non-retail customers exist) → FACT.
+- Q3.21 (if dual-function) On-site sales $ and total gross sales $, INCLUDING inter-facility shipments (the (B)
+  ratio; 90/10 deeming applies per the reversed decision above) → FACT.
+- Q3.22 Handling-cost exclusion facts: store-level handling, distribution, custom-order, pick-and-pack (per the
+  (c)(4) bullet above) → FACT.
 
 **Gate 4 — §263(a) tangible-property questions (always asked; per flagged line where noted):**
 - Q4.1 De minimis safe harbor: AFS? (→ ceiling authority) — **written accounting procedures in place at the
@@ -1129,9 +1155,13 @@ custom-order, pick-and-pack) per the (c)(4) bullet.
 - Q4.4 Election to capitalize repairs per books ((n)) → ANNUAL ELECTION. BAR follow-ups (betterment/restoration/
   adaptation sub-questions) per flagged improvement line.
 
-**Gate 5 — §266 (always asked where classifier flags candidates):** property unimproved AND unproductive this year
-(annual election)? development/construction project (election sticks to completion)? election statement confirmed
-filed? → resolves the still-open §3 item 3 confirmation workflow. **ORDERING NOTE ADDED 2026-07-09** (an adversarial
+**Gate 5 — §266 (always asked where classifier flags candidates) — NUMBERED 2026-07-09:**
+- Q5.1 Property unimproved AND unproductive this year? → ELECTION (annual, year-by-year).
+- Q5.2 Development/construction project? → ELECTION (sticks until the work completes).
+- Q5.3 Election statement confirmed filed with the original return? → FACT. Resolves the still-open §3 item 3
+  confirmation workflow.
+
+**ORDERING NOTE ADDED 2026-07-09** (an adversarial
 trace found a real conflict for a self-constructed real-property asset that is simultaneously a §266(b)(1)(ii)
 development-project candidate and a Gate-7 designated-property/common-feature candidate): per §1.266-1(a)(2),
 §§1.263A-8..-15 apply FIRST, and a §266 election for designated property is valid only if it does not thereby
@@ -1140,47 +1170,63 @@ Gate 7, Gate 5's election question must be asked AFTER Gate 7's per-unit/per-deb
 known, not on Gate 5's own fixed position in the sequence — implementers should treat this as a cross-gate
 `ask_when` dependency, not a strict linear Gate-0-through-7 walk.
 
-**Gate 6 — SCA (ask if self-constructed assets exist; per asset):** the taxpayer's actual cost-allocation method
-of accounting (specific identification / burden rate / standard cost) → **ADDED 2026-07-09** (a field-reachability
-audit found Gate 6 asked for pool/driver assignments without first establishing which of the three methods the
-taxpayer uses — this tool implements Specific Identification only, per Phase C above; burden-rate/standard-cost
-answers must be FLAGGED, not silently forced into a Specific-ID pool/driver structure); SSCM eligibility routes
-(C) or (D) (three sub-facts each); book-capitalized indirect costs already in CIP (double-count guard — **note:**
-Phase C's own text flags the double-count RULE itself as still unresolved, so this answer currently routes to the
-review queue, not a computed adjustment, until that gap closes); pool/driver assignments (validated against
-`sca_drivers.yaml`); the individual materially involved in construction — **officer, or for a partnership/sole
-proprietorship the general/managing partner or proprietor per Q0.1's entity type ADDED 2026-07-09** (an adversarial
-trace found the original "officer" wording doesn't fit a partnership; surfaces the open §8c-adjacent
-officer/partner-comp limitation rather than silently proceeding).
+**Gate 6 — SCA (ask if self-constructed assets exist; per asset) — NUMBERED 2026-07-09:**
+- Q6.1 Cost-allocation method of accounting: specific identification / burden rate / standard cost → FACT.
+  **ADDED 2026-07-09** — a field-reachability audit found Gate 6 asked for pool/driver assignments without first
+  establishing which method the taxpayer uses; this tool implements Specific Identification only (Phase C above) —
+  burden-rate/standard-cost answers must be FLAGGED, not silently forced into a Specific-ID pool/driver structure.
+- Q6.2 SSCM eligibility route: (C) or (D) (three sub-facts each) → FACT.
+- Q6.3 Book-capitalized indirect costs already in CIP (double-count guard) → FACT. **Note:** Phase C's own text
+  flags the double-count RULE itself as unresolved — this answer routes to the review queue, not a computed
+  adjustment, until that gap closes.
+- Q6.4 Pool/driver assignments (validated against `sca_drivers.yaml`) → FACT.
+- Q6.5 Individual materially involved in construction — officer, or for a partnership/sole proprietorship the
+  general/managing partner or proprietor (per Q0.1's entity type) → FACT. **ADDED 2026-07-09** — an adversarial
+  trace found the original "officer" wording doesn't fit a partnership; surfaces the open §8c-adjacent
+  officer/partner-comp limitation rather than silently proceeding.
 
-**Gate 7 — §263A(f) (ask if designated-property candidates exist; per unit, then per debt instrument):** per-unit
-classification (real? improvement + (d)(3)(iii) gate? class life ≥20 + held-for-sale carve-out? period/cost
-estimates with the contemporaneous-records question ((b)(2)(iii))? 90-day/$1M-per-day de minimis? excluded
-property? related-person activities?); unit-of-property structure (common features, benefitted-unit map, per-property
-activity dates — §1.263A-10); produced under contract → customer/contractor role + payments-by-date; computation
-period & measurement-date frequency (METHOD-OF-ACCOUNTING); tracing posture — trace / §1.263A-9(d) no-tracing
-election (METHOD-OF-ACCOUNTING) / AFR-plus-3 (ask_when: $10M test OR small-business route; METHOD-OF-ACCOUNTING,
-forecloses tracing); per-debt eligible-debt exclusion screens ((a)(4)(i)-(ix)); suspension election (120-day facts +
-inherent-cause carve-out; METHOD-OF-ACCOUNTING, all-units consistency); 15-day repayment toggle (per-period, NOT a
-method). Partnerships (from Q0.1): guaranteed payments for use of capital ((c)(2)(iii)).
+**Gate 7 — §263A(f) (ask if designated-property candidates exist) — NUMBERED 2026-07-09:**
 
-**Per-unit/per-debt facts ADDED 2026-07-09** (a field-reachability audit found these already required by Phase D's
-own engine text above but never asked anywhere in this Gate — each belongs in the per-unit or per-debt sub-tree
-noted): industry-specific aged-property production-period extension (tobacco/wine/whiskey-type customary aging,
-gated on `industry`); producing-asset basis + usage-apportionment for equipment/facilities used TO PRODUCE the
-unit (moves real dollars into APE per the bulldozer example above — needs both a "were producing assets used"
-screen and their basis/apportionment method); mid-production acquisition + purchase price (T.D. 10034,
-§1.263A-11(f)); for tax years beginning on/before Oct 2, 2025, the pre-amendment associated-property inputs
-(adjusted basis of the existing structure/common feature, the 5% de minimis test) — `ask_when`: Q0.2's tax year
-falls in the pre-T.D.-10034 window; an explicit `production_complete` date DISTINCT from the FixedAsset schedule's
-`placed_in_service_date` (capitalization runs until the LATER of the two — conflating them silently undercounts
-the computation period); for the AFR-plus-3 $10M-route eligibility screen, the **since-1994** look-back is a
-longer window than Q0.4's ordinary §448(c) 3-year test — do not silently reuse Q0.4's answer, ask this separately;
-the §1.263A-9(d)(1) accounts-payable fold-in sub-election available only under the no-tracing election (a distinct
-choice that lowers the WAIR denominator, not implied by electing no-tracing itself); and — for related-person
-facts — TWO separate questions, not one: related-person ACTIVITIES (used for classification/production-period
-purposes) and related-person COSTS INCURRED BY THE TAXPAYER (used to exclude related-person-incurred costs from
-the taxpayer's own APE) are legally distinct data needs per the Phase D text above.
+*Per-unit sub-tree (repeats per unit):*
+- Q7.1 Real property? → FACT. (Category 1, automatic designation.)
+- Q7.2 Improvement to existing property + the (d)(3)(iii) gate? → FACT.
+- Q7.3 Tangible personal property with class life ≥20 years + held-for-sale carve-out? → FACT. (Category 2/3.)
+- Q7.4 Estimated production period and cost, with the contemporaneous-records question ((b)(2)(iii))? → FACT.
+- Q7.5 90-day production period / $1M-per-day cost de minimis exclusion? → FACT.
+- Q7.6 Otherwise-excluded property (per the exclusion list above)? → FACT.
+- Q7.7 Related-person ACTIVITIES (classification/production-period purposes)? → FACT.
+- Q7.8 Related-person COSTS incurred by the taxpayer (excluded from the taxpayer's own APE)? → FACT. **ADDED
+  2026-07-09** — a distinct data need from Q7.7, previously asked (if at all) as one undifferentiated question.
+- Q7.9 Unit-of-property structure: common features, benefitted-unit map, per-property activity dates (§1.263A-10) → FACT.
+- Q7.10 `production_complete` date, distinct from the FixedAsset schedule's `placed_in_service_date` → FACT.
+  **ADDED 2026-07-09** — capitalization runs until the LATER of the two; conflating them silently undercounts the
+  computation period.
+- Q7.11 (`ask_when`: `industry` indicates customary aging, e.g. tobacco/wine/whiskey) Aged-property production-period
+  extension → FACT. **ADDED 2026-07-09.**
+- Q7.12 Were producing assets/equipment (e.g. owned construction equipment) used to produce this unit? If so, their
+  basis and usage-apportionment method → FACT. **ADDED 2026-07-09** — moves real dollars into APE per the
+  bulldozer example in Phase D above; previously un-asked entirely.
+- Q7.13 Acquired mid-production? If so, purchase price → FACT. **ADDED 2026-07-09** (T.D. 10034, §1.263A-11(f)).
+- Q7.14 (`ask_when`: Q0.2's tax year begins on/before Oct 2, 2025) Pre-amendment associated-property inputs:
+  adjusted basis of the existing structure/common feature; the 5% de minimis test → FACT. **ADDED 2026-07-09.**
+- Q7.15 Produced under contract? Customer or contractor role, and payments-by-date → FACT.
+
+*Taxpayer/computation-level (not per-unit):*
+- Q7.16 Computation period & measurement-date frequency → METHOD-OF-ACCOUNTING.
+- Q7.17 Tracing posture: trace / §1.263A-9(d) no-tracing election / AFR-plus-3 (`ask_when`: $10M test OR
+  small-business route; forecloses tracing) → METHOD-OF-ACCOUNTING.
+- Q7.18 (`ask_when`: Q7.17's AFR-plus-3 $10M route is being evaluated) Since-1994 average-receipts look-back for
+  that eligibility test → FACT. **ADDED 2026-07-09** — a longer window than Q0.4's ordinary 3-year §448(c) test;
+  do not silently reuse Q0.4's answer.
+- Q7.19 (`ask_when`: Q7.17 = no-tracing) Accounts-payable fold-in sub-election (§1.263A-9(d)(1)), which lowers the
+  WAIR denominator → METHOD-OF-ACCOUNTING. **ADDED 2026-07-09** — a distinct choice, not implied by electing
+  no-tracing itself.
+
+*Per-debt-instrument sub-tree (repeats per debt instrument):*
+- Q7.20 Eligible-debt exclusion screens ((a)(4)(i)-(ix)) → FACT.
+- Q7.21 Suspension election (120-day facts + inherent-cause carve-out) → METHOD-OF-ACCOUNTING, all-units consistency.
+- Q7.22 15-day repayment toggle (per-period, NOT a method) → FACT.
+- Q7.23 (`ask_when`: Q0.1 = partnership) Guaranteed payments for use of capital ((c)(2)(iii)) → FACT.
 
 **Build/test notes:** the interview emits (a) a populated `EntityProfile`, (b) the list of schedules Phase A must
 ingest for this taxpayer (only what the answers require), (c) the election/3115 summary for the workpaper, and (d)
