@@ -109,12 +109,20 @@ class CapitalizationPipeline:
         if tax_tb:
             all_warnings += tax_tb["warnings"]
 
-        # Phase C — SCA (pools/assets are computed inputs, passed explicitly)
-        if sca_pools and sca_assets:
+        # Phase C — SCA (pools/assets are computed inputs, passed explicitly).
+        # §263A(i) exempts a small business from ALL of §263A — SCA included,
+        # same gate as Phase D below (found in red-team: SCA previously ran
+        # for exempt taxpayers, and the exempt unicap dict has no
+        # mixed_alloc_ratio key, silently allocating at ratio 0).
+        if sca_pools and sca_assets and not profile.small_business_exempt:
             from .engines.sca import compute_sca
             sscm_ratio = result["unicap"].get("mixed_alloc_ratio", Decimal("0"))
             result["sca"] = compute_sca(sca_pools, sca_assets, sscm_ratio)
             all_warnings += result["sca"]["warnings"]
+        elif sca_pools and sca_assets:
+            all_warnings.append(
+                "SCA skipped: §263A(i)/§448(c) small-business exemption covers "
+                "self-constructed assets too — no §263A capitalization to them.")
 
         # Phase D — §263A(f); exempt entities skip ALL of §263A including (f)
         if data.cip_projects and data.debts and not profile.small_business_exempt:
@@ -156,11 +164,14 @@ class CapitalizationPipeline:
             for ppa in result["ppa_1060"]:
                 all_warnings += ppa["warnings"]
 
-        result["basis_amortization"] = basis_items
-        result["all_warnings"] = all_warnings
+        # prepend blocking errors BEFORE publishing the list — the previous
+        # order depended on list aliasing (a refactor to list(all_warnings)
+        # would have silently dropped the blocking prefix; red-team finding).
         if data.validation.errors:
             all_warnings[:0] = [f"INGESTION ERROR (blocking): {e}"
                                 for e in data.validation.errors]
+        result["basis_amortization"] = basis_items
+        result["all_warnings"] = all_warnings
 
         if generate_workbook:
             tag = company_tag or (profile.entity_name if profile else None) or "entity"

@@ -111,6 +111,32 @@ def test_full_pipeline_runs_every_engine(tmp_path):
     assert r["_output_path"].endswith(".xlsx")
 
 
+def test_engagement_workbook_renders_engine_tabs(tmp_path):
+    """The run_engagement workbook must carry the engine outputs — the three
+    engagement tabs render with the golden §263A(f) total and the Basis &
+    Amortization rows; the legacy TB-only path keeps exactly five tabs (pinned
+    by test_report.py)."""
+    from openpyxl import load_workbook
+    pipe = CapitalizationPipeline(output_dir=str(tmp_path / "out"))
+    profile = EntityProfile(entity_name="Tabs Co",
+                            avg_gross_receipts=Decimal("75000000"))
+    r = pipe.run_engagement(_engagement_json(tmp_path), profile)
+    wb = load_workbook(r["_output_path"])
+    for tab in ("Tax-Basis TB", "Basis & Amortization", "Engine Results"):
+        assert tab in wb.sheetnames, wb.sheetnames
+    ba = wb["Basis & Amortization"]
+    cells = [str(c.value) for row in ba.iter_rows() for c in row if c.value is not None]
+    assert any(v == "376428.57" or v == "376428.57" for v in
+               [f"{c}" for c in cells]) or \
+        any(abs(float(c.value or 0) - 376428.57) < 0.01
+            for row in ba.iter_rows() for c in row
+            if isinstance(c.value, (int, float)))
+    tbtab = wb["Tax-Basis TB"]
+    vals = [c.value for row in tbtab.iter_rows() for c in row
+            if isinstance(c.value, (int, float))]
+    assert 0 in vals or 0.0 in vals          # the tie-check row renders as 0
+
+
 def test_exempt_entity_skips_263af_but_not_174(tmp_path):
     """§263A(i) exemption turns off §263A(f) but NOT §174 (a non-§263A
     provision) — the pipeline must gate them differently."""
@@ -131,3 +157,81 @@ def test_59e_runs_for_individual_amt_exposure(tmp_path):
                             generate_workbook=False)
     items = r["qualified_59e"]["items"]
     assert items and items[0]["category"] == "idc"
+
+
+def test_mspm_and_srm_results_render_to_workbook(tmp_path):
+    """RED-TEAM REGRESSION: the Summary tab indexed SPM-only unicap keys
+    (sec471_pool/absorption_ratio) — the workbook generator crashed with
+    KeyError for EVERY non-exempt MSPM or SRM client while 201 tests stayed
+    green, because no test ever drove analyze() -> engine -> report."""
+    from openpyxl import load_workbook
+    from financial_tools.cap263a.model import TBLine
+    from financial_tools.cap263a.analysis import analyze
+    from financial_tools.cap263a.report import CapitalizationReport
+    lines = [TBLine("5000", "Direct labor", "100", "Production",
+                    amount=Decimal("100000"))]
+    mspm = EntityProfile(avg_gross_receipts=Decimal("75000000"), method="MSPM",
+                         pre_production_471=Decimal("2500000"),
+                         production_471=Decimal("7500000"),
+                         pre_production_additional_263A=Decimal("200000"),
+                         production_additional_263A=Decimal("800000"),
+                         pre_production_471_on_hand=Decimal("1000000"),
+                         production_471_on_hand=Decimal("2000000"),
+                         beginning_DM_not_yet_in_production=Decimal("400000"),
+                         ending_DM_not_yet_in_production=Decimal("800000"),
+                         DM_purchased_during_year=Decimal("1900000"))
+    r = analyze(lines, mspm)
+    assert r["unicap"]["additional_capitalized_to_inventory"] == Decimal("284400.00")
+    wb = load_workbook(CapitalizationReport().generate(
+        r, str(tmp_path / "mspm.xlsx")))
+    summ = wb["Summary Dashboard"]
+    texts = [str(c.value) for row in summ.iter_rows() for c in row if c.value]
+    assert any("MSPM" in t for t in texts)
+
+    srm = EntityProfile(avg_gross_receipts=Decimal("75000000"), method="SRM",
+                        produces=False, acquires_for_resale=True,
+                        purchasing_costs=Decimal("60000"),
+                        current_year_471_costs=Decimal("2000000"),
+                        storage_handling_costs=Decimal("105000"),
+                        beginning_inventory_471=Decimal("400000"),
+                        ending_inventory_471=Decimal("500000"))
+    r2 = analyze(lines, srm)
+    assert r2["unicap"]["additional_capitalized_to_inventory"] == Decimal("36875.00")
+    CapitalizationReport().generate(r2, str(tmp_path / "srm.xlsx"))
+
+
+def test_sca_pipeline_integration_and_exemption_gate(tmp_path):
+    """RED-TEAM: run_engagement's SCA path was never tested, and it ran SCA
+    for §263A(i)-exempt taxpayers (whose unicap dict has no mixed_alloc_ratio
+    key, silently allocating at ratio 0). SCA is a §263A mechanic — the
+    exemption must skip it, with a visible note."""
+    from financial_tools.cap263a.model import CostPool, SelfConstructedAsset
+    pools = [CostPool(pool_id="HR", description="HR support", amount=Decimal("100000"),
+                      driver="headcount", is_mixed_service=True,
+                      targets={"A1": Decimal("75"), "A2": Decimal("25")})]
+    assets = [SelfConstructedAsset(asset_id="A1", book_cost=Decimal("0"), sscm_eligible=True),
+              SelfConstructedAsset(asset_id="A2", book_cost=Decimal("0"), sscm_eligible=True)]
+    pipe = CapitalizationPipeline(output_dir=str(tmp_path / "out"))
+    big = EntityProfile(avg_gross_receipts=Decimal("75000000"),
+                        mixed_alloc_ratio=Decimal("0.6"))
+    r = pipe.run_engagement(_engagement_json(tmp_path), big,
+                            sca_pools=pools, sca_assets=assets,
+                            generate_workbook=False)
+    per = r["sca"]["per_asset"]
+    assert per["A1"]["mixed_263a"] == Decimal("45000.00")
+    assert per["A2"]["mixed_263a"] == Decimal("15000.00")
+
+    small = EntityProfile(avg_gross_receipts=Decimal("1000000"))
+    r2 = pipe.run_engagement(_engagement_json(tmp_path), small,
+                             sca_pools=pools, sca_assets=assets,
+                             generate_workbook=False)
+    assert "sca" not in r2
+    assert any("SCA skipped" in w for w in r2["all_warnings"])
+
+
+def test_bool_in_money_field_raises_clear_error():
+    """RED-TEAM: a JSON `true` in a money field crashed with a bare
+    InvalidOperation deep inside Decimal(); it must name the field."""
+    import pytest
+    with pytest.raises(TypeError, match="ending_inventory_471"):
+        EntityProfile(ending_inventory_471=True)

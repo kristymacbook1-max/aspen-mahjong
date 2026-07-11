@@ -60,6 +60,17 @@ class CapitalizationReport:
         self._create_asset_basis()
         self._create_adjusted_is()
         self._create_method_changes()
+        # Engagement-level tabs render only when their engines actually ran
+        # (run_engagement path) — the legacy TB-only path keeps exactly the
+        # original five tabs, which existing tests pin by name.
+        if result.get("tax_basis_tb"):
+            self._create_tax_basis_tab()
+        if result.get("basis_amortization") or result.get("interest_263af") \
+                or result.get("sca"):
+            self._create_basis_amortization_tab()
+        if any(result.get(k) for k in ("re_174", "intangibles_263a45",
+                                       "qualified_59e", "ppa_1060")):
+            self._create_engine_results_tab()
         # order tabs: Summary first. The offset must be relative to Summary
         # Dashboard's OWN current index (it's created 2nd, right after
         # Classified TB, not last) — a fixed "-(total sheets - 1)" offset only
@@ -272,19 +283,48 @@ class CapitalizationReport:
 
         # --- §263A UNICAP computation ---
         u = self._r["unicap"]
-        apply_section_header(ws, row, 1, 4, "§263A UNICAP")
+        method = u.get("method", "SPM")
+        apply_section_header(ws, row, 1, 4, f"§263A UNICAP ({method})")
         row += 1
         if u.get("exempt"):
             self._label(ws, row, 1, u["note"])
         else:
-            for lbl, val, pct in [
+            # Method-specific intermediates: each engine returns its own
+            # ratio-table shape (a KeyError here shipped once — the Summary
+            # indexed SPM-only keys for every method; see TAX_DECISIONS §16).
+            common_top = [
                 ("Mixed-service SSCM allocation ratio", u["mixed_alloc_ratio"], True),
                 ("Mixed capitalized to §263A", u["mixed_capitalized"], False),
                 ("Mixed remaining deductible", u["mixed_deductible"], False),
-                ("§471 cost pool", u["sec471_pool"], False),
-                ("Additional §263A pool (incl. mixed)", u["additional_263a_pool"], False),
-                ("SPM absorption ratio", u["absorption_ratio"], True),
-                ("§471 costs in ending inventory", u["ending_inventory_471"], False),
+            ]
+            if method == "MSPM":
+                method_rows = [
+                    ("Pre-production additional §263A pool", u["pre_production_pool"], False),
+                    ("Pre-production absorption ratio", u["pre_production_ratio"], True),
+                    ("Residual pre-production §263A (rolled to production)",
+                     u["residual_pre_production_263A"], False),
+                    ("Direct materials adjustment", u["direct_materials_adjustment"], False),
+                    ("Production absorption ratio", u["production_ratio"], True),
+                    ("Pre-production §471 on hand at year end",
+                     u["pre_production_471_on_hand"], False),
+                    ("Production §471 on hand at year end",
+                     u["production_471_on_hand"], False),
+                ]
+            elif method == "SRM":
+                method_rows = [
+                    ("Purchasing ratio", u["purchasing_ratio"], True),
+                    ("Storage & handling ratio", u["storage_handling_ratio"], True),
+                    ("Combined absorption ratio", u["combined_ratio"], True),
+                    ("§471 costs in ending inventory", u["ending_inventory_471"], False),
+                ]
+            else:
+                method_rows = [
+                    ("§471 cost pool", u["sec471_pool"], False),
+                    ("Additional §263A pool (incl. mixed)", u["additional_263a_pool"], False),
+                    ("SPM absorption ratio", u["absorption_ratio"], True),
+                    ("§471 costs in ending inventory", u["ending_inventory_471"], False),
+                ]
+            for lbl, val, pct in common_top + method_rows + [
                 ("Additional §263A capitalized to ending inventory",
                  u["additional_capitalized_to_inventory"], False),
                 ("Adjusted deductible after mixed allocation",
@@ -329,7 +369,9 @@ class CapitalizationReport:
             ("§263(a) Elective (safe-harbor capitalize)", b["§263(a) Elective"],
              "Reg §1.263(a)-1(f)/-3(h)(i)(n)"),
             ("§263A additional cost to ending inventory",
-             u.get("additional_capitalized_to_inventory", 0), "SPM Reg §1.263A-2(b)"),
+             u.get("additional_capitalized_to_inventory", 0),
+             {"MSPM": "MSPM Reg §1.263A-2(c)", "SRM": "SRM Reg §1.263A-3(d)"}.get(
+                 u.get("method", "SPM"), "SPM Reg §1.263A-2(b)")),
             ("§263A(f) interest (avoided-cost stub — see Method Changes tab)",
              self._interest_stub(), "Reg §1.263A-9"),
             ("§266 carrying charges (elective)", b["§266 Carrying"], "Reg §1.266-1"),
@@ -453,3 +495,183 @@ class CapitalizationReport:
         ws.column_dimensions["B"].width = 16
         ws.column_dimensions["C"].width = 16
         ws.column_dimensions["D"].width = 46
+
+    # ------------------------------------------------------------------
+    # Engagement-level tabs (run_engagement path only)
+    # ------------------------------------------------------------------
+    def _create_tax_basis_tab(self):
+        tb = self._r["tax_basis_tb"]
+        ws = self._scaffold(
+            "Tax-Basis TB",
+            "Runtime Pipeline Step 2: book TB + book-tax differences = the tax-basis "
+            "trial balance every downstream computation classifies. The M-1 block "
+            "ties by construction; a nonzero tie-check means a BTD was dropped.")
+        row = 5
+        apply_section_header(ws, row, 1, 3, "M-1 reconciliation")
+        row += 1
+        m1 = tb["m1_reconciliation"]
+        for lbl, key in [("Book P&L total", "book_total"),
+                         ("Book-tax differences applied", "btd_total"),
+                         ("Tax-basis P&L total", "tax_total"),
+                         ("Tie-check (must be 0)", "tie_check")]:
+            self._label(ws, row, 1, lbl, bold=True)
+            self._money(ws, row, 2, float(m1[key]),
+                        fill=FILL_HIGHLIGHT_GREEN if key == "tax_total" else None)
+            row += 1
+        row += 1
+        apply_section_header(ws, row, 1, 3, "Tax-basis totals by cost center")
+        row += 1
+        for h_i, h in enumerate(["Cost center", "Tax-basis total"]):
+            ws.cell(row, 1 + h_i, h)
+        apply_header_row(ws, row, 1, 2)
+        row += 1
+        for cc, amt in sorted(tb["cc_rollup"].items()):
+            self._label(ws, row, 1, cc or "(none)")
+            self._money(ws, row, 2, float(amt))
+            row += 1
+        for w in tb["warnings"]:
+            self._label(ws, row, 1, f"⚠ {w}")
+            row += 1
+        ws.column_dimensions["A"].width = 44
+        ws.column_dimensions["B"].width = 18
+
+    def _create_basis_amortization_tab(self):
+        ws = self._scaffold(
+            "Basis & Amortization",
+            "The shared Basis & Amortization Schedule — every engine's capitalized "
+            "postings in one place (Phases C/D/F/G/H), with first-year amortization "
+            "under each item's own convention. recovery = blank means capitalized "
+            "with no amortization (land, syndication, indefinite-life pending SME).")
+        row = 5
+        items = self._r.get("basis_amortization") or []
+        if items:
+            apply_section_header(ws, row, 1, 7, "Capitalized items (AmortizableItem rows)")
+            row += 1
+            headers = ["Item", "Category", "Basis", "Recovery (mo)", "Convention",
+                       "Year-1 amortization", "Source / flags"]
+            for i, h in enumerate(headers):
+                ws.cell(row, 1 + i, h)
+            apply_header_row(ws, row, 1, len(headers))
+            row += 1
+            total_basis = total_amort = 0.0
+            for it in items:
+                self._label(ws, row, 1, f"{it.item_id} {it.description}".strip())
+                self._label(ws, row, 2, it.category)
+                self._money(ws, row, 3, float(it.basis))
+                self._label(ws, row, 4, str(it.recovery_months or ""))
+                self._label(ws, row, 5, it.convention)
+                amort = float(it.first_year_amortization())
+                self._money(ws, row, 6, amort)
+                self._label(ws, row, 7, "; ".join([it.source] + list(it.flags)).strip("; "))
+                total_basis += float(it.basis)
+                total_amort += amort
+                row += 1
+            self._label(ws, row, 1, "Total", bold=True)
+            self._money(ws, row, 3, total_basis, bold=True, fill=FILL_HIGHLIGHT_GREEN)
+            self._money(ws, row, 6, total_amort, bold=True)
+            row += 2
+        interest = self._r.get("interest_263af")
+        if interest:
+            apply_section_header(ws, row, 1, 7, "§263A(f) interest by unit (avoided-cost method)")
+            row += 1
+            for i, h in enumerate(["Unit", "Avg excess expenditures", "Traced interest",
+                                   "Excess amount", "Total capitalized",
+                                   "Book already capitalized", "Tax delta to post"]):
+                ws.cell(row, 1 + i, h)
+            apply_header_row(ws, row, 1, 7)
+            row += 1
+            for uid, u in interest["per_unit"].items():
+                self._label(ws, row, 1, uid)
+                self._money(ws, row, 2, float(u["average_excess"]))
+                self._money(ws, row, 3, float(u["traced_interest"]))
+                self._money(ws, row, 4, float(u["excess_expenditure_amount"]))
+                self._money(ws, row, 5, float(u["total_capitalized"]))
+                self._money(ws, row, 6, float(u["book_capitalized_interest"]))
+                self._money(ws, row, 7, float(u["tax_delta_to_post"]))
+                row += 1
+            self._label(ws, row, 1, "Total capitalized (traced + excess)", bold=True)
+            self._money(ws, row, 5, float(interest["total_capitalized"]), bold=True,
+                        fill=FILL_HIGHLIGHT_GREEN)
+            row += 2
+        sca = self._r.get("sca")
+        if sca:
+            apply_section_header(ws, row, 1, 6, "Self-constructed assets (Phase C allocation)")
+            row += 1
+            for i, h in enumerate(["Asset", "Book cost (A)", "Indirect §263A",
+                                   "Mixed §263A", "Additional (B)", "Adjusted basis pre-interest"]):
+                ws.cell(row, 1 + i, h)
+            apply_header_row(ws, row, 1, 6)
+            row += 1
+            for aid, a in sca["per_asset"].items():
+                self._label(ws, row, 1, aid)
+                for ci, key in enumerate(["book_cost", "indirect_263a", "mixed_263a",
+                                          "additional_263a", "adjusted_basis_pre_interest"]):
+                    self._money(ws, row, 2 + ci, float(a[key]))
+                row += 1
+        for col, width in (("A", 40), ("B", 18), ("C", 16), ("D", 14),
+                           ("E", 14), ("F", 18), ("G", 30)):
+            ws.column_dimensions[col].width = width
+
+    def _create_engine_results_tab(self):
+        ws = self._scaffold(
+            "Engine Results",
+            "§174/§174A, §1.263(a)-4/-5 + start-up, §59(e), and §1060 engine outputs. "
+            "Detail rows live on Basis & Amortization; this tab is the per-regime "
+            "summary plus every engine warning (nothing is stderr-only).")
+        row = 5
+        re_out = self._r.get("re_174")
+        if re_out:
+            apply_section_header(ws, row, 1, 4, "§174/§174A research & experimental")
+            row += 1
+            for lbl, val in [("Capitalized (foreign + elected domestic)",
+                              re_out["capitalized_total"]),
+                             ("Current-year deduction (expensed domestic + catch-up)",
+                              re_out["current_year_deduction"])]:
+                self._label(ws, row, 1, lbl, bold=True)
+                self._money(ws, row, 2, float(val))
+                row += 1
+            row += 1
+        ig = self._r.get("intangibles_263a45")
+        if ig:
+            apply_section_header(ws, row, 1, 4,
+                                 "§1.263(a)-4/-5 intangibles, transaction costs, start-up")
+            row += 1
+            for lbl, val in [("Capitalized (posted deltas)", ig["capitalized_total"]),
+                             ("Currently deductible", ig["deductible_total"])]:
+                self._label(ws, row, 1, lbl, bold=True)
+                self._money(ws, row, 2, float(val))
+                row += 1
+            row += 1
+        qe = self._r.get("qualified_59e")
+        if qe:
+            apply_section_header(ws, row, 1, 4, "§59(e) qualified-expenditure elections")
+            row += 1
+            if qe["items"]:
+                for it in qe["items"]:
+                    self._label(ws, row, 1, f"{it.get('item_id', '')} ({it.get('category', '')})")
+                    self._money(ws, row, 2, float(it.get("amount", 0)))
+                    row += 1
+            else:
+                self._label(ws, row, 1, "No items scheduled (see gating warning below).")
+                row += 1
+            row += 1
+        for ppa in self._r.get("ppa_1060") or []:
+            apply_section_header(ws, row, 1, 4, "§1060 purchase price allocation (Form 8594)")
+            row += 1
+            for klass, amt in ppa["by_class"].items():
+                self._label(ws, row, 1, f"Class {klass}")
+                self._money(ws, row, 2, float(amt))
+                row += 1
+            self._label(ws, row, 1, "Class VII (goodwill/going concern, residual)", bold=True)
+            self._money(ws, row, 2, float(ppa["class_vii_residual"]),
+                        fill=FILL_HIGHLIGHT_GREEN)
+            row += 2
+        warnings_ = self._r.get("all_warnings") or []
+        if warnings_:
+            apply_section_header(ws, row, 1, 4, "All engine warnings")
+            row += 1
+            for w in warnings_:
+                self._label(ws, row, 1, f"⚠ {w}")
+                row += 1
+        ws.column_dimensions["A"].width = 56
+        ws.column_dimensions["B"].width = 18

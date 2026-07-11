@@ -112,7 +112,13 @@ class EntityProfile:
 
     def __post_init__(self):
         for f in self._DECIMAL_FIELDS:
-            setattr(self, f, Decimal(str(getattr(self, f) or 0)))
+            v = getattr(self, f)
+            # bool is an int subclass but str(True) is not a valid Decimal —
+            # a JSON `true` in a money field crashed with a bare
+            # InvalidOperation deep in Decimal(); fail with the field name.
+            if isinstance(v, bool):
+                raise TypeError(f"EntityProfile.{f} expects a dollar amount, got bool {v!r}")
+            setattr(self, f, Decimal(str(v or 0)))
         if self.mixed_alloc_ratio is not None:
             self.mixed_alloc_ratio = Decimal(str(self.mixed_alloc_ratio))
 
@@ -397,6 +403,7 @@ def compute_spm(result: dict, profile: EntityProfile) -> dict:
 
     return {
         "exempt": False,
+        "method": "SPM",
         "warnings": warnings_,
         "mixed_alloc_ratio": ratio,
         "production_labor": prod_labor, "total_labor": total_labor,
