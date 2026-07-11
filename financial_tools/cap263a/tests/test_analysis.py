@@ -149,15 +149,16 @@ def test_negative_additional_pool_is_warned_with_large_producer_rule():
 
 
 def test_unimplemented_method_and_stale_threshold_are_warned():
-    """--method MSPM/SRM silently computed SPM with no indication; a tax year
+    """An UNKNOWN --method silently computed SPM with no indication; a tax year
     with no published §448(c) threshold silently used the 2026 figure. Both
-    must surface as warnings."""
+    must surface as warnings. (Updated 2026-07-09: MSPM/SRM now dispatch to
+    real engines, so the unknown-method fallthrough is tested with a fake name.)"""
     lines = [TBLine("5000", "Direct labor", "100", "Production", amount=Decimal("100000"))]
-    p = EntityProfile(avg_gross_receipts=Decimal("75000000"), method="MSPM", tax_year=2027)
+    p = EntityProfile(avg_gross_receipts=Decimal("75000000"), method="FACTS", tax_year=2027)
     assert p.sec448_threshold_is_estimate
     u = analyze(lines, p)["unicap"]
     joined = " ".join(u["warnings"])
-    assert "MSPM" in joined and "not implemented" in joined
+    assert "FACTS" in joined and "not implemented" in joined
     assert "2027" in joined and "VERIFY" in joined
 
 

@@ -50,6 +50,34 @@ class EntityProfile:
     accumulated_production_expenditures: Decimal = Decimal("0")
     avoided_cost_rate: Decimal = Decimal("0")
     has_designated_property: bool = False
+    # --- Interview-populated facts (Phase E Gates 0-2) ---
+    inventory_method: str = "FIFO"         # FIFO / lifo_specific / lifo_dollar_value
+    is_first_263a_year: bool = False
+    prior_year_method: str = ""            # SPM/MSPM/SRM/facts/none-noncompliant/""
+    production_activity_level: str = ""    # "" / de_minimis / more_than_de_minimis
+    production_incident_to_resale: bool = False
+    private_label_goods: bool = False
+    sscm_ratio_method: str = "labor"       # labor / production_cost
+    include_negative_263a: bool = False
+    # --- MSPM balance inputs (Gate 3, Q3.2-Q3.10; §1.263A-2(c)) ---
+    pre_production_471: Decimal = Decimal("0")
+    production_471: Decimal = Decimal("0")
+    pre_production_additional_263A: Decimal = Decimal("0")
+    production_additional_263A: Decimal = Decimal("0")
+    pre_production_471_on_hand: Decimal = Decimal("0")
+    production_471_on_hand: Decimal = Decimal("0")
+    beginning_DM_not_yet_in_production: Decimal = Decimal("0")
+    ending_DM_not_yet_in_production: Decimal = Decimal("0")
+    DM_purchased_during_year: Decimal = Decimal("0")
+    mspm_mixed_split_method: str = "direct_material"   # direct_material / labor
+    mspm_90pct_split_election: bool = False
+    # --- SRM balance inputs (Gate 3, Q3.11-Q3.18; §1.263A-3(d)) ---
+    purchasing_costs: Decimal = Decimal("0")           # purchasing-ratio NUMERATOR
+    current_year_471_costs: Decimal = Decimal("0")     # "current year's purchases"
+    storage_handling_costs: Decimal = Decimal("0")
+    beginning_inventory_471: Decimal = Decimal("0")    # LIFO carrying value if LIFO
+    srm_variation_a: bool = False          # exclude beginning inv from S&H denominator
+    srm_variation_b: bool = False          # LIFO: multiply by total ending §471
 
     THRESHOLDS = {2024: Decimal("30000000"), 2025: Decimal("31000000"),
                   2026: Decimal("32000000")}
@@ -70,11 +98,21 @@ class EntityProfile:
     # required — and MSPM/SRM have NO size restriction on negative adjustments).
     LARGE_PRODUCER_THRESHOLD = Decimal("50000000")
 
+    _DECIMAL_FIELDS = (
+        "avg_gross_receipts", "ending_inventory_471",
+        "accumulated_production_expenditures", "avoided_cost_rate",
+        "pre_production_471", "production_471",
+        "pre_production_additional_263A", "production_additional_263A",
+        "pre_production_471_on_hand", "production_471_on_hand",
+        "beginning_DM_not_yet_in_production", "ending_DM_not_yet_in_production",
+        "DM_purchased_during_year",
+        "purchasing_costs", "current_year_471_costs",
+        "storage_handling_costs", "beginning_inventory_471",
+    )
+
     def __post_init__(self):
-        self.avg_gross_receipts = Decimal(str(self.avg_gross_receipts or 0))
-        self.ending_inventory_471 = Decimal(str(self.ending_inventory_471 or 0))
-        self.accumulated_production_expenditures = Decimal(str(self.accumulated_production_expenditures or 0))
-        self.avoided_cost_rate = Decimal(str(self.avoided_cost_rate or 0))
+        for f in self._DECIMAL_FIELDS:
+            setattr(self, f, Decimal(str(getattr(self, f) or 0)))
         if self.mixed_alloc_ratio is not None:
             self.mixed_alloc_ratio = Decimal(str(self.mixed_alloc_ratio))
 
@@ -214,14 +252,8 @@ def _q(x):
 
 
 def compute_unicap(result: dict, profile: EntityProfile) -> dict:
-    """§263A UNICAP: SSCM mixed-service allocation + SPM absorption ratio.
-
-    Mixed-service costs are split into a capitalizable share (labor-based SSCM
-    ratio, unless overridden) that joins the additional §263A pool, and a
-    deductible remainder. The simplified production method then computes the
-    absorption ratio (additional §263A ÷ §471) and the additional §263A cost
-    capitalized to ending inventory.
-    """
+    """§263A UNICAP dispatcher (BUILD_PLAN.md Phase B): exemption gate first,
+    then SPM (here) / MSPM / SRM (engines.inventory) on `profile.method`."""
     if profile.small_business_exempt:
         w = []
         if profile.sec448_threshold_is_estimate:
@@ -233,7 +265,20 @@ def compute_unicap(result: dict, profile: EntityProfile) -> dict:
                 "warnings": w,
                 "mixed_capitalized": Decimal("0"), "mixed_deductible": result["mixed_total"],
                 "absorption_ratio": Decimal("0"), "additional_capitalized_to_inventory": Decimal("0")}
+    if profile.method == "MSPM":
+        from .engines.inventory import compute_mspm
+        return compute_mspm(result, profile)
+    if profile.method == "SRM":
+        from .engines.inventory import compute_srm
+        return compute_srm(result, profile)
+    return compute_spm(result, profile)
 
+
+def compute_sscm(result: dict, profile: EntityProfile) -> dict:
+    """SSCM mixed-service allocation (§1.263A-1(h)) — shared by SPM/MSPM/SRM.
+
+    Returns ratio, labor pools, capitalizable/deductible mixed split, and any
+    ratio warning (None when clean)."""
     rows = result["rows"]
     # Reg §1.263A-1(h)(4) (CORRECTED 2026-07-09 against the regulation text —
     # a prior version of this comment asserted the opposite rule on both
@@ -283,6 +328,19 @@ def compute_unicap(result: dict, profile: EntityProfile) -> dict:
     mixed = result["mixed_total"]
     mixed_cap = _q(mixed * ratio)
     mixed_ded = mixed - mixed_cap
+    return {"mixed_alloc_ratio": ratio, "production_labor": prod_labor,
+            "total_labor": total_labor, "mixed_capitalized": mixed_cap,
+            "mixed_deductible": mixed_ded, "ratio_warning": ratio_warn}
+
+
+def compute_spm(result: dict, profile: EntityProfile) -> dict:
+    """Simplified production method (§1.263A-2(b)): SSCM split + absorption
+    ratio (additional §263A ÷ §471) applied to ending §471 inventory."""
+    sscm = compute_sscm(result, profile)
+    ratio = sscm["mixed_alloc_ratio"]
+    prod_labor, total_labor = sscm["production_labor"], sscm["total_labor"]
+    mixed_cap, mixed_ded = sscm["mixed_capitalized"], sscm["mixed_deductible"]
+    ratio_warn = sscm["ratio_warning"]
 
     sec471_pool = result["bucket_totals"]["Inventory §471"]
     additional_pool = result["bucket_totals"]["§263A Additional"] + mixed_cap

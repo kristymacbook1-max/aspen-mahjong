@@ -106,11 +106,11 @@ def test_warnings_render_on_summary(tmp_path):
     negative pools) must be visible in the workpaper itself, not just stderr."""
     lines = [TBLine("5000", "Direct labor", "100", "Production", amount=Decimal("100000"))]
     r = analyze(lines, EntityProfile(avg_gross_receipts=Decimal("75000000"),
-                                     method="MSPM", tax_year=2027))
+                                     method="FACTS", tax_year=2027))
     path = os.path.join(tmp_path, "warn.xlsx")
     wb = load_workbook(CapitalizationReport().generate(r, path))
     summ = wb["Summary Dashboard"]
     cautions = [c.value for row in summ.iter_rows() for c in row
                 if isinstance(c.value, str) and c.value.startswith("⚠")]
-    assert any("MSPM" in c for c in cautions)
+    assert any("FACTS" in c for c in cautions)
     assert any("2027" in c for c in cautions)
