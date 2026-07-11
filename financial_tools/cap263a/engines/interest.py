@@ -91,15 +91,23 @@ def _normalize_date_key(k: str) -> str:
     return s
 
 
-def _outstanding_at(debt: DebtInstrument, d: date) -> Decimal:
+def _outstanding_at(debt: DebtInstrument, d: date,
+                    misses: Optional[List[str]] = None) -> Decimal:
     """Point-in-time outstanding balance on measurement date d: the dated
     schedule when supplied, else the principal (= average outstanding
-    fallback, per the DebtInstrument data contract)."""
+    fallback). A debt WITH a dated schedule that lacks this specific date
+    records a miss — silently substituting principal distorted WAIR by 3x
+    in the round-3 counterexample. Keys must already be normalized (done
+    once per debt in compute_263af — re-normalizing the whole dict per call
+    was O(dates² × debts): 128s on a 365-date/200-debt engagement)."""
     if not debt.outstanding_by_date:
         return debt.principal
-    normalized = {_normalize_date_key(k): v
-                  for k, v in debt.outstanding_by_date.items()}
-    return normalized.get(d.isoformat(), debt.principal)
+    iso = d.isoformat()
+    if iso not in debt.outstanding_by_date:
+        if misses is not None:
+            misses.append(f"{debt.debt_id or debt.description}@{iso}")
+        return debt.principal
+    return debt.outstanding_by_date[iso]
 
 
 def compute_263af(cip_projects: List[CIPProject],
@@ -126,6 +134,23 @@ def compute_263af(cip_projects: List[CIPProject],
     # model's is_eligible_debt property owns the rule — do not reimplement.
     eligible: List[DebtInstrument] = []
     for debt in debts:
+        if debt.outstanding_by_date:
+            # normalize dated-balance keys ONCE per instrument (in place —
+            # this engine already mutates the floored interest field below)
+            debt.outstanding_by_date = {
+                _normalize_date_key(k): v
+                for k, v in debt.outstanding_by_date.items()}
+        if debt.interest_incurred < 0:
+            # a negative incurred figure produced a NEGATIVE WAIR, negative
+            # capitalization, and a fabricated deductible remainder through
+            # the min() consumption chain (round-3 fuzz, confirmed) —
+            # floor + warn, mirroring the SCA negative-driver block
+            warnings.append(
+                f"NEGATIVE-INTEREST-INCURRED [{debt.debt_id or debt.description}]: "
+                f"${debt.interest_incurred:,.2f} floored to 0 — interest "
+                f"incurred cannot be negative; route rebates/adjustments "
+                f"through the schedule, not a negative figure.")
+            debt.interest_incurred = _ZERO
         if debt.is_eligible_debt:
             eligible.append(debt)
         else:
@@ -150,20 +175,39 @@ def compute_263af(cip_projects: List[CIPProject],
         else:
             nontraced.append(debt)
 
-    # Union of every unit's measurement dates — the per-date grid the
-    # nontraced pool's average outstanding is taken over when dated
-    # balances exist (§1.263A-9(c)(5)(iii): average nontraced debt
-    # outstanding over the computation period's measurement dates).
-    all_dates = sorted({s.measurement_date
-                        for p in cip_projects for s in p.snapshots
-                        if s.measurement_date is not None})
+    # The computation period's measurement-date grid (§1.263A-9(f)):
+    # measurement dates are ONE taxpayer-level convention, not per-unit data
+    # grids. Use the union ONLY when every unit's dates nest inside the
+    # largest unit's set (a partial-period unit on the same convention).
+    # A naive union of mixed frequencies (one monthly unit + one quarterly
+    # unit) zero-padded every unit against 16 dates — a 4x understatement of
+    # a full-year quarterly unit's average excess (round-3 red team, found
+    # in round 2's own fix). Mixed grids get a HARD warning and per-unit
+    # denominators (no zero-padding), never silent cross-contamination.
+    per_unit_dates = [
+        {s.measurement_date for s in p.snapshots if s.measurement_date is not None}
+        for p in cip_projects if p.snapshots]
+    union_dates = set().union(*per_unit_dates) if per_unit_dates else set()
+    largest = max(per_unit_dates, key=len) if per_unit_dates else set()
+    grids_nested = bool(per_unit_dates) and largest == union_dates and all(
+        ds <= largest for ds in per_unit_dates)
+    if per_unit_dates and not grids_nested:
+        warnings.append(
+            "MIXED-MEASUREMENT-GRID: units carry snapshot dates on different "
+            "conventions (their date sets do not nest) — §1.263A-9(f) uses "
+            "ONE taxpayer-level measurement-date convention. Each unit was "
+            "averaged over ITS OWN dates (no zero-padding); align the CIP "
+            "snapshot schedules to one grid before relying on this "
+            "computation.")
+    all_dates = sorted(union_dates) if grids_nested else []
 
     # ---- WAIR (§1.263A-9(c)(5)(iii)) — one taxpayer-level rate -----------
     nontraced_interest = sum((d.interest_incurred for d in nontraced), _ZERO)
     avg_nontraced_outstanding = _ZERO
+    balance_misses: List[str] = []
     if nontraced:
         if all_dates and any(d.outstanding_by_date for d in nontraced):
-            total = sum((_outstanding_at(debt, d)
+            total = sum((_outstanding_at(debt, d, balance_misses)
                          for d in all_dates for debt in nontraced), _ZERO)
             avg_nontraced_outstanding = total / Decimal(len(all_dates))
         else:
@@ -241,7 +285,7 @@ def compute_263af(cip_projects: List[CIPProject],
             # traced_debt_d is a point-in-time tracing snapshot, NOT
             # min(APE_d, principal) — see §1.263A-9(c)(5)(i)(B)'s
             # Property D/E example.
-            traced_d = sum((_outstanding_at(d, s.measurement_date)
+            traced_d = sum((_outstanding_at(d, s.measurement_date, balance_misses)
                             for d in unit_debts), _ZERO)
             traced_by_date[iso] = traced_d
             excess_by_date[iso] = max(_ZERO, s.cumulative_ape - traced_d)
@@ -282,6 +326,15 @@ def compute_263af(cip_projects: List[CIPProject],
             "traced_interest": _q(traced_interest),
         }
 
+    if balance_misses:
+        shown = ", ".join(balance_misses[:6])
+        more = f" (+{len(balance_misses) - 6} more)" if len(balance_misses) > 6 else ""
+        warnings.append(
+            f"DATED-BALANCE-MISSING: debts with dated balance schedules lack "
+            f"a balance on these measurement dates — principal was "
+            f"substituted, which can distort WAIR and traced-debt snapshots: "
+            f"{shown}{more}. Complete the debt balance schedule.")
+
     # ---- pro-rata cap on the excess pool ONLY (§1.263A-9(c)(1)/(c)(7)) ---
     total_available = nontraced_interest + below_afr_interest + guaranteed_payments
     sum_raw = sum(raw_excess.values(), _ZERO)
@@ -301,11 +354,22 @@ def compute_263af(cip_projects: List[CIPProject],
             f"never prorated.")
 
     # ---- finalize per-unit dollars + basis reconciliation (Step 3b) ------
+    # Penny-plug after proration: quantizing each unit independently drifted
+    # Σ excess a cent past total_available (capitalized interest with no
+    # interest source — round-3 fuzz). Plug the largest unit so the
+    # prorated sum lands exactly on the cap, same pattern as SCA's splits.
+    quantized = {pid: _q(amt) for pid, amt in raw_excess.items()}
+    if prorated and quantized:
+        drift = sum(quantized.values(), _ZERO) - _q(total_available)
+        if drift != 0:
+            largest = max(quantized, key=lambda p: quantized[p])
+            quantized[largest] -= drift
+
     total_traced = _ZERO
     total_excess = _ZERO
     projects_by_id = {p.project_id: p for p in cip_projects}
     for pid, unit in per_unit.items():
-        excess_amount = _q(raw_excess[pid])
+        excess_amount = quantized[pid]
         unit["excess_expenditure_amount"] = excess_amount
         unit["total_capitalized"] = unit["traced_interest"] + excess_amount
         total_traced += unit["traced_interest"]

@@ -53,6 +53,15 @@ def compute_1060_allocation(ppa: PurchasePriceAllocation) -> dict:
     shortfall_hit = False
     for cls in CLASS_ORDER:
         fmv = ppa.class_fmv.get(cls, Decimal("0"))
+        if fmv < 0:
+            # a negative FMV *increased* `remaining`, fabricating phantom
+            # Class VII goodwill from a zero-consideration deal while the
+            # sum still tied (round-3 fuzz) — treated as zero, warned.
+            warnings.append(
+                f"NEGATIVE-CLASS-FMV [{ppa.transaction_id}]: Class {cls} FMV "
+                f"${fmv:,.2f} is invalid — treated as $0; fix the valuation.")
+            by_class[cls] = Decimal("0")
+            continue
         if shortfall_hit:
             by_class[cls] = Decimal("0")
             continue

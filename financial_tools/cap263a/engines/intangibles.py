@@ -208,6 +208,28 @@ def compute_263a4_5(transaction_costs: List[TransactionCostItem],
             row["treatment"] = "twelve_month_rule_deduct"
             row["deductible"] = it.amount + it.facilitative_costs
             deductible_total += row["deductible"]
+            # commissions are categorically outside the de minimis AND the
+            # 12-month deduction path — round 2's fix covered only the
+            # capitalize branch; a commission on a 12-month-rule item
+            # vanished entirely (round-3 fuzz: neither deducted nor
+            # capitalized nor flagged)
+            if it.facilitative_commissions > 0:
+                row["flags"].append("E4-COMMISSIONS-ALWAYS-CAPITALIZED")
+                row["capitalized"] = it.facilitative_commissions
+                delta, recon_w = reconcile(
+                    Decimal("0"), it.facilitative_commissions,
+                    f"12-month-rule item commissions {it.item_id or it.description}")
+                warnings.extend(recon_w)
+                amortizable.append(AmortizableItem(
+                    item_id=it.item_id, description=f"{it.description} (commissions)",
+                    category="intangible", basis=delta, recovery_months=None,
+                    convention="none", start_year=current_tax_year,
+                    source="Phase G compute_263a4_5",
+                    authority="§1.263(a)-4(e)(4): commissions always facilitative",
+                    flags=["E4-COMMISSIONS-ALWAYS-CAPITALIZED",
+                           "INDEFINITE-LIFE-SME-REVIEW"]))
+                row["posted_basis"] = delta
+                capitalized_total += delta
             intangible_items.append(row)
             continue
         if passes_12mo is None and (it.benefit_start or it.benefit_end):
@@ -238,6 +260,11 @@ def compute_263a4_5(transaction_costs: List[TransactionCostItem],
             authority = "§197(a): acquired-with-business intangible, 15-year"
         elif it.benefit_start and it.benefit_end:
             recovery = _months_between(it.benefit_start, it.benefit_end)
+            if recovery < 1:
+                # a sub-one-month term parked basis forever at recovery 0,
+                # indistinguishable from indefinite-life but UNFLAGGED
+                recovery = 1
+                row["flags"].append("RECOVERY-FLOORED-ONE-MONTH")
             convention = "full-month"
             authority = ("§1.263(a)-4: amortized over the benefit term "
                          f"({recovery} months, benefit_end − benefit_start)")
@@ -275,6 +302,15 @@ def compute_263a4_5(transaction_costs: List[TransactionCostItem],
                "total": pool.total, "first_year_deduction": Decimal("0"),
                "amortizable_remainder": Decimal("0"),
                "first_year_amortization": Decimal("0"), "flags": []}
+        if pool.total < 0:
+            # a negative pool total produced an unflagged NEGATIVE first-year
+            # deduction (round-3 fuzz) — a cost pool cannot be negative
+            row["flags"].append("NEGATIVE-POOL-TOTAL")
+            warnings.append(
+                f"NEGATIVE-POOL-TOTAL [startup {pool.pool_id}]: total "
+                f"${pool.total:,.2f} — nothing computed; fix the schedule.")
+            startup_items.append(row)
+            continue
         if pool.kind == "syndication":
             # §709(b): syndication costs PERMANENTLY capitalized — no $5,000,
             # no 180-month amortization, no deduction short of liquidation.

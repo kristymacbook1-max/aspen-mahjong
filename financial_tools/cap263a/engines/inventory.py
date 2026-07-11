@@ -75,7 +75,27 @@ _NINETY = Decimal("0.9")
 
 
 def _q(x: Decimal) -> Decimal:
-    return x.quantize(Decimal("0.01"))
+    # widened context: see analysis._q — a huge ratio×pool product crashed
+    # quantize before the absurd-ratio warning could fire (round-3 fuzz)
+    import decimal
+    with decimal.localcontext() as ctx:
+        ctx.prec = 50
+        return x.quantize(Decimal("0.01"))
+
+
+def _ratio_sanity(warnings_, label, ratio):
+    """SPM has warned on a >100% absorption ratio since round 1; MSPM/SRM
+    never got the analog — 50,000,000x ratios computed silently into
+    trillion-dollar capitalizations (round-3 fuzz, confirmed)."""
+    if ratio > 1:
+        warnings_.append(
+            f"ABSORPTION RATIO {label} = {ratio} (>100%): the numerator pool "
+            f"exceeds its entire base — almost always a data error; verify "
+            f"the inputs before relying on this figure.")
+    elif ratio < 0:
+        warnings_.append(
+            f"ABSORPTION RATIO {label} = {ratio} (<0): a negative ratio means "
+            f"a negative pool or denominator — review the negative inputs.")
 
 
 def compute_mspm(result: dict, profile) -> dict:
@@ -219,7 +239,19 @@ def compute_mspm(result: dict, profile) -> dict:
                      - profile.ending_DM_not_yet_in_production)
 
     prod_denom = profile.production_471 + dm_adjustment
-    if prod_denom:
+    if prod_denom < 0:
+        # ending DM-not-in-production exceeding beginning + purchased makes
+        # the DM adjustment more negative than production_471 — a negative
+        # denominator produced a negative ratio and NEGATIVE capitalization
+        # with zero warnings (round-3 fuzz, confirmed)
+        production_ratio = Decimal("0")
+        warnings_.append(
+            f"MSPM-NEGATIVE-DENOMINATOR: production_471 + "
+            f"direct_materials_adjustment is negative (${prod_denom:,.2f}) — "
+            f"ending DM-not-yet-in-production exceeds beginning + purchases, "
+            f"an impossible materials flow. Ratio set to 0; fix the DM "
+            f"inputs.")
+    elif prod_denom:
         production_ratio = ((prod_pool + residual) / prod_denom).quantize(MSPM_RATIO_Q)
     else:
         production_ratio = Decimal("0")
@@ -228,6 +260,8 @@ def compute_mspm(result: dict, profile) -> dict:
             "zero — the production absorption ratio was set to 0. Verify the "
             "production §471 and direct-material flow inputs.")
 
+    _ratio_sanity(warnings_, "(MSPM pre-production)", pre_ratio)
+    _ratio_sanity(warnings_, "(MSPM production)", production_ratio)
     add_to_inv = _q(pre_ratio * pre_on_hand + production_ratio * prod_on_hand)
 
     return {
@@ -273,6 +307,13 @@ def compute_srm(result: dict, profile) -> dict:
     # (Red-team §16: the original gate ignored production_incident_to_resale
     # entirely and silently passed on an unknown activity level.)
     method_conflict = False
+    if profile.produces and profile.private_label_goods:
+        warnings_.append(
+            "PRIVATE-LABEL-CONDITIONS: SRM availability rests on the "
+            "(a)(4)(iii) private-label carve-out — confirm its three "
+            "conditions hold (production under contract with an UNRELATED "
+            "person; incident to resale; property sold to customers). "
+            "Neither this engine nor the interview verifies them.")
     if profile.produces and not profile.private_label_goods:
         if profile.production_activity_level == "more_than_de_minimis":
             method_conflict = True
@@ -361,6 +402,21 @@ def compute_srm(result: dict, profile) -> dict:
     # purchasing ratio still applies to the current-year increment. A single
     # combined × total shortcut overstated by purchasing-ratio × prior-year
     # layers (red-team §16, confirmed by counterexample).
+    _ratio_sanity(warnings_, "(SRM purchasing)", purchasing_ratio)
+    _ratio_sanity(warnings_, "(SRM storage & handling)", storage_handling_ratio)
+    if profile.ending_inventory_471 < 0:
+        warnings_.append(
+            f"SRM-NEGATIVE-ENDING-INVENTORY: ending_inventory_471 is negative "
+            f"(${profile.ending_inventory_471:,.2f}) — a §471-costs-on-hand "
+            f"figure cannot be negative; the capitalized amount below is "
+            f"meaningless until the input is fixed.")
+    if profile.srm_variation_a and profile.srm_variation_b:
+        warnings_.append(
+            "SRM-VARIATION-A-PLUS-B: both (d)(3)(iii) variations elected — "
+            "A's current-year-only S&H denominator is being applied to B's "
+            "all-layer total multiplicand, an internally inconsistent "
+            "combination the regulation text presents as independent options "
+            "without addressing. SME must confirm before filing.")
     if profile.srm_variation_b:
         total_lifo = profile.ending_inventory_471_total_lifo
         if total_lifo <= 0:

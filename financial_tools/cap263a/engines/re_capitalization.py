@@ -205,7 +205,9 @@ def compute_174(re_expenditures: List[REExpenditure], *,
         catchup["current_year_deduction"] = remaining_2022_2024_basis
         current_year_deduction += remaining_2022_2024_basis
     elif catchup_method == "two_year":
-        half = remaining_2022_2024_basis / Decimal("2")
+        # quantized with plug-to-following-year: an odd-cent basis produced
+        # sub-cent deductions in both years (round-3 fuzz)
+        half = (remaining_2022_2024_basis / Decimal("2")).quantize(Decimal("0.01"))
         catchup["current_year_deduction"] = half
         catchup["following_year_deduction"] = remaining_2022_2024_basis - half
         current_year_deduction += half

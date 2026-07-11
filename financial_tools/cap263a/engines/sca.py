@@ -198,6 +198,17 @@ def compute_sca(pools: List[CostPool], assets: List[SelfConstructedAsset],
         blocked = any(w.startswith("HARD-BLOCKED-DRIVER") for w in pool_warnings)
         driver_total = sum(pool.targets.values(), Decimal("0"))
         block_flag = "HARD-BLOCKED-DRIVER"
+        if pool.amount < 0 and not blocked:
+            # the round-2 block covered negative DRIVER VALUES only — a
+            # negative pool AMOUNT still booked negative capitalized dollars
+            # (and negative APE into Phase D) with zero warnings (round-3)
+            blocked = True
+            block_flag = "NEGATIVE-POOL-AMOUNT"
+            warnings.append(
+                f"NEGATIVE-POOL-AMOUNT [pool {pool.pool_id}]: pool amount is "
+                f"${pool.amount:,.2f} — a cost pool cannot be negative; pool "
+                f"NOT allocated. Route credits/reversals through the "
+                f"classifier, not a negative pool.")
         negative_drivers = [t for t, dv in pool.targets.items() if dv < 0]
         if negative_drivers and not blocked:
             # A negative driver value produces a NEGATIVE share and a

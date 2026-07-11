@@ -285,7 +285,13 @@ def analyze(lines: List[TBLine], profile: Optional[EntityProfile] = None) -> dic
 
 
 def _q(x):
-    return x.quantize(Decimal("0.01"))
+    # widened context: quantizing a ratio×pool product near 1e26 overflowed
+    # the default 28-digit context and crashed BEFORE any warning could
+    # fire (round-3 fuzz) — the absurd-ratio warnings must get to speak
+    import decimal
+    with decimal.localcontext() as ctx:
+        ctx.prec = 50
+        return x.quantize(Decimal("0.01"))
 
 
 def compute_unicap(result: dict, profile: EntityProfile) -> dict:
@@ -403,6 +409,11 @@ def compute_spm(result: dict, profile: EntityProfile) -> dict:
     # ending_inventory_471 is a free-typed input; if it dwarfs the §471 pool the
     # capitalized-to-inventory figure is meaningless (the pool is the ceiling on
     # the year's §471 cost).
+    if profile.ending_inventory_471 < 0:
+        warnings_.append(
+            f"NEGATIVE ENDING §471 INVENTORY (${profile.ending_inventory_471:,.0f}): "
+            f"a §471-costs-on-hand figure cannot be negative — the capitalized-to-"
+            f"inventory amount is meaningless until the input is fixed.")
     if profile.ending_inventory_471 > sec471_pool and sec471_pool > 0:
         warnings_.append(
             f"ENDING §471 INVENTORY (${profile.ending_inventory_471:,.0f}) EXCEEDS THE "

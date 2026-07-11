@@ -12,7 +12,10 @@ Bucket recomputes the whole dashboard.
 import os
 import sys
 
+import math
+
 from openpyxl import Workbook
+from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
 from openpyxl.utils import get_column_letter
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -30,13 +33,20 @@ FMT_CURRENCY = '"$"#,##0;("$"#,##0)'
 
 
 def _defuse(v):
-    """Spreadsheet-injection defense: a trial balance comes from an untrusted
-    source, and openpyxl stores any string beginning with =, +, -, or @ as an
-    ACTIVE FORMULA — so a client account description like
-    =HYPERLINK("http://evil","click") would execute when a reviewer opens the
-    workbook. Prefix a formula-guard apostrophe (Excel's standard neutralizer;
-    it renders the text literally and marks the cell text-typed)."""
-    if isinstance(v, str) and v[:1] in ("=", "+", "-", "@"):
+    """Untrusted-string defense for every text cell:
+    - formula injection: openpyxl stores any string beginning with =, +, -,
+      or @ as an ACTIVE FORMULA — prefix Excel's formula-guard apostrophe;
+    - control characters (\\x00 etc., routine in dirty CSV/PDF-paste data)
+      raise IllegalCharacterError on write and killed the WHOLE workbook
+      (red-team round 3) — strip them;
+    - >32,767 chars is silently truncated by openpyxl (silent data loss) —
+      truncate explicitly with a visible marker instead."""
+    if not isinstance(v, str):
+        return v
+    v = ILLEGAL_CHARACTERS_RE.sub("", v)
+    if len(v) > 32000:
+        v = v[:32000] + " …[TRUNCATED]"
+    if v[:1] in ("=", "+", "-", "@"):
         return "'" + v
     return v
 
@@ -102,6 +112,15 @@ class CapitalizationReport:
         return float(p.accumulated_production_expenditures) * float(p.avoided_cost_rate)
 
     def _money(self, ws, r, c, v, fill=None, bold=False):
+        # belt-and-suspenders under the model's magnitude guard: an inf/nan
+        # float writes as an EMPTY numeric cell (silently blanking the figure
+        # and its totals) — render a visible sentinel instead.
+        if isinstance(v, float) and not math.isfinite(v):
+            cell = ws.cell(r, c, "#NON-FINITE")
+            cell.font = FONT_BODY_BOLD
+            cell.fill = FILL_HIGHLIGHT_ORANGE
+            cell.border = THIN_BORDER
+            return cell
         cell = ws.cell(r, c, v)
         cell.number_format = FMT_CURRENCY
         cell.font = FONT_BODY_BOLD if bold else FONT_BODY
@@ -277,9 +296,16 @@ class CapitalizationReport:
         row += 2
 
         # --- warnings the workpaper must document (computation + data quality) ---
+        # all_warnings (engagement mode) supersets unicap/bucket warnings and
+        # carries engine + ingestion warnings that previously reached the
+        # workbook ONLY when an F/G/H engine happened to run (round-3 red
+        # team: PRORATED/PARTIAL-PERIOD warnings appeared nowhere on an
+        # interest-only engagement). Ordered dedupe keeps each line once.
         cautions = list(self._r["unicap"].get("warnings", []) or [])
         cautions += list(self._r.get("bucket_warnings", []) or [])
         cautions += list(self._r.get("data_quality", []) or [])
+        cautions += list(self._r.get("all_warnings", []) or [])
+        cautions = list(dict.fromkeys(cautions))
         if cautions:
             apply_section_header(ws, row, 1, 4, "Cautions — resolve before signing")
             row += 1
@@ -519,13 +545,23 @@ class CapitalizationReport:
         apply_section_header(ws, row, 1, 3, "M-1 reconciliation")
         row += 1
         m1 = tb["m1_reconciliation"]
+        tie_bad = m1["tie_check"] != 0
         for lbl, key in [("Book P&L total", "book_total"),
                          ("Book-tax differences applied", "btd_total"),
                          ("Tax-basis P&L total", "tax_total"),
                          ("Tie-check (must be 0)", "tie_check")]:
-            self._label(ws, row, 1, lbl, bold=True)
-            self._money(ws, row, 2, float(m1[key]),
-                        fill=FILL_HIGHLIGHT_GREEN if key == "tax_total" else None)
+            # the tie-check row exists to be UN-missable — a nonzero value
+            # (a dropped BTD) previously rendered as a plain unmarked number,
+            # less prominent than the row above it (red-team round 3)
+            if key == "tie_check" and tie_bad:
+                self._label(ws, row, 1, "⚠ " + lbl + " — FAILED, a BTD was "
+                            "dropped or double-applied", bold=True)
+                self._money(ws, row, 2, float(m1[key]),
+                            fill=FILL_HIGHLIGHT_ORANGE, bold=True)
+            else:
+                self._label(ws, row, 1, lbl, bold=True)
+                self._money(ws, row, 2, float(m1[key]),
+                            fill=FILL_HIGHLIGHT_GREEN if key == "tax_total" else None)
             row += 1
         row += 1
         apply_section_header(ws, row, 1, 3, "Tax-basis totals by cost center")
@@ -538,7 +574,7 @@ class CapitalizationReport:
             self._label(ws, row, 1, cc or "(none)")
             self._money(ws, row, 2, float(amt))
             row += 1
-        for w in tb["warnings"]:
+        for w in tb.get("warnings") or []:
             self._label(ws, row, 1, f"⚠ {w}")
             row += 1
         ws.column_dimensions["A"].width = 44
@@ -580,6 +616,14 @@ class CapitalizationReport:
             self._money(ws, row, 6, total_amort, bold=True)
             row += 2
         interest = self._r.get("interest_263af")
+        if interest and not interest["per_unit"]:
+            # a header + green total with zero unit rows reads as "analyzed,
+            # zero exposure" (round-3) — say what actually happened instead
+            self._label(ws, row, 1, "§263A(f): engine ran but no designated-"
+                        "property units carried APE snapshots — nothing "
+                        "computed. See warnings.", bold=True)
+            row += 2
+            interest = None
         if interest:
             apply_section_header(ws, row, 1, 7, "§263A(f) interest by unit (avoided-cost method)")
             row += 1
@@ -665,6 +709,12 @@ class CapitalizationReport:
                 row += 1
             row += 1
         for ppa in self._r.get("ppa_1060") or []:
+            if not ppa["by_class"] and not ppa["class_vii_residual"]:
+                self._label(ws, row, 1, "§1060: allocation record present but "
+                            "empty (no class FMVs / zero consideration) — "
+                            "nothing allocated. See warnings.", bold=True)
+                row += 2
+                continue
             apply_section_header(ws, row, 1, 4, "§1060 purchase price allocation (Form 8594)")
             row += 1
             for klass, amt in ppa["by_class"].items():

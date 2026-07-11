@@ -187,8 +187,16 @@ def _coerce(node: Node, value: Any) -> Any:
         if node.answer_type == "decimal":
             if isinstance(value, bool):
                 raise ValueError(f"expected a number, got bool {value!r}")
-            return Decimal(str(value))
+            d = Decimal(str(value))
+            # NaN receipts crashed the derived-exemption comparison with a
+            # raw InvalidOperation; -Infinity GRANTED the exemption
+            # (round-3 fuzz, both confirmed)
+            if not d.is_finite():
+                raise ValueError(f"non-finite amount {value!r} rejected")
+            return d
         if node.answer_type == "int":
+            if isinstance(value, bool):
+                raise ValueError(f"expected an integer, got bool {value!r}")
             return int(value)
         if node.answer_type == "bool":
             if isinstance(value, bool):
@@ -207,7 +215,7 @@ def _coerce(node: Node, value: Any) -> Any:
                     f"per-item answer must be a LIST of item dicts, got {value!r}")
             return list(value)
         return value
-    except (ValueError, ArithmeticError) as e:
+    except (ValueError, ArithmeticError, TypeError) as e:
         raise ValueError(f"{node.id}: cannot coerce answer {value!r} "
                          f"({node.answer_type}): {e}") from None
 
@@ -232,12 +240,16 @@ def _derived(env: Dict[str, Any]) -> Dict[str, Any]:
     produces = env.get("Q1_1a")
     if produces is None:
         srm_available: Optional[bool] = None   # Gate 1 not (yet) answered
+    elif not produces or env.get("Q1_4"):
+        srm_available = True          # pure reseller / private-label route
+    elif env.get("Q1_2") is None:
+        # a producer whose de minimis determination was never established:
+        # UNKNOWN, not unavailable — the prior False here asserted "above de
+        # minimis" for a question never asked (round-3 fuzz, confirmed)
+        srm_available = None
     else:
-        srm_available = (
-            not produces
-            or (env.get("Q1_2") == "de_minimis" and bool(env.get("Q1_3")))
-            or bool(env.get("Q1_4"))
-        )
+        srm_available = (env.get("Q1_2") == "de_minimis"
+                         and bool(env.get("Q1_3")))
     return {"small_business_exempt": exempt,
             "under_448c_threshold": under,
             "srm_available": srm_available}
@@ -270,7 +282,13 @@ def run_interview(answers: Dict[str, Any],
         METHOD-CHANGE-3115-481A-REQUIRED naming that question id.
     """
     graph = graph if graph is not None else load_graph()
-    prior_elections: Dict[str, Any] = answers.get("prior_elections", {}) or {}
+    prior_elections = answers.get("prior_elections") or {}
+    if not isinstance(prior_elections, dict):
+        # a truthy non-dict crashed (int) or silently compared against
+        # nothing (str) — round-3 fuzz, confirmed
+        raise ValueError("prior_elections must be a dict of "
+                         "{question_id: established prior-year answer}, got "
+                         f"{type(prior_elections).__name__}")
 
     env: Dict[str, Any] = {_uid(n.id): None for n in graph}
     # A typo'd answer key silently un-answers its question (red-team) —
@@ -326,8 +344,11 @@ def run_interview(answers: Dict[str, Any],
             schedule_data[mt[len("schedule."):]] = answer
 
         if node.kind in ("ELECTION", "METHOD-OF-ACCOUNTING"):
-            elections.append({"id": node.id, "kind": node.kind,
-                              "answer": answer})
+            # an empty per-item list is "no items elected" — recording it
+            # put content-free elections on the workpaper summary (fuzz)
+            if not (node.answer_type == "per_item" and not answer):
+                elections.append({"id": node.id, "kind": node.kind,
+                                  "answer": answer})
 
         if node.warning_if_true and answer:
             warnings.append(f"{node.warning_if_true}: {node.id} — "
@@ -340,6 +361,31 @@ def run_interview(answers: Dict[str, Any],
     prior_method = env.get("Q0_6")
     this_method = env.get("Q2_2")
 
+    # The exemption walk vs the returned profile: with Q0.4 unanswered, the
+    # gates all ran but EntityProfile's receipts default (0) reports exempt —
+    # downstream UNICAP silently switches OFF for a fully-interviewed
+    # taxpayer (round-3 fuzz, confirmed). Warn loudly; nothing can invent
+    # the missing receipts figure.
+    if "Q0.4" in asked and env.get("Q0_4") is None:
+        warnings.append(
+            "EXEMPTION-UNDETERMINED: Q0.4 (aggregated 3-yr average gross "
+            "receipts) was not answered — the §448(c) exemption CANNOT be "
+            "determined. The returned profile's receipts default to $0, "
+            "which downstream reads as EXEMPT (all §263A off); supply Q0.4 "
+            "before relying on any computation.")
+
+    # Answers supplied for questions the graph decided NOT to ask are never
+    # applied (verified) — but silence hid real contradictions (Q0.5=first
+    # year AND Q0.6=prior method both answered; fuzz). Warn per key.
+    answered_ids = {k for k in answers if k != "prior_elections"}
+    for qid in sorted(answered_ids - set(asked)):
+        if qid in known_ids:
+            warnings.append(
+                f"ANSWER-FOR-UNASKED-QUESTION: {qid} was answered but the "
+                f"graph never asked it (skipped gate or unmet ask_when) — "
+                f"the answer was NOT applied. If you expected it to count, "
+                f"check the controlling answers upstream of it.")
+
     # Gate 2 menu constraint / Gate 1 consequence matrix: SRM chosen while the
     # matrix says it was never available.
     if this_method == "SRM" and srm_available is False:
@@ -348,6 +394,22 @@ def run_interview(answers: Dict[str, Any],
             "makes SRM unavailable (producer above de minimis, no "
             "incident-to-resale route, no private-label goods) — SPM/MSPM "
             "only (§1.263A-3(a)(4)).")
+    elif this_method == "SRM" and srm_available is None \
+            and env.get("Q1_1a"):
+        warnings.append(
+            "SRM-AVAILABILITY-UNKNOWN: Q2.2 = SRM but the de minimis "
+            "determination (Q1.2) was never established for this producer — "
+            "the §1.263A-3(a)(4) availability gate cannot be evaluated. "
+            "Resolve Gate 1 before relying on SRM figures.")
+
+    # §1.263A-1(h)(3)(ii): a reseller must use the labor-based SSCM ratio.
+    if env.get("Q2_8b") == "production_cost" and env.get("Q1_1b") \
+            and not env.get("Q1_1a"):
+        warnings.append(
+            "SSCM-RATIO-RESELLER: the production-cost allocation ratio is a "
+            "producer-only formula (§1.263A-1(h)(3)(ii)) — a reseller "
+            "electing it is a regulation violation; use the labor-based "
+            "ratio.")
 
     # Q0.6a reconciliation (runner-computed; never asked). First-§263A-year
     # taxpayers ADOPT methods — Q0.6 was never asked, no 3115 posture at all.

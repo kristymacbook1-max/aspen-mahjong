@@ -215,8 +215,14 @@ _SHEET_HINTS = {
     "fixed_assets": ["fixed asset", "fixed assets", "asset register",
                      "fa schedule"],
     "cip": ["cip", "construction in progress", "construction-in-progress"],
-    "debt": ["debt", "loan", "loans", "interest schedule", "borrowings"],
-    "re": ["r&e", "research", "174", "r&d"],
+    # bare "loan"/"research" routed "Loan Covenant Fees" to debt and
+    # "Research Building Depreciation" (a FIXED-ASSET sheet) to R&E — the
+    # latter booked a phantom $850k §174 deduction (round-3 red team).
+    # Single-word hints must be schedule-unambiguous.
+    "debt": ["debt", "loans", "interest schedule", "borrowings",
+             "debt schedule", "loan schedule"],
+    "re": ["r&e", "174", "r&d", "research schedule", "r&e schedule",
+           "research expenditures", "research & experimental"],
     "startup": ["start-up", "startup", "organizational", "org cost",
                 "org costs"],
 }
@@ -483,6 +489,14 @@ def read_engagement(path=None, *, tb_sheet=None, **schedule_paths) -> Engagement
                             data.tb_lines = read_trial_balance(child)
                         except ValueError as e:
                             rep.errors.append(f"{child.name}: {e}")
+                else:
+                    # a data file matching no hint previously vanished with
+                    # zero output (round-3: the round-2 fix warned on
+                    # misroutes but not no-routes)
+                    rep.warnings.append(
+                        f"{child.name}: filename matches no schedule hint — "
+                        f"file NOT ingested. Rename it (e.g. 'debt.csv', "
+                        f"'fixed_assets.csv') or pass it explicitly.")
         elif p.suffix.lower() == ".json":
             with open(p, encoding="utf-8-sig") as f:   # BOM-tolerant
                 doc = json.load(f)

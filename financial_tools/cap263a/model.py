@@ -26,6 +26,14 @@ def _dec(v) -> Decimal:
             raise ValueError(f"not a dollar amount: {v!r}")
     if not d.is_finite():
         raise ValueError(f"non-finite dollar amount rejected: {v!r}")
+    # A finite-but-absurd magnitude (1e400) passes is_finite() yet becomes
+    # float('inf') at the report layer, where openpyxl writes an EMPTY
+    # numeric cell — silently blanking the figure AND every total it feeds;
+    # with a recovery period it instead crashes quantize() and kills the
+    # whole workbook (red-team round 3, both confirmed). No legitimate
+    # engagement has a quadrillion-dollar line item.
+    if abs(d) > Decimal("1e15"):
+        raise ValueError(f"implausible dollar magnitude rejected: {v!r}")
     return d
 
 

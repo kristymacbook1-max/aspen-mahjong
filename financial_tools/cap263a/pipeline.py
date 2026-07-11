@@ -103,17 +103,31 @@ class CapitalizationPipeline:
             interview_result = run_interview(answers)
             profile = interview_result.profile
             iflags = interview_result.flags
-            if re_options is None:
-                re_options = {}
-                if iflags.get("RE_CAPITALIZATION_ELECTION"):
-                    re_options["domestic_capitalization_election"] = True
-                    if iflags.get("RE_CAPITALIZATION_PERIOD_MONTHS"):
-                        re_options["elected_period_months"] = \
-                            int(iflags["RE_CAPITALIZATION_PERIOD_MONTHS"])
-                if iflags.get("RE_CATCHUP_METHOD"):
-                    re_options["catchup_method"] = iflags["RE_CATCHUP_METHOD"]
-                if iflags.get("RE_SMALL_BUSINESS_RETROACTIVE_ELECTION"):
-                    re_options["small_business_retroactive"] = True
+            # MERGE, never gate: a caller supplementing ONE option (e.g.
+            # re_options={"catchup_method": ...}) previously discarded every
+            # interview-derived election — the exact bug class the original
+            # wiring fix claimed to close, reintroduced through the merge
+            # seam (round-3 red team). Explicit keys win, with a warning
+            # when they override a non-None interview answer.
+            derived = {}
+            if iflags.get("RE_CAPITALIZATION_ELECTION"):
+                derived["domestic_capitalization_election"] = True
+                if iflags.get("RE_CAPITALIZATION_PERIOD_MONTHS"):
+                    derived["elected_period_months"] = \
+                        int(iflags["RE_CAPITALIZATION_PERIOD_MONTHS"])
+            if iflags.get("RE_CATCHUP_METHOD"):
+                derived["catchup_method"] = iflags["RE_CATCHUP_METHOD"]
+            if iflags.get("RE_SMALL_BUSINESS_RETROACTIVE_ELECTION"):
+                derived["small_business_retroactive"] = True
+            explicit = re_options or {}
+            for k in set(derived) & set(explicit):
+                if explicit[k] != derived[k]:
+                    interview_result.warnings.append(
+                        f"RE-OPTION-OVERRIDE: caller re_options[{k!r}]="
+                        f"{explicit[k]!r} overrides the interview-derived "
+                        f"{derived[k]!r} — confirm this is intentional (the "
+                        f"interview answer reflects an election).")
+            re_options = {**derived, **explicit}
             if not individual_amt_exposure and iflags.get("AMT_EXPOSURE"):
                 individual_amt_exposure = True
         profile = profile or EntityProfile()
@@ -134,6 +148,10 @@ class CapitalizationPipeline:
         basis_items = []
         all_warnings = list(result.get("bucket_warnings", []))
         all_warnings += result.get("unicap", {}).get("warnings", [])
+        # ingestion WARNINGS (multi-match routing, zero-rows-parsed, skipped
+        # balance rows) previously reached NO output channel at all — the
+        # entire reader hardening was dead output (round-3 red team)
+        all_warnings += data.validation.warnings
         if tax_tb:
             all_warnings += tax_tb["warnings"]
         if interview_result is not None:
