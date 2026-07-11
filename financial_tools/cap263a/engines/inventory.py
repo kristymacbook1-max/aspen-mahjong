@@ -89,6 +89,28 @@ def compute_mspm(result: dict, profile) -> dict:
     mixed_cap = sscm["mixed_capitalized"]
     mixed_ded = sscm["mixed_deductible"]
 
+    # Spec-audit guards (red-team §16) — mechanics the plan specifies that
+    # this engine does not implement must WARN, never silently substitute:
+    if profile.sscm_ratio_method == "production_cost":
+        warnings_.append(
+            "MSPM-SSCM-RATIO-METHOD-NOT-IMPLEMENTED: sscm_ratio_method="
+            "'production_cost' elected (a real producer option under "
+            "§1.263A-1(h)(3)(ii)) but compute_sscm implements the labor-based "
+            "ratio only — the labor-ratio dollars below are NOT the elected "
+            "method's numbers.")
+    if getattr(profile, "har_election", False):
+        warnings_.append(
+            "HAR-NOT-IMPLEMENTED: the historic absorption ratio election "
+            "(§1.263A-2(c)(4)) is specified in the plan but not built — the "
+            "ratios below are ACTUAL ratios, not the frozen HAR ratios.")
+    if profile.inventory_method in ("lifo_specific", "lifo_dollar_value"):
+        warnings_.append(
+            "MSPM-LIFO-COMBINED-RATIO-NOT-IMPLEMENTED: MSPM+LIFO requires the "
+            "COMBINED absorption ratio applied to the current-year LIFO "
+            "increment (§1.263A-2(c) Example 3), not the two ratios applied "
+            "separately — the output below is on the non-collapsed basis and "
+            "is NOT the LIFO-correct figure.")
+
     # --- SSCM split between pre-production and production pools,
     # §1.263A-2(c)(3)(iii)(B): taxpayer's choice of the direct-material
     # proportion or the pre-production-labor proportion. The proportion is
@@ -244,18 +266,40 @@ def compute_srm(result: dict, profile) -> dict:
     handling ratio (combined), applied to §471 costs remaining on hand."""
     warnings_ = []
 
-    # Method-availability gate (§1.263A-3(a)(4)(i)): a producer above the de
-    # minimis threshold may elect SPM or MSPM but NOT SRM, unless the
-    # (a)(4)(iii) private-label carve-out applies. HARD conflict — the
-    # numbers are still computed for visibility, but the warning leads.
-    method_conflict = (profile.produces
-                       and profile.production_activity_level == "more_than_de_minimis"
-                       and not profile.private_label_goods)
-    if method_conflict:
+    # Method-availability gate (§1.263A-3(a)(4)): SRM is available only to a
+    # pure reseller, an (a)(4)(ii) de-minimis producer whose production is
+    # INCIDENT TO RESALE, or an (a)(4)(iii) private-label producer. HARD
+    # conflict — numbers still computed for visibility, warning leads.
+    # (Red-team §16: the original gate ignored production_incident_to_resale
+    # entirely and silently passed on an unknown activity level.)
+    method_conflict = False
+    if profile.produces and not profile.private_label_goods:
+        if profile.production_activity_level == "more_than_de_minimis":
+            method_conflict = True
+            warnings_.append(
+                "SRM-METHOD-CONFLICT: §1.263A-3(a)(4)(i) bars the simplified resale "
+                "method for a producer above the de minimis threshold (SPM/MSPM "
+                "required) — these SRM figures are NOT a permissible filing position.")
+        elif profile.production_activity_level == "de_minimis" \
+                and not profile.production_incident_to_resale:
+            method_conflict = True
+            warnings_.append(
+                "SRM-METHOD-CONFLICT: §1.263A-3(a)(4)(ii) permits SRM for a de-minimis "
+                "producer only when production is INCIDENT TO RESALE of §1221(1) "
+                "property — production_incident_to_resale is False, so SRM is not "
+                "available. These figures are NOT a permissible filing position.")
+        elif not profile.production_activity_level:
+            warnings_.append(
+                "SRM-PRODUCTION-LEVEL-UNKNOWN: the taxpayer produces but "
+                "production_activity_level was never established (Gate 1 Q1.2) — the "
+                "§1.263A-3(a)(4) availability gate CANNOT be evaluated. Resolve the "
+                "de minimis determination before relying on these SRM figures.")
+    elif not profile.produces \
+            and profile.production_activity_level == "more_than_de_minimis":
         warnings_.append(
-            "SRM-METHOD-CONFLICT: §1.263A-3(a)(4)(i) bars the simplified resale method "
-            "for a producer above the de minimis threshold (SPM/MSPM required) — these "
-            "SRM figures are NOT a permissible filing position.")
+            "SRM-INPUTS-INCONSISTENT: produces=False but production_activity_level="
+            "'more_than_de_minimis' — the availability gate cannot be evaluated on "
+            "contradictory inputs. Fix the activity profile.")
 
     # SSCM is reported for visibility only — per the (d)(3)(i)(F) one-step
     # sub-split, the purchasing/storage-handling pools supplied on the
@@ -312,19 +356,55 @@ def compute_srm(result: dict, profile) -> dict:
               "inventory and purchases inputs.")
 
     combined_ratio = purchasing_ratio + storage_handling_ratio
-    add_to_inv = _q(combined_ratio * profile.ending_inventory_471)
+    # Variation (d)(3)(iii)(B): a LIFO taxpayer may multiply THE STORAGE &
+    # HANDLING RATIO ONLY by total ending-inventory §471 costs — the
+    # purchasing ratio still applies to the current-year increment. A single
+    # combined × total shortcut overstated by purchasing-ratio × prior-year
+    # layers (red-team §16, confirmed by counterexample).
+    if profile.srm_variation_b:
+        total_lifo = profile.ending_inventory_471_total_lifo
+        if total_lifo <= 0:
+            warnings_.append(
+                "SRM-VARIATION-B-INPUT-MISSING: srm_variation_b elected but "
+                "ending_inventory_471_total_lifo (TOTAL ending-inventory §471 at LIFO "
+                "carrying value — the S&H ratio's multiplicand under (d)(3)(iii)(B)) "
+                "was not supplied; computed WITHOUT the variation.")
+            add_to_inv = _q(combined_ratio * profile.ending_inventory_471)
+        else:
+            add_to_inv = _q(purchasing_ratio * profile.ending_inventory_471
+                            + storage_handling_ratio * total_lifo)
+    else:
+        add_to_inv = _q(combined_ratio * profile.ending_inventory_471)
+
+    # (d)(3)(i)(F) input contract: the profile's purchasing/S&H pools must
+    # ALREADY include their allocable mixed-service share (the one-step
+    # sub-split is not computed here — no per-activity labor inputs exist).
+    # The aggregate SSCM split therefore must NOT flow into this method's
+    # capitalized/deductible outputs: publishing mixed_capitalized from the
+    # aggregate ratio double-reported dollars the pools already carry and
+    # zeroed real deductions out of adjusted_deductible_post (red-team §16).
+    if result["mixed_total"]:
+        warnings_.append(
+            f"SRM-MSC-INPUT-CONTRACT: ${result['mixed_total']:,.0f} of mixed-service "
+            f"costs are on the classified TB. Under the SRM their capitalizable share "
+            f"belongs INSIDE the purchasing/storage-handling pool inputs per the "
+            f"§1.263A-3(d)(3)(i)(F) one-step sub-split — confirm the pool figures "
+            f"already include it; the full TB mixed total is otherwise reported as "
+            f"currently deductible here (informational SSCM ratio: "
+            f"{sscm['mixed_alloc_ratio']}).")
 
     return {
         "exempt": False,
         "method": "SRM",
         "method_conflict": method_conflict,
         "warnings": warnings_,
-        # SSCM reporting (informational — pools already include their share)
+        # SSCM reported informationally; NOT applied to the TB mixed bucket —
+        # the (F) shares live inside the pool inputs per the contract above.
         "mixed_alloc_ratio": sscm["mixed_alloc_ratio"],
         "production_labor": sscm["production_labor"],
         "total_labor": sscm["total_labor"],
-        "mixed_capitalized": sscm["mixed_capitalized"],
-        "mixed_deductible": sscm["mixed_deductible"],
+        "mixed_capitalized": Decimal("0"),
+        "mixed_deductible": result["mixed_total"],
         # ratios / intermediates (Practice-Unit ratio-table shape)
         "purchasing_costs": profile.purchasing_costs,
         "current_year_471_costs": profile.current_year_471_costs,
@@ -337,5 +417,5 @@ def compute_srm(result: dict, profile) -> dict:
         "srm_variation_b": profile.srm_variation_b,
         "ending_inventory_471": profile.ending_inventory_471,
         "additional_capitalized_to_inventory": add_to_inv,
-        "adjusted_deductible_post": result["deductible_total"] + sscm["mixed_deductible"],
+        "adjusted_deductible_post": result["deductible_total"] + result["mixed_total"],
     }

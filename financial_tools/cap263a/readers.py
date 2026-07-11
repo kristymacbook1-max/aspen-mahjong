@@ -17,6 +17,7 @@ accumulate in EngagementData.validation (ERRORs block, WARNs don't).
 
 import csv
 import json
+import re
 from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -35,11 +36,16 @@ from .reader import _to_decimal, read_trial_balance
 # coercers
 # --------------------------------------------------------------------------
 
-_TRUE = {"true", "yes", "y", "1", "x", "t"}
-_FALSE = {"false", "no", "n", "0", "", "f", "none"}
+_TRUE = {"true", "yes", "y", "1", "x", "t", "domestic", "us", "u.s."}
+_FALSE = {"false", "no", "n", "0", "", "f", "none", "foreign", "non-us"}
 
 
 def _to_bool(v) -> bool:
+    """Truthy/falsy table with domestic/foreign aliases (a 'Domestic?' column
+    populated 'foreign' previously coerced True via bool(str) — flipping
+    mandatory 15-year foreign R&E capitalization into current expensing;
+    red-team finding). Unrecognized strings still fall back to bool(s) —
+    schedule authors should stick to yes/no."""
     if isinstance(v, bool):
         return v
     if v is None:
@@ -193,19 +199,43 @@ _SPECS = {
     )),
 }
 
-# sheet-title hints per schedule (lowercase substring match)
+# Sheet-title hints per schedule. Matching is WORD-BOUNDED (red-team: the
+# bare substring "cip" matched inside "Muni-CIP-al Bonds" and "prinCIPal",
+# silently swallowing entire debt schedules; the bare "assets" hint routed
+# "Intangible Assets" to the fixed-asset parser). More-specific schedules
+# are listed FIRST so "Intangible Assets" resolves before "asset register".
 _SHEET_HINTS = {
-    "btd": ["btd", "book-tax", "book tax", "m-1", "schedule m"],
-    "fixed_assets": ["fixed asset", "asset register", "fa schedule", "assets"],
-    "cip": ["cip", "construction in progress", "construction-in-progress"],
-    "debt": ["debt", "loan", "interest schedule", "borrowings"],
-    "re": ["r&e", "research", "174", "r&d"],
-    "transaction_costs": ["transaction cost", "deal cost", "263(a)-5"],
-    "intangibles": ["intangible", "263(a)-4"],
-    "startup": ["start-up", "startup", "organizational", "org cost"],
-    "qualified_expenditures": ["59(e)", "qualified expenditure", "59e"],
+    "intangibles": ["intangible", "intangibles", "263(a)-4"],
+    "transaction_costs": ["transaction cost", "transaction costs",
+                          "deal cost", "deal costs", "263(a)-5"],
+    "qualified_expenditures": ["59(e)", "qualified expenditure",
+                               "qualified expenditures", "59e"],
     "ppa": ["purchase price", "8594", "ppa", "1060"],
+    "btd": ["btd", "book-tax", "book tax", "m-1", "schedule m"],
+    "fixed_assets": ["fixed asset", "fixed assets", "asset register",
+                     "fa schedule"],
+    "cip": ["cip", "construction in progress", "construction-in-progress"],
+    "debt": ["debt", "loan", "loans", "interest schedule", "borrowings"],
+    "re": ["r&e", "research", "174", "r&d"],
+    "startup": ["start-up", "startup", "organizational", "org cost",
+                "org costs"],
 }
+
+
+def _hint_matches(title: str) -> List[str]:
+    """All schedule kinds a title matches (for ambiguity warnings).
+    Underscores/hyphens read as spaces so 'fixed_assets.csv' matches the
+    multi-word 'fixed asset' hint."""
+    t = title.strip().lower().replace("_", " ").replace("-", " ")
+    words = set(re.findall(r"[\w&()]+", t))
+    out = []
+    for kind, hints in _SHEET_HINTS.items():
+        for h in hints:
+            h_norm = h.replace("-", " ")
+            if (" " in h_norm and h_norm in t) or (h_norm in words):
+                out.append(kind)
+                break
+    return out
 
 
 # --------------------------------------------------------------------------
@@ -302,6 +332,17 @@ def _parse_cip_snapshots(rows: List[Dict[str, object]],
         p.snapshots.sort(key=lambda s: s.measurement_date or date.min)
 
 
+def _merge_engagements(dst: EngagementData, src: EngagementData):
+    """Fold a nested engagement (a JSON file inside a directory) into dst."""
+    for attr in ("tb_lines", "btds", "fixed_assets", "cip_projects", "debts",
+                 "re_expenditures", "transaction_costs", "intangibles",
+                 "startup_pools", "qualified_expenditures",
+                 "purchase_price_allocations"):
+        getattr(dst, attr).extend(getattr(src, attr))
+    dst.validation.errors.extend(src.validation.errors)
+    dst.validation.warnings.extend(src.validation.warnings)
+
+
 # --------------------------------------------------------------------------
 # validation
 # --------------------------------------------------------------------------
@@ -364,10 +405,22 @@ def read_engagement(path=None, *, tb_sheet=None, **schedule_paths) -> Engagement
                   "qualified_path": "qualified_expenditures", "ppa_path": "ppa"}
 
     def ingest_rows(kind, rows, source):
+        if not isinstance(rows, list) or any(not isinstance(r, dict) for r in rows):
+            rep.errors.append(
+                f"Schedule {kind!r} from {source}: expected a LIST of row "
+                f"objects, got {type(rows).__name__} — schedule skipped.")
+            return
         if kind == "ppa":
             data.purchase_price_allocations.extend(_parse_ppa(rows, source))
             return
         parsed = _parse_rows(kind, rows, source, rep)
+        if rows and not parsed:
+            # data rows in, zero objects out = a misrouted/misheaded sheet
+            # silently vanishing (red-team: an entire debt schedule was lost)
+            rep.warnings.append(
+                f"Schedule {kind!r} from {source}: {len(rows)} data rows "
+                f"parsed to ZERO records — headers matched no known alias "
+                f"(was this sheet routed to the right schedule?).")
         getattr(data, {"btd": "btds", "fixed_assets": "fixed_assets",
                        "cip": "cip_projects", "debt": "debts",
                        "re": "re_expenditures",
@@ -392,23 +445,52 @@ def read_engagement(path=None, *, tb_sheet=None, **schedule_paths) -> Engagement
 
     if path is not None:
         p = Path(path)
+        if not p.exists():
+            raise FileNotFoundError(f"Engagement source not found: {p}")
         if p.is_dir():
             for child in sorted(p.iterdir()):
-                name = child.name.lower()
+                stem = child.stem
                 if child.suffix.lower() not in (".csv", ".xlsx", ".xlsm", ".json"):
                     continue
-                matched = None
-                for kind, hints in _SHEET_HINTS.items():
-                    if any(h in name for h in hints):
-                        matched = kind
-                        break
-                if matched:
-                    ingest_file(matched, child)
-                elif any(h in name for h in ("tb", "trial")):
-                    data.tb_lines = read_trial_balance(child)
+                if child.suffix.lower() == ".json":
+                    # an engagement.json inside a directory was silently
+                    # skipped (matched no hint) — recurse into it instead
+                    data_sub = read_engagement(child)
+                    _merge_engagements(data, data_sub)
+                    continue
+                if "snapshot" in stem.lower():
+                    rows = (_rows_from_csv(child) if child.suffix.lower() == ".csv"
+                            else _rows_from_ws(load_workbook(child, data_only=True).worksheets[0]))
+                    _parse_cip_snapshots(rows, data.cip_projects, rep)
+                    continue
+                hits = _hint_matches(stem)
+                if len(hits) > 1:
+                    rep.warnings.append(
+                        f"{child.name}: filename matches multiple schedules "
+                        f"({', '.join(hits)}) — routed to {hits[0]!r}; rename "
+                        f"the file if that's wrong.")
+                if hits:
+                    ingest_file(hits[0], child)
+                elif any(h in stem.lower() for h in ("tb", "trial")):
+                    if child.suffix.lower() == ".csv":
+                        rep.errors.append(
+                            f"{child.name}: trial balances must be .xlsx (the "
+                            f"TB reader needs the workbook structure) — "
+                            f"convert the CSV or pass it as a JSON "
+                            f"trial_balance array.")
+                    else:
+                        try:
+                            data.tb_lines = read_trial_balance(child)
+                        except ValueError as e:
+                            rep.errors.append(f"{child.name}: {e}")
         elif p.suffix.lower() == ".json":
-            with open(p, encoding="utf-8") as f:
+            with open(p, encoding="utf-8-sig") as f:   # BOM-tolerant
                 doc = json.load(f)
+            if not isinstance(doc, dict):
+                rep.errors.append(
+                    f"{p.name}: an engagement JSON must be an object of "
+                    f"schedule arrays, got {type(doc).__name__}.")
+                doc = {}
             for key, kind in (("trial_balance", None), ("btd", "btd"),
                               ("fixed_assets", "fixed_assets"), ("cip", "cip"),
                               ("debt", "debt"), ("re", "re"),
@@ -419,6 +501,12 @@ def read_engagement(path=None, *, tb_sheet=None, **schedule_paths) -> Engagement
                               ("ppa", "ppa")):
                 rows = doc.get(key)
                 if not rows:
+                    continue
+                if not isinstance(rows, list) or \
+                        any(not isinstance(r, dict) for r in rows):
+                    rep.errors.append(
+                        f"{p.name}: schedule {key!r} must be a list of row "
+                        f"objects — skipped.")
                     continue
                 if key == "trial_balance":
                     data.tb_lines = [
@@ -437,25 +525,48 @@ def read_engagement(path=None, *, tb_sheet=None, **schedule_paths) -> Engagement
                 _parse_cip_snapshots(
                     [{str(k).strip().lower().replace("_", " "): v for k, v in r.items()}
                      for r in cip_snaps], data.cip_projects, rep)
+            # dated debt balances — without this, Phase D's snapshot traced-
+            # debt/WAIR mechanics could NEVER see a dated balance through the
+            # reader (red-team, confirmed): {"debt_balances": [{"debt_id":
+            # ..., "date": ..., "outstanding": ...}]}
+            debt_bals = doc.get("debt_balances")
+            if debt_bals:
+                by_id = {d.debt_id: d for d in data.debts}
+                for r in debt_bals:
+                    did = str(r.get("debt_id") or r.get("loan_id") or "").strip()
+                    d_ = _to_date(r.get("date") or r.get("measurement_date"))
+                    amt = r.get("outstanding") or r.get("balance")
+                    debt = by_id.get(did)
+                    if debt is None or d_ is None or amt is None:
+                        rep.warnings.append(
+                            f"debt_balances row skipped (debt_id={did!r}): "
+                            f"unknown debt, bad date, or missing amount.")
+                        continue
+                    debt.outstanding_by_date[d_.isoformat()] = _to_decimal(amt)
         elif p.suffix.lower() in (".xlsx", ".xlsm"):
             wb = load_workbook(p, data_only=True)
             snapshot_rows = None
             for ws in wb.worksheets:
-                title = ws.title.strip().lower()
-                if "snapshot" in title:
+                title = ws.title.strip()
+                if "snapshot" in title.lower():
                     snapshot_rows = _rows_from_ws(ws)
                     continue
-                matched = None
-                for kind, hints in _SHEET_HINTS.items():
-                    if any(h in title for h in hints):
-                        matched = kind
-                        break
-                if matched:
-                    ingest_rows(matched, _rows_from_ws(ws), ws.title)
+                hits = _hint_matches(title)
+                if len(hits) > 1:
+                    rep.warnings.append(
+                        f"Sheet {title!r} matches multiple schedules "
+                        f"({', '.join(hits)}) — routed to {hits[0]!r}; rename "
+                        f"the sheet if that's wrong.")
+                if hits:
+                    ingest_rows(hits[0], _rows_from_ws(ws), title)
             try:
                 data.tb_lines = read_trial_balance(p, sheet=tb_sheet)
-            except ValueError:
-                rep.warnings.append("No trial-balance sheet found in workbook")
+            except ValueError as e:
+                # a real, structural TB problem (ambiguous sheets, missing
+                # amount column) was previously swallowed as "no TB found" —
+                # the message said the opposite of the truth (red-team)
+                rep.errors.append(f"Trial balance could not be read from "
+                                  f"{p.name}: {e}")
             if snapshot_rows:
                 _parse_cip_snapshots(snapshot_rows, data.cip_projects, rep)
         else:

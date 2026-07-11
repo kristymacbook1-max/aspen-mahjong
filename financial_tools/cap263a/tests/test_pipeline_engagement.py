@@ -229,6 +229,25 @@ def test_sca_pipeline_integration_and_exemption_gate(tmp_path):
     assert any("SCA skipped" in w for w in r2["all_warnings"])
 
 
+def test_blocking_ingestion_errors_refuse_unless_forced(tmp_path):
+    """RED-TEAM: blocking ERRORs were effectively warnings — the workbook
+    shipped on unresolved FK links. run_engagement must refuse unless
+    force=True, and forced runs must carry the blocking prefix in
+    all_warnings."""
+    import json, pytest
+    doc = {"trial_balance": [{"acct_num": "5000", "acct_desc": "Direct labor",
+                              "cc_num": "100", "amount": "1000"}],
+           "cip": [{"project_id": "P1", "linked_asset_id": "GHOST"}]}
+    src = tmp_path / "bad.json"
+    src.write_text(json.dumps(doc))
+    pipe = CapitalizationPipeline(output_dir=str(tmp_path / "out"))
+    with pytest.raises(ValueError, match="GHOST"):
+        pipe.run_engagement(src, EntityProfile(), generate_workbook=False)
+    r = pipe.run_engagement(src, EntityProfile(), force=True,
+                            generate_workbook=False)
+    assert r["all_warnings"][0].startswith("INGESTION ERROR (blocking)")
+
+
 def test_bool_in_money_field_raises_clear_error():
     """RED-TEAM: a JSON `true` in a money field crashed with a bare
     InvalidOperation deep inside Decimal(); it must name the field."""

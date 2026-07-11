@@ -50,6 +50,10 @@ _MAX_BLANK_RUN = 1000     # stop scanning after this many consecutive blank rows
 def _to_decimal(v):
     if v is None:
         return Decimal("0")
+    # bool is an int subclass — Decimal(str(True)) raises a bare
+    # InvalidOperation from deep inside the numeric branch (red-team).
+    if isinstance(v, bool):
+        return Decimal("1") if v else Decimal("0")
     if isinstance(v, (int, float)):
         d = Decimal(str(v))
         return d if d.is_finite() else Decimal("0")
@@ -167,9 +171,16 @@ def read_trial_balance(path, sheet=None):
                 break     # trailing empty region — stop scanning to max_row
             continue
         blank_run = 0
-        if (desc.lower() in _SECTION_HEADERS or desc == "0"
-                or desc.lower() in _FORMULA_ERRORS):
+        if desc == "0" or desc.lower() in _FORMULA_ERRORS:
             continue
+        if desc.lower() in _SECTION_HEADERS:
+            # Only skip as a section header when the row carries NO dollars —
+            # a real account line described "COGS"/"Income" with an amount
+            # was silently dropped with its dollars (red-team, confirmed).
+            row_amount = (_to_decimal(cell("amount")) if has_amount
+                          else _to_decimal(cell("debit")) - _to_decimal(cell("credit")))
+            if row_amount == 0 and not str(cell("acct_num") or "").strip():
+                continue
         if has_amount:
             amount = _to_decimal(cell("amount"))
         else:

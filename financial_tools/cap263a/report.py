@@ -84,11 +84,20 @@ class CapitalizationReport:
 
     # ------------------------------------------------------------------
     def _interest_stub(self) -> float:
-        """Legacy scalar §263A(f) stub: APE × avoided-cost rate. §263A(i)
-        exempts a small business from ALL of §263A including (f), so the
-        exemption zeroes this too. (The real per-unit engine is Phase D.)"""
+        """§263A(f) figure for the Summary/Method-Changes tabs. When the real
+        Phase D engine ran, ITS total is the workpaper number — the legacy
+        APE×rate scalar rendered $0 next to a six-figure engine result on a
+        different tab (red-team: three different interest numbers in one
+        workbook). The scalar stub survives only as the schedules-empty
+        fallback. §263A(i) exempts a small business from ALL of §263A
+        including (f), so the exemption zeroes both paths."""
         p = self._r["profile"]
-        if p.small_business_exempt or not p.has_designated_property:
+        if p.small_business_exempt:
+            return 0.0
+        engine = self._r.get("interest_263af")
+        if engine:
+            return float(engine["total_capitalized"])
+        if not p.has_designated_property:
             return 0.0
         return float(p.accumulated_production_expenditures) * float(p.avoided_cost_rate)
 

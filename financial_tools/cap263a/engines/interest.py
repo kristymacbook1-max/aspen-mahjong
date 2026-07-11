@@ -37,7 +37,7 @@ cents (WAIR and average-excess intermediates are carried exact — for the
 golden fixture 200,000/2,800,000 must behave as exactly 1/14).
 """
 
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal, ROUND_HALF_UP
 from typing import Dict, List, Optional
 
@@ -79,11 +79,27 @@ def _exclusion_screen(debt: DebtInstrument) -> str:
     return "§1.263A-9(a)(4) — excluded (unspecified screen)"
 
 
+def _normalize_date_key(k: str) -> str:
+    """'2026-3-31' / '03/31/2026' style keys normalize to ISO so a format
+    mismatch can't silently fall back to principal (red-team finding)."""
+    s = str(k).strip()
+    for fmt in ("%Y-%m-%d", "%m/%d/%Y", "%Y/%m/%d", "%m-%d-%Y"):
+        try:
+            return datetime.strptime(s, fmt).date().isoformat()
+        except ValueError:
+            continue
+    return s
+
+
 def _outstanding_at(debt: DebtInstrument, d: date) -> Decimal:
     """Point-in-time outstanding balance on measurement date d: the dated
     schedule when supplied, else the principal (= average outstanding
     fallback, per the DebtInstrument data contract)."""
-    return debt.outstanding_by_date.get(d.isoformat(), debt.principal)
+    if not debt.outstanding_by_date:
+        return debt.principal
+    normalized = {_normalize_date_key(k): v
+                  for k, v in debt.outstanding_by_date.items()}
+    return normalized.get(d.isoformat(), debt.principal)
 
 
 def compute_263af(cip_projects: List[CIPProject],
@@ -159,6 +175,19 @@ def compute_263af(cip_projects: List[CIPProject],
         # exact Decimal division — never rounded before it multiplies
         wair = nontraced_interest / avg_nontraced_outstanding
         wair_source = "nontraced"
+    elif nontraced_interest > 0:
+        # Inconsistent data: nontraced interest incurred but zero average
+        # outstanding on every measurement date. Falling back to the AFR
+        # while also treating that interest as consumable would be
+        # internally inconsistent (red-team finding) — refuse, don't guess.
+        wair = _ZERO
+        wair_source = "unavailable"
+        warnings.append(
+            f"WAIR-DATA-INCONSISTENT: ${nontraced_interest:,.2f} nontraced "
+            f"interest incurred but zero nontraced principal outstanding on "
+            f"every measurement date — WAIR cannot be computed and the AFR "
+            f"fallback does not apply (debt existed). Excess amounts "
+            f"computed as ZERO; fix the debt schedule's dated balances.")
     elif afr_highest is not None:
         # §1.263A-9(c)(5)(iii)(D): no nontraced debt outstanding during the
         # computation period → the highest §1274(d) AFR in effect stands in.
@@ -203,6 +232,11 @@ def compute_263af(cip_projects: List[CIPProject],
         excess_by_date: Dict[str, Decimal] = {}
         for s in snaps:
             iso = s.measurement_date.isoformat()
+            if iso in ape:
+                warnings.append(
+                    f"DUPLICATE-MEASUREMENT-DATE [{pid}] {iso}: two APE "
+                    f"snapshots on the same date — the later row overwrote "
+                    f"the earlier (${ape[iso]:,.2f}). Fix the CIP schedule.")
             ape[iso] = s.cumulative_ape
             # traced_debt_d is a point-in-time tracing snapshot, NOT
             # min(APE_d, principal) — see §1.263A-9(c)(5)(i)(B)'s
@@ -213,9 +247,23 @@ def compute_263af(cip_projects: List[CIPProject],
             excess_by_date[iso] = max(_ZERO, s.cumulative_ape - traced_d)
 
         if excess_by_date:
-            # exact division — quantization happens only on final dollars
-            average_excess = (sum(excess_by_date.values(), _ZERO)
-                              / Decimal(len(excess_by_date)))
+            # §1.263A-9(f)(2)(iii) measurement-date convention: dates in the
+            # computation period OUTSIDE the unit's own production period
+            # count as ZERO in the numerator and the denominator is the FULL
+            # period's measurement-date count. Dividing by the unit's own
+            # snapshot count overstated a partial-period unit's average by
+            # the missing-dates ratio (2x in the red-team counterexample).
+            denominator = Decimal(len(all_dates)) if all_dates else \
+                Decimal(len(excess_by_date))
+            average_excess = sum(excess_by_date.values(), _ZERO) / denominator
+            if all_dates and len(excess_by_date) < len(all_dates):
+                warnings.append(
+                    f"PARTIAL-PERIOD-UNIT [{pid}]: {len(excess_by_date)} APE "
+                    f"snapshots over a {len(all_dates)}-date computation "
+                    f"period — missing dates treated as zero excess per the "
+                    f"§1.263A-9(f)(2)(iii) snapshot convention. Confirm the "
+                    f"unit's production period actually excludes those dates "
+                    f"(a missing data row would UNDERSTATE capitalization).")
         else:
             average_excess = _ZERO
             warnings.append(

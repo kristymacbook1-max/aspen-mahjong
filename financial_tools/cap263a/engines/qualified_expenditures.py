@@ -69,10 +69,23 @@ def compute_59e(elections: List[QualifiedExpenditureElection], *,
     items: List[dict] = []
     amortizable: List[AmortizableItem] = []
 
-    # Gate 10 Q10.1 — checked before any per-item election logic.
-    if not individual_amt_exposure and entity_type == "c_corp":
+    # Gate 10 Q10.1 — checked before any per-item election logic. The plan's
+    # question is "an individual, OR a pass-through whose owners may report
+    # AMT preference items" — so an s_corp/partnership WITHOUT stated owner
+    # exposure is gated out too, not served (red-team §16: the original
+    # boolean only gated C corps, silently scheduling elections for
+    # pass-throughs whose owners had no AMT exposure).
+    if not individual_amt_exposure and entity_type != "sole_prop":
+        if entity_type == "c_corp":
+            return {"items": items, "amortizable_items": amortizable,
+                    "warnings": [C_CORP_GATE_WARNING]}
         return {"items": items, "amortizable_items": amortizable,
-                "warnings": [C_CORP_GATE_WARNING]}
+                "warnings": [
+                    f"§59E-NO-AMT-EXPOSURE: entity_type={entity_type!r} with "
+                    f"individual_amt_exposure=False — §59(e) matters only when "
+                    f"an individual owner could face §55/§56/§57 preference "
+                    f"items (Gate 10 Q10.1). No election scheduled; re-run "
+                    f"with individual_amt_exposure=True if owners are exposed."]}
 
     periods = load_periods()
     for el in elections:

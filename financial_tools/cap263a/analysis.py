@@ -70,6 +70,10 @@ class EntityProfile:
     ending_DM_not_yet_in_production: Decimal = Decimal("0")
     DM_purchased_during_year: Decimal = Decimal("0")
     mspm_mixed_split_method: str = "direct_material"   # direct_material / labor
+    # Pre-production share of labor for the (c)(3)(iii)(B) labor split method
+    # (fraction). Was a getattr-only phantom the engine could never receive —
+    # the labor method silently fell back to direct-material (red-team §16).
+    mspm_labor_split_proportion: Optional[Decimal] = None
     mspm_90pct_split_election: bool = False
     # --- SRM balance inputs (Gate 3, Q3.11-Q3.18; §1.263A-3(d)) ---
     purchasing_costs: Decimal = Decimal("0")           # purchasing-ratio NUMERATOR
@@ -77,7 +81,13 @@ class EntityProfile:
     storage_handling_costs: Decimal = Decimal("0")
     beginning_inventory_471: Decimal = Decimal("0")    # LIFO carrying value if LIFO
     srm_variation_a: bool = False          # exclude beginning inv from S&H denominator
-    srm_variation_b: bool = False          # LIFO: multiply by total ending §471
+    srm_variation_b: bool = False          # LIFO: S&H ratio × TOTAL ending §471
+    # Variation (B)'s multiplicand: TOTAL ending-inventory §471 costs at LIFO
+    # carrying value. Only the S&H ratio applies to it — the purchasing ratio
+    # still multiplies the current-year increment (ending_inventory_471).
+    # A single combined×total shortcut overstated by purchasing-ratio ×
+    # prior-year layers (red-team §16, confirmed by counterexample).
+    ending_inventory_471_total_lifo: Decimal = Decimal("0")
 
     THRESHOLDS = {2024: Decimal("30000000"), 2025: Decimal("31000000"),
                   2026: Decimal("32000000")}
@@ -108,6 +118,7 @@ class EntityProfile:
         "DM_purchased_during_year",
         "purchasing_costs", "current_year_471_costs",
         "storage_handling_costs", "beginning_inventory_471",
+        "ending_inventory_471_total_lifo",
     )
 
     def __post_init__(self):
@@ -121,6 +132,8 @@ class EntityProfile:
             setattr(self, f, Decimal(str(v or 0)))
         if self.mixed_alloc_ratio is not None:
             self.mixed_alloc_ratio = Decimal(str(self.mixed_alloc_ratio))
+        if self.mspm_labor_split_proportion is not None:
+            self.mspm_labor_split_proportion = Decimal(str(self.mspm_labor_split_proportion))
 
     @property
     def sec448_threshold(self) -> Decimal:
@@ -201,12 +214,30 @@ def analyze(lines: List[TBLine], profile: Optional[EntityProfile] = None) -> dic
     totals = {b: Decimal("0") for b in BUCKETS}
     is_total = Decimal("0")
 
+    btd_warnings = []
     for ln in lines:
         cl = classify(acct_num=ln.acct_num, acct_desc=ln.acct_desc,
                       cc_num=ln.cc_num, cc_desc=ln.cc_desc, tax=tax)
         is_is = cl.tier1 not in _NON_IS_TIERS
         ln.statement_type = "IS" if is_is else "BS"
         bucket = bucket_of(cl, profile) if is_is else ""
+        # Synthetic tax-only lines from an UNMATCHED book-tax difference
+        # ("[BTD] ..." from compute_tax_basis_tb) must not be keyword-
+        # classified into capitalized/mixed pools — a tax-only M-1 item was
+        # silently converted into UNICAP capitalization at confidence 70
+        # with no review flag (red-team, confirmed). Force Deductible +
+        # REVIEW; a human routes it after fixing the account mapping.
+        if ln.acct_desc.startswith("[BTD]"):
+            if is_is and bucket != "Deductible":
+                btd_warnings.append(
+                    f"UNMATCHED-BTD-HELD-DEDUCTIBLE: {ln.acct_desc!r} "
+                    f"(${ln.amount:,.0f}) would have classified into "
+                    f"{bucket!r} on keywords alone — held in Deductible "
+                    f"pending the account mapping fix; do not leave "
+                    f"unmatched BTDs in a filing workpaper.")
+            bucket = "Deductible" if is_is else ""
+            if "REVIEW" not in cl.flags:
+                cl.flags.append("REVIEW")
         if is_is:
             totals[bucket] += ln.amount
             is_total += ln.amount
@@ -220,7 +251,7 @@ def analyze(lines: List[TBLine], profile: Optional[EntityProfile] = None) -> dic
     # (contra/reversal lines net below zero) is economically invalid and must
     # be surfaced. The compute_unicap guard only saw the §263A pools; catch the
     # §263(a) / §266 / §263A(f) buckets and the aggregate here too.
-    bucket_warnings = []
+    bucket_warnings = list(btd_warnings)
     for b in CAPITALIZED_BUCKETS:
         if totals[b] < 0:
             bucket_warnings.append(

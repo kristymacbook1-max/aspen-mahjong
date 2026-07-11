@@ -183,11 +183,18 @@ def compute_174(re_expenditures: List[REExpenditure], *,
                "current_year_deduction": Decimal("0"),
                "following_year_deduction": Decimal("0")}
     if small_business_retroactive and catchup_method:
+        # ENFORCED, not just flagged (red-team §16: the conflicted catch-up
+        # dollars previously still landed in current_year_deduction, so the
+        # warning was cosmetic): the retroactive election amends 2022-2024 —
+        # there is no remaining basis to catch up. Neither number is booked;
+        # the conflicted amount is reported separately for the SME.
         warnings.append(
             "CATCHUP-RETROACTIVE-MUTUALLY-EXCLUSIVE: the §448(c) small-"
             "business retroactive election and a catch-up method were BOTH "
-            "selected — they are mutually exclusive; catch-up computed below "
-            "for visibility, SME must resolve which applies.")
+            "selected — mutually exclusive. NO catch-up deduction was booked; "
+            "resolve which election applies before relying on this output.")
+        catchup["conflicted_amount_not_deducted"] = remaining_2022_2024_basis
+        catchup_method = None
     if small_business_retroactive:
         warnings.append(
             "SMALL-BUSINESS-RETROACTIVE-DEADLINE: the Rev. Proc. 2025-28 "

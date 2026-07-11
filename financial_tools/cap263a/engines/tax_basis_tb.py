@@ -21,16 +21,24 @@ def compute_tax_basis_tb(tb_lines: List[TBLine],
     by_key: Dict[Tuple[str, str], TBLine] = {}
     by_acct: Dict[str, List[TBLine]] = {}
     tax_lines: List[TBLine] = []
+    warnings: List[str] = []
     for ln in tb_lines:
         copy = TBLine(acct_num=ln.acct_num, acct_desc=ln.acct_desc,
                       cc_num=ln.cc_num, cc_desc=ln.cc_desc,
                       amount=ln.amount, statement_type=ln.statement_type,
                       row_index=ln.row_index)
         tax_lines.append(copy)
-        by_key[(copy.acct_num, copy.cc_num)] = copy
+        key = (copy.acct_num, copy.cc_num)
+        if key in by_key and copy.acct_num:
+            # both lines' dollars survive in tax_lines, but WHICH line a BTD
+            # adjusts becomes insertion-order luck — surface it (red-team).
+            warnings.append(
+                f"DUPLICATE-TB-KEY (acct={copy.acct_num!r}, cc={copy.cc_num!r}): "
+                f"multiple TB lines share this key — a BTD matching it applies "
+                f"to the LAST line only ({copy.acct_desc!r}). Split the BTD or "
+                f"disambiguate the accounts if that's not the intended target.")
+        by_key[key] = copy
         by_acct.setdefault(copy.acct_num, []).append(copy)
-
-    warnings: List[str] = []
     unmatched: List[BookTaxDifference] = []
     applied: List[dict] = []
 

@@ -179,6 +179,28 @@ def compute_263a4_5(transaction_costs: List[TransactionCostItem],
                "treatment": "", "deductible": Decimal("0"),
                "capitalized": Decimal("0"), "posted_basis": Decimal("0"),
                "flags": []}
+        # Date-sanity guards (red-team: reversed dates produced a NEGATIVE
+        # recovery period and negative amortization with zero warnings, or —
+        # with a payment_year set — silently deducted the full amount via
+        # the 12-month rule; a 4-digit-typo payment_year crashed date()).
+        if it.benefit_start and it.benefit_end and it.benefit_end < it.benefit_start:
+            row["flags"].append("BENEFIT-DATES-REVERSED")
+            row["treatment"] = "sme_review"
+            warnings.append(
+                f"BENEFIT-DATES-REVERSED [{it.item_id}]: benefit_end "
+                f"{it.benefit_end} precedes benefit_start {it.benefit_start} — "
+                f"no treatment computed; fix the schedule dates.")
+            intangible_items.append(row)
+            continue
+        if it.payment_year and not (1900 <= it.payment_year <= 9998):
+            row["flags"].append("PAYMENT-YEAR-INVALID")
+            row["treatment"] = "sme_review"
+            warnings.append(
+                f"PAYMENT-YEAR-INVALID [{it.item_id}]: payment_year="
+                f"{it.payment_year} is not a plausible tax year — no "
+                f"treatment computed.")
+            intangible_items.append(row)
+            continue
         passes_12mo = _twelve_month_rule_passes(it)
         if passes_12mo:
             # §1.263(a)-4(f): short-lived benefit — nothing capitalizes,
@@ -193,7 +215,11 @@ def compute_263a4_5(transaction_costs: List[TransactionCostItem],
 
         # §1.263(a)-4(e)(4) $5,000 CLIFF on facilitative costs, per
         # transaction: ≤ $5,000 deductible; over → ALL capitalizable.
-        cap = it.amount
+        # Commissions are categorically OUTSIDE the de minimis — always
+        # capitalized, never counted toward (or sheltered by) the cliff.
+        cap = it.amount + it.facilitative_commissions
+        if it.facilitative_commissions > 0:
+            row["flags"].append("E4-COMMISSIONS-ALWAYS-CAPITALIZED")
         ded = Decimal("0")
         if it.facilitative_costs > 0:
             if it.facilitative_costs <= FACILITATIVE_DE_MINIMIS:

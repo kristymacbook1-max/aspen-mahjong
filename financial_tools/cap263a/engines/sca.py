@@ -197,6 +197,19 @@ def compute_sca(pools: List[CostPool], assets: List[SelfConstructedAsset],
         warnings.extend(pool_warnings)
         blocked = any(w.startswith("HARD-BLOCKED-DRIVER") for w in pool_warnings)
         driver_total = sum(pool.targets.values(), Decimal("0"))
+        block_flag = "HARD-BLOCKED-DRIVER"
+        negative_drivers = [t for t, dv in pool.targets.items() if dv < 0]
+        if negative_drivers and not blocked:
+            # A negative driver value produces a NEGATIVE share and a
+            # negative "capitalized" allocation to a real asset while the
+            # conservation check still ties (red-team, confirmed) — refuse.
+            blocked = True
+            block_flag = "NEGATIVE-DRIVER-VALUE"
+            warnings.append(
+                f"NEGATIVE-DRIVER-VALUE [pool {pool.pool_id}]: driver values "
+                f"for {negative_drivers} are negative — a driver share is a "
+                f"fraction of a physical quantity; pool NOT allocated. Fix "
+                f"the driver data.")
         degenerate = driver_total == 0
         if degenerate and not blocked:
             warnings.append(
@@ -212,7 +225,7 @@ def compute_sca(pools: List[CostPool], assets: List[SelfConstructedAsset],
                     "share": Decimal("0"), "allocated": Decimal("0"),
                     "capitalized": Decimal("0"), "deductible": Decimal("0"),
                     "not_booked": Decimal("0"),
-                    "flags": ["HARD-BLOCKED-DRIVER"] if blocked
+                    "flags": [block_flag] if blocked
                              else ["POOL-DEGENERATE-DENOMINATOR"]})
             conservation_checks.append({
                 "pool_id": pool.pool_id, "pool_amount": pool.amount,

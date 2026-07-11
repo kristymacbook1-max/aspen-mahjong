@@ -627,6 +627,7 @@ a claim to spot-check, not settled fact.
 - **Primary-source verification passes (§7a-§7f):** §1.263A-1 (SSCM/UNICAP general), §1.263A-2 (MSPM), §1.263A-3 (SRM), §1.263A-4 (farming), and §§1.263A-7 through -15 (change in method + full interest-capitalization scheme) regulation text retrieved and cross-checked directly; four IRS LB&I Practice/Concept Units (resellers, interest capitalization, self-constructed-asset costs, producers) cross-checked as independent secondary confirmation, then re-audited a second time by four parallel subagents (§7e) specifically checking whether the plan's own "VERIFIED" claims actually held up, then **red-teamed a third time (§7f)** — including an agent given only raw facts, with no knowledge of any prior answer, to independently re-derive the hardest number from scratch. Found and fixed: one real citation bug ($50M rule); two real missing MSPM mechanics (residual pre-production, direct materials adjustment); one real missing SRM method-availability gate (SPM-only above de minimis production) plus several smaller SRM gaps; one real missing §263A(f) de minimis designated-property exclusion and mid-production-purchase APE rule; a **materially wrong core avoided-cost-method formula** in Phase D that understated the golden worked example by ~16% (corrected from $323,571.43 to $376,428.57, then independently re-confirmed from scratch in §7f); **two separate false verification claims in this very document's own audit trail** (§7c's Phase-C-cost-methods claim, and §7d's Phase-D-formula claim — both retracted); and a genuine **self-contradiction** where Phase C silently misapplied SSCM to assets the plan's own SSCM section says likely don't qualify for it (plus two more instances of that same "reuses SSCM" staleness found and fixed in §7f, elsewhere in the document). Also resolved the "T.D. 10034" suspected-fabrication flag: the citation is real (§7d). **Standing lesson from this whole sequence: confident "verified"/"no discrepancy found" language in this document's own audit trail has twice turned out to be wrong — every entry, including this one, is a claim to spot-check, not settled fact.**
 - **Synthetic-data full-calculation stress test + final decisions (§8):** every formula (SPM/MSPM/SRM/SCA/§263A(f)) run end-to-end against non-trivial synthetic datasets by five parallel subagents; a real shipped-code taxonomy bug found and fixed (§8, intro); four genuine specification gaps found and closed with explicit adopted decisions (§8a-§8d). `BUILD_PLAN.md` updated throughout and declared final/buildable as of 2026-07-08.
 - **Full-text reconciliation, §§1.261-1..1.266-1 + §§1.263A-0..-15 (§10, 2026-07-09 second pass):** complete authoritative eCFR text supplied in-session — §9's provenance caveat lifted for everything it covers, and every §9 correction it covers confirmed verbatim. One §9 hedge reversed (the (h)(5) income-tax exclusion IS in the reg — partial retrieval of a correct paragraph had produced a false hedge); one adopted SME decision reversed (SRM 90/10 threshold = the (c)(5)(iii)(B) sales ratio, not an independent cost study); §1.263A-3(a)(4)(iv) resolved (production costs flow through the SRM formula itself); §1.263(a)-1/-3 and §1.266-1 verified (closing two of the three remaining unverified citations — only §1.471-11 remains); and ~10 genuinely new mechanics entered the plan (financial-statement-based §471 definition, MSPM+LIFO combined ratio, SRM handling exclusions incl. pick-and-pack, §1.263A-10 unit/common-feature rules, §1.263A-11(c) contract-payment APE rules, §1.263A-9(d) no-tracing election, aged-property production periods, de minimis safe harbor $2,500-authority note). Suite: 96 passing.
+- **Post-build red team (§16, 2026-07-09, `/goal` directive):** four adversarial agents (seams / spec-vs-code / hostile inputs / coverage gaps) executed against the fresh build; ELEVEN confirmed wrong-dollar bugs fixed — headline items: a 2× §263A(f) overstatement for partial-period units, the workbook crashing for every MSPM/SRM client while 201 tests stayed green, run_engagement silently discarding interview-answered elections, bool("no")==True flipping the tax-shelter answer, SRM's variation-B and mixed-service contract errors, and an unmatched book-tax difference keyword-classifying itself into $36k of UNICAP capitalization. Plus ~20 gate/data-loss fixes (blocking errors now actually block; sheet routing no longer swallows schedules via substring matches; NaN rejected; unreachable dated debt balances now ingestible) and mandatory DOUBLE-COUNT-RECONCILE warnings wherever the TB classifier and a schedule engine can see the same dollars. Every fix pinned by a regression test named for its bug. Suite 201 → 221. Meta-lesson recorded: all eleven dollar bugs lived outside the golden paths or in seams between independently-built modules — golden tests prove the happy path, not the tool.
 - **BUILD EXECUTED (§15, 2026-07-09, `/goal` directive):** the whole plan is now running code — five parallel build agents with strict file ownership plus a foundation/integration pass shipped multi-format ingestion (xlsx/csv/json/directory), the materialized tax-basis TB, MSPM/SRM/SCA/§263A(f) engines, the §174/§1.263(a)-4/-5/§59(e)/§1060/§280B engines, the 119-node Gate 0-10 interview, and the end-to-end `run_engagement` orchestrator. Every golden figure passes as an automated test, two of them verified fully end-to-end (interview answers → MSPM $284,400; JSON upload → §263A(f) $376,428.57). Suite 201 passing (from 96). Open: report tabs for the new engines, Phase H classifier codes, three interview flag-vs-field promotions, the Phase C double-count rule, the F/G/H primary-text pull.
 - **Finalization pass: runtime pipeline, basis reconciliation, elective menu, completeness sweep (§14, 2026-07-09, `/goal` directive):** the plan was fully spec'd by Code section but never stated the runtime order the finished tool actually computes in — a `/goal` directive with three parallel subagents found and fixed this, plus two real structural gaps: no mechanic anywhere reconciled book-already-capitalized basis against tax-required capitalization (confirmed correctly N/A for inventory, but genuinely missing for interest/intangibles/R&E, and Gate 4's tangible-property improvements had NO per-asset posting mechanism at all — the most consequential single finding); and no consolidated list of the plan's ~15+ elections existed, conflating three different kinds of election. A fourth research pass found one material new gap (§1060/Form 8594 purchase-price allocation for business acquisitions) and one small one (§280B demolition-to-land-basis), with several other candidates (§263(g), §461(g), §616/§617 mandatory baseline, §194) researched and explicitly deferred rather than silently dropped. New sections added: Runtime Pipeline, Basis Reconciliation, Elective Capitalization Menu, plus a materialized Tax-Basis TB deliverable in Phase A. Suite: 96 passing (docs-only).
 - **Scope expansion: §174/§174A, §1.263(a)-4/-5 + §195/§248/§709, and §59(e) added (§13, 2026-07-09):** direct request to cover all mandatory/elective capitalization provisions under §263(a)/§174/§266/§59(e), not §263A alone. Repo-mining found existing (previously unknown-to-this-plan) taxonomy codes and a reusable §1.263(a)-5 classifier in `transaction_costs/`, but confirmed no amortization-schedule engine exists anywhere for any of it. WebSearch-based verification (WebFetch to all canonical hosts blocked this session) reversed a working assumption that §59(e)'s R&E prong was vestigial — OBBBA revived it for 2025+ — and confirmed the corporate AMT/CAMT does not use §59(e) at all, gating the new Gate 10 accordingly. Added three new phases (F/G/H), three new interview gates (8/9/10), extended the input table to 8, and added a shared `AmortizableItem` basis/amortization mechanic generalizing the existing per-asset concept. Explicitly flagged, not silently built: Gates 8-10 are unvalidated (no §12-style pass yet), no golden worked example exists for any of the three phases, and several citation specifics (§174(d)'s reach on elective-domestic R&E, the exact §57(a) mining-preference subparagraph, the §59(e)/§174A(c) election-conflict resolution) are UNCERTAIN pending a licensed-research-tool primary-text pull. Suite: 96 passing (docs-only).
@@ -1482,3 +1483,88 @@ has hand-derived arithmetic fixtures (documented in test docstrings), but they a
 IRS-published examples — one notch below MSPM's regulation-sourced Example 1 on the provenance scale.
 
 Suite: 201 passing.
+
+## §16 — Post-build red team: errors, gaps, and break modes found and fixed (2026-07-09, `/goal` directive)
+
+**Trigger:** an explicit directive to "find errors, gaps, inaccuracies, and ways that this will break,"
+immediately after the §15 build. Four parallel adversarial agents with distinct lenses (cross-module seams;
+tax-rule translation vs. the plan spec; hostile-input robustness; test-coverage gaps), every claimed bug
+CONFIRMED by executing the actual code with a counterexample before being fixed. Two rounds of fixes; suite
+grew 201 → 221, including a `test_redteam_round2.py` regression file where every test pins a confirmed bug.
+
+**CONFIRMED WRONG-DOLLARS bugs found and fixed (each had a numeric counterexample):**
+1. **§263A(f) partial-period 2× overstatement** — a unit with snapshots on only some of the computation
+   period's measurement dates divided by its OWN snapshot count instead of the full grid's, doubling its
+   average excess in the counterexample. Now averages over the full grid per §1.263A-9(f)(2)(iii) with a
+   PARTIAL-PERIOD-UNIT warning. The golden fixture never caught it because its single unit spans all dates.
+2. **SRM variation (d)(3)(iii)(B)** applied the COMBINED ratio to total ending inventory; the regulation
+   applies only the S&H ratio to the total (purchasing ratio still × the increment) — overstated by
+   purchasing-ratio × prior-year layers ($59,000 vs the correct $50,000 in the counterexample). New
+   `ending_inventory_471_total_lifo` field carries the multiplicand.
+3. **Workbook generation crashed for every non-exempt MSPM/SRM client** (KeyError on SPM-only unicap keys) —
+   201 tests stayed green because nothing drove analyze() → engine → report end to end. Summary is now
+   method-aware; an end-to-end regression drives both goldens into real workbooks.
+4. **run_engagement dropped every interview election** — a §174A(c)/§59(e) election answered in the interview
+   ran the engines on defaults (silently discarding a valid, irrevocable election). Interview flags now wire
+   into engine kwargs; interview warnings reach all_warnings; promised-but-missing schedules warn.
+5. **bool("no") == True** — a dictated "no" to the tax-shelter question set is_tax_shelter=True and switched
+   ALL of UNICAP on. The interview now uses a strict yes/no string table and rejects ambiguous answers.
+6. **Unmatched-BTD synthetic lines keyword-classified into UNICAP pools** (a tax-only M-1 item became $36k of
+   capitalization at confidence 70, no review flag). "[BTD]" lines are now forced Deductible + REVIEW.
+7. **SRM published the aggregate SSCM split as capitalized mixed costs** while its own input contract says
+   the (F) shares live inside the pool inputs — zeroing real deductions out of adjusted_deductible_post.
+   SRM now reports the ratio informationally only, with a mandatory input-contract warning.
+8. **The MSPM labor split method was unreachable** (read a field that didn't exist; always silently fell back
+   to direct-material — $50,000 vs the correct $20,000 pre-production on the regulation's own Example 5).
+   `mspm_labor_split_proportion` is now a real EntityProfile field.
+9. **A $4,000 commission slipped through the §1.263(a)-4(e)(4) $5,000 de minimis** — commissions are
+   categorically outside it; new `facilitative_commissions` field, always capitalized.
+10. **Reversed benefit dates produced NEGATIVE amortization** (recovery_months=-17, -$84,705 year-1) or a
+    silent full deduction via the 12-month rule; now flagged BENEFIT-DATES-REVERSED → SME review.
+11. **The §174 catch-up/retroactive mutual-exclusivity warning was cosmetic** — the conflicted dollars still
+    landed in current_year_deduction. Now enforced: nothing books, the amount reports separately.
+
+**CONFIRMED gate/data-loss bugs fixed:** SRM's availability gate ignored `production_incident_to_resale`
+((a)(4)(ii)) and silently passed on an unknown activity level (now: hard conflict / explicit
+LEVEL-UNKNOWN warning); §59(e) served pass-throughs with no stated individual-AMT exposure (now gated);
+blocking ingestion ERRORs were effectively warnings — the workbook shipped on unresolved FK links (now
+refuses unless force=True, per the plan's own --force contract); substring sheet routing swallowed entire
+schedules ("prinCIPal"/"MuniCIPal" matched the CIP hint; bare "assets" captured "Intangible Assets") — now
+word-bounded, most-specific-first, with multi-match and zero-rows-parsed warnings; a real TB error
+(ambiguous sheets, missing amount column) was swallowed as "no TB found" (now a blocking error carrying the
+real message); TB rows described "COGS"/"Income" WITH dollars were dropped as section headers (now only
+amount-less rows skip); NaN/Infinity amounts silently poisoned totals AND defeated the tie-check (now
+rejected at the model layer with the offending value named); date-object keys in outstanding_by_date
+silently fell back to principal (now normalized, and dated debt balances are now actually reachable through
+the JSON reader — previously NO reader path could deliver them, so Phase D's dated-balance mechanics were
+dead code for reader-ingested data); "foreign" in a Domestic? column coerced True, flipping mandatory
+15-year foreign R&E capitalization into current expensing (now aliased correctly); out-of-menu enum answers
+flowed into the profile (now refused + warned); typo'd answer keys silently un-answered questions (now
+warned); negative SCA driver values allocated negative dollars with conservation still tying (now blocked);
+duplicate TB (acct,cc) keys and duplicate APE measurement dates now warn; the workbook showed THREE
+different §263A(f) numbers (legacy stub, TB bucket, engine) — the stub now defers to the engine figure, and
+TB-bucket-vs-engine overlap gets a mandatory DOUBLE-COUNT-RECONCILE warning (same for R&E and §263(a)
+transaction costs — the classifier and the schedule engines can both see the same dollars, nothing can
+auto-net them, so silence was the bug).
+
+**Found, documented, deliberately NOT built this round (each now carries an explicit in-output warning or a
+plan note):** the SCA→§263A(f) `ape_by_asset` hand-off (the plan specifies it; timing allocation across
+measurement dates is genuinely underdetermined from SCA's single annual figure — CIP snapshots must include
+allocated additional §263A costs, warned when SCA runs alongside Phase D); the remaining ~3 §1.263A-9(a)(4)
+eligible-debt screens (reserves/deferred taxes, §453A/§460(b) items, sale-leaseback obligations); the
+(d)(3)(i)(F) one-step MSC sub-split computation (input contract + warning instead); HAR, the MSPM+LIFO
+combined ratio, and the $200K deemed-zero as engine mechanics (all now emit NOT-IMPLEMENTED warnings when
+their facts arise instead of silently computing the wrong basis); traced debt's §1.263A-9(b)(2)
+previously-capitalized-interest component; §1060 downstream basis seeding (manual, noted); the classifier's
+NO-INT/NO-INTCAP alphabetical tie-break on common interest descriptions; Gate 5's cross-gate ordering
+dependency (documented, runner still walks document order); Q7.14's tax-year approximation of the
+T.D. 10034 effective date for fiscal-year taxpayers.
+
+**Meta-lesson (consistent with §7e/§9/§10's standing lessons):** the build's own golden fixtures all passed
+while eleven confirmed wrong-dollar bugs shipped — every one lived either OUTSIDE the golden path (partial
+periods, variations, elections the fixtures didn't exercise) or in the SEAMS between independently-built
+modules (interview→pipeline, classifier→schedule engines, tax-basis-TB→classifier). Golden-example tests
+prove the happy path, not the tool; adversarial execution against counterexamples is what found all of
+these, and future engine work should budget for it as a standing phase, not a one-off.
+
+Suite: 221 passing.

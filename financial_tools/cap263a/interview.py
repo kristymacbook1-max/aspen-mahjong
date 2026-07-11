@@ -170,18 +170,46 @@ def load_graph(path: Optional[str] = None) -> List[Node]:
 # Runner
 # --------------------------------------------------------------------------
 
+_BOOL_TRUE = {"true", "yes", "y", "1", "x", "t"}
+_BOOL_FALSE = {"false", "no", "n", "0", "", "f", "none"}
+
+
 def _coerce(node: Node, value: Any) -> Any:
+    """Answer coercion with the question id in every failure.
+
+    bool answers use a truthy/falsy STRING table — Python's bool("no") is
+    True, which turned a dictated "no" to the tax-shelter question into
+    is_tax_shelter=True and switched all of UNICAP on (red-team, confirmed).
+    """
     if value is None:
         return None
-    if node.answer_type == "decimal":
-        return Decimal(str(value))
-    if node.answer_type == "int":
-        return int(value)
-    if node.answer_type == "bool":
-        return bool(value)
-    if node.answer_type == "per_item":
-        return list(value)
-    return value
+    try:
+        if node.answer_type == "decimal":
+            if isinstance(value, bool):
+                raise ValueError(f"expected a number, got bool {value!r}")
+            return Decimal(str(value))
+        if node.answer_type == "int":
+            return int(value)
+        if node.answer_type == "bool":
+            if isinstance(value, bool):
+                return value
+            s = str(value).strip().lower()
+            if s in _BOOL_TRUE:
+                return True
+            if s in _BOOL_FALSE:
+                return False
+            raise ValueError(
+                f"ambiguous yes/no answer {value!r} — use yes/no/true/false")
+        if node.answer_type == "per_item":
+            if isinstance(value, (str, bytes)) or not hasattr(value, "__iter__"):
+                # list("abc") silently exploded a scalar into characters
+                raise ValueError(
+                    f"per-item answer must be a LIST of item dicts, got {value!r}")
+            return list(value)
+        return value
+    except (ValueError, ArithmeticError) as e:
+        raise ValueError(f"{node.id}: cannot coerce answer {value!r} "
+                         f"({node.answer_type}): {e}") from None
 
 
 def _sec448_threshold(env: Dict[str, Any]) -> Decimal:
@@ -245,8 +273,15 @@ def run_interview(answers: Dict[str, Any],
     prior_elections: Dict[str, Any] = answers.get("prior_elections", {}) or {}
 
     env: Dict[str, Any] = {_uid(n.id): None for n in graph}
+    # A typo'd answer key silently un-answers its question (red-team) —
+    # surface every key that matches no question id.
+    known_ids = {n.id for n in graph} | {"prior_elections"}
+    unknown_keys = [k for k in answers if k not in known_ids]
+    warnings_head = [f"UNRECOGNIZED-ANSWER-KEY: {k!r} matches no question id "
+                     f"— that answer was IGNORED (check for typos/spacing)."
+                     for k in unknown_keys]
     asked: List[str] = []
-    warnings: List[str] = []
+    warnings: List[str] = list(warnings_head)
     elections: List[dict] = []
     flags: Dict[str, Any] = {}
     schedule_data: Dict[str, Any] = {}
@@ -272,8 +307,14 @@ def run_interview(answers: Dict[str, Any],
 
         if node.answer_type == "enum" and node.choices \
                 and answer not in node.choices:
+            # Warn AND refuse to route — the bogus value previously flowed
+            # straight into the profile (entity_type='TOTALLY_BOGUS' reached
+            # compute_59e's gating; red-team, confirmed).
             warnings.append(f"ANSWER-OUT-OF-MENU: {node.id} answer "
-                            f"{answer!r} not in {node.choices}")
+                            f"{answer!r} not in {node.choices} — NOT applied; "
+                            f"the question remains effectively unanswered.")
+            env[_uid(node.id)] = None
+            continue
 
         # Route the answer
         mt = node.maps_to

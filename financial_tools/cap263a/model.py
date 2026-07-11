@@ -7,10 +7,26 @@ from typing import Optional, List, Dict
 
 
 def _dec(v) -> Decimal:
-    """Coerce any money-ish input to Decimal (None -> 0)."""
+    """Coerce any money-ish input to Decimal (None -> 0).
+
+    bool is rejected by name (a JSON `true` in a money field crashed with a
+    bare InvalidOperation) and non-finite values are rejected outright — a
+    NaN silently poisons every total AND defeats the tie-check, so it must
+    never enter a schedule (red-team findings, both confirmed)."""
     if isinstance(v, Decimal):
-        return v
-    return Decimal(str(v)) if v is not None else Decimal("0")
+        d = v
+    elif v is None:
+        return Decimal("0")
+    elif isinstance(v, bool):
+        raise TypeError(f"expected a dollar amount, got bool {v!r}")
+    else:
+        try:
+            d = Decimal(str(v))
+        except Exception:
+            raise ValueError(f"not a dollar amount: {v!r}")
+    if not d.is_finite():
+        raise ValueError(f"non-finite dollar amount rejected: {v!r}")
+    return d
 
 
 @dataclass
@@ -180,8 +196,11 @@ class DebtInstrument:
         self.principal = _dec(self.principal)
         self.rate = _dec(self.rate)
         self.interest_incurred = _dec(self.interest_incurred)
-        self.outstanding_by_date = {k: _dec(v) for k, v in
-                                    (self.outstanding_by_date or {}).items()}
+        # keys normalize to ISO strings — a date-object key silently missed
+        # every lookup and fell back to principal (red-team, confirmed)
+        self.outstanding_by_date = {
+            (k.isoformat() if isinstance(k, date) else str(k)): _dec(v)
+            for k, v in (self.outstanding_by_date or {}).items()}
 
     @property
     def is_eligible_debt(self) -> bool:
@@ -281,6 +300,11 @@ class IntangibleItem:
     benefit_end: Optional[date] = None
     payment_year: int = 0
     facilitative_costs: Decimal = Decimal("0") # aggregate, for the (e)(4) $5k cliff
+    # Commissions are CATEGORICALLY excluded from the (e)(4) de minimis —
+    # always capitalized regardless of the $5,000 cliff. Keeping them inside
+    # facilitative_costs let a $4,000 commission slip through as deductible
+    # (red-team §16); supply them separately here.
+    facilitative_commissions: Decimal = Decimal("0")
     prior_capitalized_basis: Decimal = Decimal("0")
     row_index: int = 0
     source_sheet: str = ""
@@ -288,6 +312,7 @@ class IntangibleItem:
     def __post_init__(self):
         self.amount = _dec(self.amount)
         self.facilitative_costs = _dec(self.facilitative_costs)
+        self.facilitative_commissions = _dec(self.facilitative_commissions)
         self.prior_capitalized_basis = _dec(self.prior_capitalized_basis)
 
 

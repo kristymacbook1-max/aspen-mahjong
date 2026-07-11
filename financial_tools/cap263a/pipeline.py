@@ -57,6 +57,7 @@ class CapitalizationPipeline:
                        re_options: dict = None,
                        success_fee_elections=frozenset(),
                        individual_amt_exposure: bool = False,
+                       force: bool = False,
                        generate_workbook: bool = True,
                        company_tag: str = None, timestamp: str = None,
                        **reader_kwargs) -> dict:
@@ -82,12 +83,39 @@ class CapitalizationPipeline:
         data = source if isinstance(source, EngagementData) else \
             read_engagement(source, **reader_kwargs)
 
-        # Step 0 (Phase E): interview answers -> EntityProfile
+        # Blocking ingestion errors REFUSE by default — BUILD_PLAN's
+        # ValidationReport contract ("unresolved FK = ERROR; --force
+        # overrides"). Before this guard, ERROR was effectively a warning
+        # (red-team, confirmed): the workbook shipped on garbage links.
+        if data.validation.errors and not force:
+            raise ValueError(
+                "Blocking ingestion errors — fix them or pass force=True to "
+                "compute anyway:\n  " + "\n  ".join(data.validation.errors))
+
+        # Step 0 (Phase E): interview answers -> EntityProfile. The interview
+        # also carries ELECTIONS the engines need as kwargs — dropping them
+        # ran engines on defaults and silently discarded a valid, irrevocable
+        # §59(e)/§174A(c) election (red-team, confirmed). Explicit caller
+        # kwargs win over interview-derived values.
         interview_result = None
         if profile is None and answers is not None:
             from .interview import run_interview
             interview_result = run_interview(answers)
             profile = interview_result.profile
+            iflags = interview_result.flags
+            if re_options is None:
+                re_options = {}
+                if iflags.get("RE_CAPITALIZATION_ELECTION"):
+                    re_options["domestic_capitalization_election"] = True
+                    if iflags.get("RE_CAPITALIZATION_PERIOD_MONTHS"):
+                        re_options["elected_period_months"] = \
+                            int(iflags["RE_CAPITALIZATION_PERIOD_MONTHS"])
+                if iflags.get("RE_CATCHUP_METHOD"):
+                    re_options["catchup_method"] = iflags["RE_CATCHUP_METHOD"]
+                if iflags.get("RE_SMALL_BUSINESS_RETROACTIVE_ELECTION"):
+                    re_options["small_business_retroactive"] = True
+            if not individual_amt_exposure and iflags.get("AMT_EXPOSURE"):
+                individual_amt_exposure = True
         profile = profile or EntityProfile()
 
         # Step 2: tax-basis TB (materialized; downstream classifies THIS)
@@ -108,6 +136,27 @@ class CapitalizationPipeline:
         all_warnings += result.get("unicap", {}).get("warnings", [])
         if tax_tb:
             all_warnings += tax_tb["warnings"]
+        if interview_result is not None:
+            # 3115/method-change and conflict warnings must reach the
+            # workpaper, and a schedule the answers promised but the upload
+            # lacks silently skips its engine (red-team, both confirmed).
+            all_warnings += interview_result.warnings
+            present = {"btd": bool(data.btds),
+                       "fixed_assets": bool(data.fixed_assets),
+                       "cip": bool(data.cip_projects),
+                       "debt": bool(data.debts),
+                       "re": bool(data.re_expenditures),
+                       "transaction_costs": bool(data.transaction_costs),
+                       "intangibles": bool(data.intangibles),
+                       "startup": bool(data.startup_pools),
+                       "qualified_expenditures": bool(data.qualified_expenditures)}
+            for sched in interview_result.schedules_required:
+                key = sched.split(".")[0].lower()
+                if key in present and not present[key]:
+                    all_warnings.append(
+                        f"SCHEDULE-MISSING: the interview answers require the "
+                        f"{sched!r} schedule but the upload contains none — "
+                        f"the corresponding engine was silently skipped.")
 
         # Phase C — SCA (pools/assets are computed inputs, passed explicitly).
         # §263A(i) exempts a small business from ALL of §263A — SCA included,
@@ -163,6 +212,41 @@ class CapitalizationPipeline:
                                   for p in data.purchase_price_allocations]
             for ppa in result["ppa_1060"]:
                 all_warnings += ppa["warnings"]
+
+        # TB-vs-schedule double-count reconciliation (red-team, confirmed):
+        # the classifier buckets TB lines while the schedule engines
+        # independently capitalize what may be THE SAME dollars — interest
+        # lines vs the debt schedule, EX-RD deductible R&E vs the R&E
+        # schedule, §263(a) Mandatory transaction lines vs the intangibles
+        # schedule. Nothing can auto-net them (the TB line and the schedule
+        # row aren't linked), so every overlap gets a MANDATORY warning
+        # quantifying both sides — silence was the bug.
+        buckets = result["bucket_totals"]
+        if "interest_263af" in result and buckets["§263A(f) Interest"]:
+            all_warnings.append(
+                f"DOUBLE-COUNT-RECONCILE [§263A(f)]: ${buckets['§263A(f) Interest']:,.0f} "
+                f"of TB lines sit in the §263A(f) Interest bucket AND the debt-schedule "
+                f"engine capitalized ${result['interest_263af']['total_capitalized']:,.2f} "
+                f"— if these are the same interest dollars, remove one side before "
+                f"filing (the TB bucket is classification-only; the engine figure is "
+                f"the computed workpaper number).")
+        if "re_174" in result:
+            re_tb = sum((r.line.amount for r in result["rows"]
+                         if r.cls.code in ("EX-RD", "EX-174AMORT")), Decimal("0"))
+            if re_tb:
+                all_warnings.append(
+                    f"DOUBLE-COUNT-RECONCILE [§174]: ${re_tb:,.0f} of R&E-coded TB lines "
+                    f"remain in the deductible total AND the R&E schedule drove "
+                    f"${result['re_174']['capitalized_total']:,.2f} of capitalization — "
+                    f"if the schedule covers the same costs, the TB deduction must be "
+                    f"backed out (deduction + basis for the same dollars otherwise).")
+        if "intangibles_263a45" in result and buckets["§263(a) Mandatory"]:
+            all_warnings.append(
+                f"DOUBLE-COUNT-RECONCILE [§263(a)]: ${buckets['§263(a) Mandatory']:,.0f} "
+                f"of TB lines sit in the §263(a) Mandatory bucket AND the transaction-"
+                f"cost/intangibles engine posted "
+                f"${result['intangibles_263a45']['capitalized_total']:,.2f} — confirm "
+                f"the schedule and the TB lines are not the same dollars twice.")
 
         # prepend blocking errors BEFORE publishing the list — the previous
         # order depended on list aliasing (a refactor to list(all_warnings)
