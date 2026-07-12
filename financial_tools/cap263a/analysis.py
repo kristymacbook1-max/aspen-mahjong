@@ -58,6 +58,9 @@ class EntityProfile:
     production_incident_to_resale: bool = False
     private_label_goods: bool = False
     sscm_ratio_method: str = "labor"       # labor / production_cost
+    # (g)(4)(ii) all-departments 90% election — the department-level
+    # carve-out mechanics are NOT built; setting this warns (honesty gate).
+    msc_90_10_election: bool = False
     include_negative_263a: bool = False
     # --- MSPM balance inputs (Gate 3, Q3.2-Q3.10; §1.263A-2(c)) ---
     pre_production_471: Decimal = Decimal("0")
@@ -372,13 +375,46 @@ def compute_sscm(result: dict, profile: EntityProfile) -> dict:
     total_labor = sum((r.line.amount for r in rows
                        if r.cls.is_labor and r.cls.tier1 not in SSCM_DENOM_EXCLUDED_TIERS), Decimal("0"))
     ratio_warn = None
+    ratio_method_used = "labor"
     if profile.mixed_alloc_ratio is not None:
         ratio = profile.mixed_alloc_ratio
+        ratio_method_used = "override"
         if not (Decimal("0") <= ratio <= Decimal("1")):
             ratio_warn = (f"SSCM ALLOCATION RATIO OVERRIDE = {ratio} is outside [0,1] — a "
                           f"service-cost allocation ratio is a fraction; clamped to "
                           f"[0,1] for the computation. Check the input.")
+    elif profile.sscm_ratio_method == "production_cost" \
+            and not profile.acquires_for_resale:
+        # §1.263A-1(h)(5), producers only: §263A production costs ÷ total
+        # costs, where "total costs" excludes mixed service costs, interest,
+        # AND income-based taxes ((h)(5)(ii) last sentence — the hedge-closed
+        # three-item list). Buildable straight from the classified TB, per
+        # the plan's own SSCM "Build implication"; left as a warned stub
+        # until this round.
+        b = result["bucket_totals"]
+        income_tax = sum((r.line.amount for r in rows
+                          if r.cls.code == "NO-INCTAX"), Decimal("0"))
+        numerator = b["Inventory §471"] + b["§263A Additional"]
+        denominator = (result["is_total"] - result["mixed_total"]
+                       - b["§263A(f) Interest"] - income_tax)
+        if denominator > 0:
+            ratio = numerator / denominator
+            ratio_method_used = "production_cost"
+            if not (Decimal("0") <= ratio <= Decimal("1")):
+                ratio_warn = (f"SSCM PRODUCTION-COST RATIO = "
+                              f"{ratio.quantize(Decimal('0.0001'))} is outside [0,1] "
+                              f"— review the §263A pools vs total costs; clamped.")
+        else:
+            ratio = Decimal("0")
+            ratio_warn = ("SSCM PRODUCTION-COST RATIO: total costs (excl. mixed "
+                          "service, interest, income-based taxes) is zero or "
+                          "negative — ratio set to 0; labor method may be the "
+                          "better election on these facts.")
     else:
+        if profile.sscm_ratio_method == "production_cost":
+            ratio_warn = ("SSCM-PRODUCTION-COST-RESELLER: the production-cost "
+                          "allocation ratio is a producer-only formula "
+                          "(§1.263A-1(h)(3)(ii)) — labor-based ratio used instead.")
         ratio = (prod_labor / total_labor) if total_labor else Decimal("0")
         if not (Decimal("0") <= ratio <= Decimal("1")):
             ratio_warn = (f"SSCM LABOR RATIO = {ratio.quantize(Decimal('0.0001'))} is outside "
@@ -394,9 +430,17 @@ def compute_sscm(result: dict, profile: EntityProfile) -> dict:
     mixed = result["mixed_total"]
     mixed_cap = _q(mixed * ratio)
     mixed_ded = mixed - mixed_cap
+    if profile.msc_90_10_election and mixed and ratio_warn is None:
+        ratio_warn = ("MSC-90-10-NOT-IMPLEMENTED: the (g)(4)(ii) all-departments "
+                      "90% election is set, but the department-level carve-out "
+                      "mechanics are not built — the SSCM ratio was applied "
+                      "UNIFORMLY across all mixed service costs. A department "
+                      "≥90% capitalizable must be allocated 100% under the "
+                      "election (mandatory side); review before filing.")
     return {"mixed_alloc_ratio": ratio, "production_labor": prod_labor,
             "total_labor": total_labor, "mixed_capitalized": mixed_cap,
-            "mixed_deductible": mixed_ded, "ratio_warning": ratio_warn}
+            "mixed_deductible": mixed_ded, "ratio_warning": ratio_warn,
+            "ratio_method_used": ratio_method_used}
 
 
 def compute_spm(result: dict, profile: EntityProfile) -> dict:

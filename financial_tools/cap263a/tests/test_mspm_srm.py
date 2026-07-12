@@ -221,8 +221,11 @@ def test_srm_no_conflict_for_private_label_producer():
 
 
 def test_srm_reseller_production_cost_sscm_ratio_warns():
+    """(Updated round 5: the warning moved into compute_sscm itself — the
+    production-cost ratio is now IMPLEMENTED for producers, and a reseller
+    electing it falls back to labor with SSCM-PRODUCTION-COST-RESELLER.)"""
     u = compute_srm(_result(), _srm_profile(sscm_ratio_method="production_cost"))
-    assert any("SRM-SSCM-RATIO-METHOD" in w for w in u["warnings"])
+    assert any("SSCM-PRODUCTION-COST-RESELLER" in w for w in u["warnings"])
 
 
 # ------------------------------------------------ guardrails / degenerate data

@@ -139,15 +139,8 @@ def compute_mspm(result: dict, profile) -> dict:
     mixed_cap = sscm["mixed_capitalized"]
     mixed_ded = sscm["mixed_deductible"]
 
-    # Spec-audit guard (red-team §16): the production-cost SSCM ratio is
-    # specified but unbuilt — warn, never silently substitute.
-    if profile.sscm_ratio_method == "production_cost":
-        warnings_.append(
-            "MSPM-SSCM-RATIO-METHOD-NOT-IMPLEMENTED: sscm_ratio_method="
-            "'production_cost' elected (a real producer option under "
-            "§1.263A-1(h)(3)(ii)) but compute_sscm implements the labor-based "
-            "ratio only — the labor-ratio dollars below are NOT the elected "
-            "method's numbers.")
+    # (h)(5) production-cost ratio is implemented in compute_sscm as of
+    # round 5 (producers only; resellers fall back with a warning).
 
     # --- SSCM split between pre-production and production pools,
     # §1.263A-2(c)(3)(iii)(B): taxpayer's choice of the direct-material
@@ -459,11 +452,8 @@ def compute_srm(result: dict, profile) -> dict:
     sscm = compute_sscm(result, profile)
     if sscm["ratio_warning"]:
         warnings_.append(sscm["ratio_warning"])
-    if profile.sscm_ratio_method == "production_cost":
-        warnings_.append(
-            "SRM-SSCM-RATIO-METHOD: sscm_ratio_method='production_cost' — a reseller "
-            "must use the labor-based SSCM allocation ratio (§1.263A-1(h)(3)(ii) makes "
-            "the production-cost ratio a producer formula). Use the labor-based ratio.")
+    # (production-cost election by a reseller now warns inside compute_sscm
+    # itself — SSCM-PRODUCTION-COST-RESELLER — and falls back to labor.)
 
     for name, pool in (("purchasing_costs", profile.purchasing_costs),
                        ("storage_handling_costs", profile.storage_handling_costs)):

@@ -344,7 +344,7 @@ questions:
     gate: 2
     question: "(g)(4)(ii) all-departments 90% mixed-service election?"
     answer_type: bool
-    maps_to: flag.MSC_90_10_ELECTION
+    maps_to: profile.msc_90_10_election
     kind: METHOD-OF-ACCOUNTING
     authority: "Phase E Gate 2 Q2.8; §1.263A-1(g)(4)(ii)"
     ask_when: "Q2_8a and not Q2_5"

@@ -124,6 +124,53 @@ def test_200k_de_minimis_spm_path():
     assert "de minimis" in r["unicap"]["note"]
 
 
+def test_sscm_production_cost_ratio_implemented():
+    """§1.263A-1(h)(5), producers only — previously a warned stub, now
+    computed from the classified TB. Hand arithmetic: numerator = §471
+    1,000,000 + Additional 300,000 = 1,300,000; denominator ("total costs"
+    excl. mixed service, interest, income-based taxes) = IS total 2,000,000
+    − mixed 400,000 − interest 0 − income tax 100,000 = 1,500,000; ratio
+    = 0.866667; mixed capitalized = 400,000 × 0.866667 = 346,666.80."""
+    lines = [
+        TBLine("5000", "Direct labor", "100", "Production", amount=Decimal("1000000")),
+        TBLine("6000", "Warehouse storage and handling", "200", "Warehouse",
+               amount=Decimal("300000")),
+        TBLine("7000", "Advertising", "400", "Marketing", amount=Decimal("200000")),
+        TBLine("8000", "Officer compensation", "400", "Executive",
+               amount=Decimal("400000")),
+        TBLine("9100", "Federal income tax expense", "900", "Tax",
+               amount=Decimal("100000")),
+    ]
+    p = EntityProfile(avg_gross_receipts=Decimal("75000000"),
+                      sscm_ratio_method="production_cost",
+                      acquires_for_resale=False)
+    u = analyze(lines, p)["unicap"]
+    assert u["mixed_alloc_ratio"] == Decimal("0.866667")
+    assert u["mixed_capitalized"] == Decimal("346666.80")
+
+    # a reseller electing it falls back to labor with the violation warning
+    p2 = EntityProfile(avg_gross_receipts=Decimal("75000000"),
+                       sscm_ratio_method="production_cost",
+                       produces=False, acquires_for_resale=True)
+    u2 = analyze(lines, p2)["unicap"]
+    assert any("SSCM-PRODUCTION-COST-RESELLER" in w for w in u2["warnings"])
+
+
+def test_msc_90_10_election_warns_not_implemented():
+    """The (g)(4)(ii) election's department mechanics are unbuilt — setting
+    the flag must warn, never silently apply the uniform ratio as if the
+    election were honored (the mandatory ≥90%-capitalizable side is an
+    under-capitalization risk)."""
+    lines = [TBLine("5000", "Direct labor", "100", "Production",
+                    amount=Decimal("100000")),
+             TBLine("8000", "Officer compensation", "400", "Executive",
+                    amount=Decimal("50000"))]
+    p = EntityProfile(avg_gross_receipts=Decimal("75000000"),
+                      msc_90_10_election=True)
+    u = analyze(lines, p)["unicap"]
+    assert any("MSC-90-10-NOT-IMPLEMENTED" in w for w in u["warnings"])
+
+
 def test_remaining_a4_debt_screens_excluded_and_named():
     unit = CIPProject(project_id="U", snapshots=[
         CIPSnapshot(measurement_date=date(2026, 3, 31),

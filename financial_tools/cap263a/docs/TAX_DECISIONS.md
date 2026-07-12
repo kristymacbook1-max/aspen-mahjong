@@ -1706,10 +1706,20 @@ deferred mechanic whose specification was already fully verified in the plan (no
 Interview wiring: Q2.5/Q2.6b now map to the real profile fields; new nodes Q2.6c-f (HAR frozen ratios +
 qualifying index, FIFO/LIFO-appropriate) and Q3.10a (the LIFO increment).
 
-**Still deferred after this round (each needs data or authority the repo doesn't have — all warn in output):**
-LIFO decrement release (per-layer data), the (F) mixed-service sub-split (per-activity labor inputs), the SSCM
-production-cost ratio + (g)(4)(ii) 90/10 department mechanics, the Phase C double-count rule (unresolved SME
-policy), the SCA→§263A(f) APE timing hand-off, §1060 downstream seeding, and the F/G/H licensed-primary-text
-pull before filing reliance.
+**Same round, second pass — the SSCM production-cost ratio (§1.263A-1(h)(5)) is also now IMPLEMENTED** (the
+plan's own SSCM section had declared it "buildable now, not gated on Phase A" — it needed only the classified
+TB): producers electing `sscm_ratio_method="production_cost"` get §263A production costs ÷ total costs (the
+denominator excluding mixed service costs, interest, AND income-based taxes per the (h)(5)(ii) three-item
+list, income taxes identified via the NO-INCTAX classifier code); a reseller electing it falls back to the
+labor ratio with an SSCM-PRODUCTION-COST-RESELLER violation warning inside compute_sscm itself (both MSPM's
+and SRM's older stub warnings retired). And `msc_90_10_election` was promoted from a dead interview flag to a
+real profile field whose only current effect is an honest MSC-90-10-NOT-IMPLEMENTED warning — the mandatory
+≥90%-capitalizable side is an under-capitalization risk the output must name, not silently ignore.
 
-Suite: 259 passing (9 new tests, all first-run green, incl. the regulation's own Example 3).
+**Still deferred after this round (each needs data or authority the repo doesn't have — all warn in output):**
+LIFO decrement release (per-layer data), the (F) mixed-service sub-split (per-activity labor inputs), the
+(g)(4)(ii) department-level carve-out mechanics (per-department capitalizable/deductible determinations), the
+Phase C double-count rule (unresolved SME policy), the SCA→§263A(f) APE timing hand-off, §1060 downstream
+seeding, and the F/G/H licensed-primary-text pull before filing reliance.
+
+Suite: 261 passing (11 new tests, all first-run green, incl. the regulation's own Example 3).
