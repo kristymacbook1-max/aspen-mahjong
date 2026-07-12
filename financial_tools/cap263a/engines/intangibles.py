@@ -105,6 +105,17 @@ def compute_263a4_5(transaction_costs: List[TransactionCostItem],
                "description": tc.description, "amount": tc.amount,
                "treatment": "", "deductible": Decimal("0"),
                "capitalized": Decimal("0"), "flags": []}
+        if tc.amount < 0:
+            # a negative fee flowed silently into deductible_total
+            # (round-4 symmetry sweep) — a cost cannot be negative
+            row["treatment"] = "sme_review"
+            row["flags"].append("NEGATIVE-AMOUNT")
+            warnings.append(
+                f"NEGATIVE-AMOUNT [txn cost {tc.item_id or tc.description}]: "
+                f"${tc.amount:,.2f} — nothing computed; route "
+                f"credits/refunds through the schedule, not a negative fee.")
+            transaction_items.append(row)
+            continue
         cap = Decimal("0")
         ded = Decimal("0")
         if (tc.success_based and tc.covered_transaction

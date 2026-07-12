@@ -91,6 +91,13 @@ def compute_59e(elections: List[QualifiedExpenditureElection], *,
     for el in elections:
         if not el.elected:
             continue
+        if el.amount < 0:
+            # scheduled silently with a negative amortization base
+            # (round-4 symmetry sweep) — an expenditure cannot be negative
+            warnings.append(
+                f"NEGATIVE-AMOUNT [§59(e) {el.item_id}]: ${el.amount:,.2f} — "
+                f"no schedule built; fix the expenditure figure.")
+            continue
         row = {"item_id": el.item_id, "category": el.category,
                "amount": el.amount, "recovery_months": None,
                "first_year_amortization": Decimal("0"), "flags": []}

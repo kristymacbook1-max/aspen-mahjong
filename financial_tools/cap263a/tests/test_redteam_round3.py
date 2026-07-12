@@ -339,6 +339,54 @@ def test_two_year_catchup_no_subcent_deductions():
             + c["following_year_deduction"]) == Decimal("100.01")
 
 
+# ---------------------------------------------------------------------------
+# Round 4 — the fix-symmetry sweep (docs/TAX_DECISIONS.md §18): the four
+# residual gaps found when auditing round 3's fixes for sibling paths.
+# ---------------------------------------------------------------------------
+
+def test_entity_profile_rejects_nan_and_implausible_magnitude():
+    """ROUND 4: EntityProfile had its OWN Decimal coercion that accepted
+    Decimal('NaN') and Decimal('1e400'), bypassing the round-3 model-layer
+    guards entirely."""
+    with pytest.raises(ValueError, match="non-finite"):
+        EntityProfile(ending_inventory_471=Decimal("NaN"))
+    with pytest.raises(ValueError, match="implausible"):
+        EntityProfile(ending_inventory_471=Decimal("1e400"))
+
+
+def test_negative_transaction_cost_routed_to_sme_not_deducted():
+    """ROUND 4: a -$50,000 fee flowed silently into deductible_total."""
+    from financial_tools.cap263a.engines.intangibles import compute_263a4_5
+    from financial_tools.cap263a.model import TransactionCostItem
+    out = compute_263a4_5([TransactionCostItem(item_id="T1",
+                                               amount=Decimal("-50000"))], [], [])
+    assert out["deductible_total"] == Decimal("0")
+    assert any("NEGATIVE-AMOUNT" in w for w in out["warnings"])
+
+
+def test_negative_59e_amount_not_scheduled():
+    """ROUND 4: a negative qualified expenditure was scheduled silently with
+    a negative amortization base."""
+    from financial_tools.cap263a.engines.qualified_expenditures import compute_59e
+    from financial_tools.cap263a.model import QualifiedExpenditureElection
+    out = compute_59e([QualifiedExpenditureElection(
+        item_id="Q", category="idc", amount=Decimal("-120000"),
+        elected=True, election_year=2026)],
+        entity_type="sole_prop", individual_amt_exposure=True)
+    assert out["items"] == []
+    assert any("NEGATIVE-AMOUNT" in w for w in out["warnings"])
+
+
+def test_negative_ape_snapshot_warns():
+    """ROUND 4: a negative cumulative-APE snapshot floored harmlessly but
+    silently — a data error worth naming."""
+    unit = _unit("U", [Decimal("-500000")], [QDATES[0]])
+    nt = DebtInstrument(debt_id="N", principal=Decimal("1000000"),
+                        interest_incurred=Decimal("50000"))
+    out = compute_263af([unit], [nt])
+    assert any("NEGATIVE-APE" in w for w in out["warnings"])
+
+
 def test_nonzero_m1_tie_check_is_visually_flagged(tmp_path):
     """The M-1 tie-check cell — whose sole purpose is to be un-missable —
     rendered a nonzero value as a plain unmarked number."""

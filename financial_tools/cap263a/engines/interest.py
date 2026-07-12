@@ -281,6 +281,12 @@ def compute_263af(cip_projects: List[CIPProject],
                     f"DUPLICATE-MEASUREMENT-DATE [{pid}] {iso}: two APE "
                     f"snapshots on the same date — the later row overwrote "
                     f"the earlier (${ape[iso]:,.2f}). Fix the CIP schedule.")
+            if s.cumulative_ape < 0:
+                warnings.append(
+                    f"NEGATIVE-APE [{pid}] {iso}: cumulative APE "
+                    f"${s.cumulative_ape:,.2f} — accumulated production "
+                    f"expenditures cannot be negative; the per-date excess "
+                    f"floors at 0, but fix the CIP schedule.")
             ape[iso] = s.cumulative_ape
             # traced_debt_d is a point-in-time tracing snapshot, NOT
             # min(APE_d, principal) — see §1.263A-9(c)(5)(i)(B)'s

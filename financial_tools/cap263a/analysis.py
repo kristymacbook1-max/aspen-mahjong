@@ -122,14 +122,19 @@ class EntityProfile:
     )
 
     def __post_init__(self):
+        # same guards as the schedule layer's model._dec (bool, non-finite,
+        # implausible magnitude) — EntityProfile had its OWN coercion that
+        # accepted Decimal("NaN")/Decimal("1e400"), bypassing the round-3
+        # model-layer fix (round-4 symmetry sweep, confirmed).
+        from .model import _dec
         for f in self._DECIMAL_FIELDS:
             v = getattr(self, f)
-            # bool is an int subclass but str(True) is not a valid Decimal —
-            # a JSON `true` in a money field crashed with a bare
-            # InvalidOperation deep in Decimal(); fail with the field name.
             if isinstance(v, bool):
                 raise TypeError(f"EntityProfile.{f} expects a dollar amount, got bool {v!r}")
-            setattr(self, f, Decimal(str(v or 0)))
+            try:
+                setattr(self, f, _dec(v))
+            except ValueError as e:
+                raise ValueError(f"EntityProfile.{f}: {e}") from None
         if self.mixed_alloc_ratio is not None:
             self.mixed_alloc_ratio = Decimal(str(self.mixed_alloc_ratio))
         if self.mspm_labor_split_proportion is not None:
