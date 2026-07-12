@@ -197,6 +197,10 @@ class DebtInstrument:
     personal_or_qualified_residence: bool = False
     tax_exempt_org_nonbusiness: bool = False
     disallowed_163_8T: bool = False
+    # the remaining three (a)(4) categories, previously documented-deferred:
+    reserve_or_deferred_tax: bool = False       # reserves/DTLs not debt for tax
+    tax_liability_453a_460b: bool = False       # income-tax/§453A/§460(b) items
+    sale_leaseback_purchase_money: bool = False
     row_index: int = 0
     source_sheet: str = ""
 
@@ -217,6 +221,9 @@ class DebtInstrument:
         if self.disallowed_163_8T or self.related_party_below_afr:
             return False
         if self.personal_or_qualified_residence or self.tax_exempt_org_nonbusiness:
+            return False
+        if self.reserve_or_deferred_tax or self.tax_liability_453a_460b \
+                or self.sale_leaseback_purchase_money:
             return False
         if self.non_interest_bearing and not self.traced_to:
             return False

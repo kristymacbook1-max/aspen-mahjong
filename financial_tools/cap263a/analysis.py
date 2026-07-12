@@ -69,6 +69,20 @@ class EntityProfile:
     beginning_DM_not_yet_in_production: Decimal = Decimal("0")
     ending_DM_not_yet_in_production: Decimal = Decimal("0")
     DM_purchased_during_year: Decimal = Decimal("0")
+    # §1.263A-2(b)(3)(iv)/(c)(3)(v): producer with ≤$200,000 total indirect
+    # costs (categories-excluded, related-party aggregated — Gate 2 Q2.5) →
+    # additional §263A costs DEEMED ZERO; also bars the HAR election.
+    producer_de_minimis_200k: bool = False
+    # HAR election (§1.263A-2(c)(4)): frozen historic ratios for the
+    # qualifying period. combined ratio is the LIFO variant ((c)(4)(iii)).
+    har_election: bool = False
+    har_preprod_ratio: Optional[Decimal] = None
+    har_production_ratio: Optional[Decimal] = None
+    har_combined_ratio: Optional[Decimal] = None
+    har_qualifying_year_index: int = 0     # 1-5 in period; 6 = recomputation year
+    # MSPM+LIFO (§1.263A-2(c)(3)(iv)): the current-year LIFO increment stated
+    # in §471 costs — the combined absorption ratio's multiplicand.
+    lifo_current_year_increment_471: Decimal = Decimal("0")
     mspm_mixed_split_method: str = "direct_material"   # direct_material / labor
     # Pre-production share of labor for the (c)(3)(iii)(B) labor split method
     # (fraction). Was a getattr-only phantom the engine could never receive —
@@ -118,7 +132,7 @@ class EntityProfile:
         "DM_purchased_during_year",
         "purchasing_costs", "current_year_471_costs",
         "storage_handling_costs", "beginning_inventory_471",
-        "ending_inventory_471_total_lifo",
+        "ending_inventory_471_total_lifo", "lifo_current_year_increment_471",
     )
 
     def __post_init__(self):
@@ -139,6 +153,10 @@ class EntityProfile:
             self.mixed_alloc_ratio = Decimal(str(self.mixed_alloc_ratio))
         if self.mspm_labor_split_proportion is not None:
             self.mspm_labor_split_proportion = Decimal(str(self.mspm_labor_split_proportion))
+        for rf in ("har_preprod_ratio", "har_production_ratio", "har_combined_ratio"):
+            v = getattr(self, rf)
+            if v is not None:
+                setattr(self, rf, Decimal(str(v)))
 
     @property
     def sec448_threshold(self) -> Decimal:
@@ -384,6 +402,24 @@ def compute_sscm(result: dict, profile: EntityProfile) -> dict:
 def compute_spm(result: dict, profile: EntityProfile) -> dict:
     """Simplified production method (§1.263A-2(b)): SSCM split + absorption
     ratio (additional §263A ÷ §471) applied to ending §471 inventory."""
+    if profile.producer_de_minimis_200k:
+        # §1.263A-2(b)(3)(iv): additional §263A costs deemed ZERO for a
+        # producer at/below the $200,000 indirect-cost de minimis.
+        return {
+            "exempt": False, "method": "SPM",
+            "note": "§1.263A-2(b)(3)(iv) $200K producer de minimis — "
+                    "additional §263A costs deemed zero.",
+            "warnings": [], "mixed_alloc_ratio": Decimal("0"),
+            "production_labor": Decimal("0"), "total_labor": Decimal("0"),
+            "mixed_capitalized": Decimal("0"),
+            "mixed_deductible": result["mixed_total"],
+            "sec471_pool": result["bucket_totals"]["Inventory §471"],
+            "additional_263a_pool": Decimal("0"),
+            "absorption_ratio": Decimal("0"),
+            "ending_inventory_471": profile.ending_inventory_471,
+            "additional_capitalized_to_inventory": Decimal("0"),
+            "adjusted_deductible_post": result["deductible_total"] + result["mixed_total"],
+        }
     sscm = compute_sscm(result, profile)
     ratio = sscm["mixed_alloc_ratio"]
     prod_labor, total_labor = sscm["production_labor"], sscm["total_labor"]

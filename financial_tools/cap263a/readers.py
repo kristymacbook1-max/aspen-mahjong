@@ -147,6 +147,10 @@ _SPECS = {
         personal_or_qualified_residence=(["personal", "qualified residence"], _to_bool),
         tax_exempt_org_nonbusiness=(["tax exempt", "tax-exempt nonbusiness"], _to_bool),
         disallowed_163_8T=(["disallowed 163-8t", "disallowed"], _to_bool),
+        reserve_or_deferred_tax=(["reserve", "deferred tax", "dtl"], _to_bool),
+        tax_liability_453a_460b=(["tax liability", "453a", "460b"], _to_bool),
+        sale_leaseback_purchase_money=(["sale leaseback", "sale-leaseback",
+                                        "purchase money"], _to_bool),
     )),
     "re": (REExpenditure, _spec(
         re_id=(["re id", "project id", "id", "project"], str),

@@ -103,14 +103,44 @@ def compute_mspm(result: dict, profile) -> dict:
     ratios (pre-production / production), residual pre-production rollover,
     and the direct-materials adjustment, per the verified Phase B formula."""
     warnings_ = []
+    if profile.producer_de_minimis_200k:
+        # §1.263A-2(c)(3)(v) via (b)(3)(iv): additional §263A deemed ZERO.
+        if profile.har_election:
+            warnings_.append(
+                "HAR-BARRED-200K: the HAR election is not available to a "
+                "taxpayer deemed to have zero additional §263A costs under "
+                "the $200K de minimis (§1.263A-2(c)(4) refinement (4)) — "
+                "election ignored.")
+        return {
+            "exempt": False, "method": "MSPM",
+            "note": "§1.263A-2(c)(3)(v) $200K producer de minimis — "
+                    "additional §263A costs deemed zero.",
+            "warnings": warnings_,
+            "mixed_alloc_ratio": Decimal("0"),
+            "production_labor": Decimal("0"), "total_labor": Decimal("0"),
+            "mixed_capitalized": Decimal("0"),
+            "mixed_deductible": result["mixed_total"],
+            "pre_production_ratio": Decimal("0"),
+            "production_ratio": Decimal("0"),
+            "pre_production_pool": Decimal("0"), "production_pool": Decimal("0"),
+            "residual_pre_production_263A": Decimal("0"),
+            "direct_materials_adjustment": Decimal("0"),
+            "pre_production_471": profile.pre_production_471,
+            "production_471": profile.production_471,
+            "pre_production_471_on_hand": profile.pre_production_471_on_hand,
+            "production_471_on_hand": profile.production_471_on_hand,
+            "additional_capitalized_to_inventory": Decimal("0"),
+            "adjusted_deductible_post": result["deductible_total"] + result["mixed_total"],
+        }
+
     sscm = compute_sscm(result, profile)
     if sscm["ratio_warning"]:
         warnings_.append(sscm["ratio_warning"])
     mixed_cap = sscm["mixed_capitalized"]
     mixed_ded = sscm["mixed_deductible"]
 
-    # Spec-audit guards (red-team §16) — mechanics the plan specifies that
-    # this engine does not implement must WARN, never silently substitute:
+    # Spec-audit guard (red-team §16): the production-cost SSCM ratio is
+    # specified but unbuilt — warn, never silently substitute.
     if profile.sscm_ratio_method == "production_cost":
         warnings_.append(
             "MSPM-SSCM-RATIO-METHOD-NOT-IMPLEMENTED: sscm_ratio_method="
@@ -118,18 +148,6 @@ def compute_mspm(result: dict, profile) -> dict:
             "§1.263A-1(h)(3)(ii)) but compute_sscm implements the labor-based "
             "ratio only — the labor-ratio dollars below are NOT the elected "
             "method's numbers.")
-    if getattr(profile, "har_election", False):
-        warnings_.append(
-            "HAR-NOT-IMPLEMENTED: the historic absorption ratio election "
-            "(§1.263A-2(c)(4)) is specified in the plan but not built — the "
-            "ratios below are ACTUAL ratios, not the frozen HAR ratios.")
-    if profile.inventory_method in ("lifo_specific", "lifo_dollar_value"):
-        warnings_.append(
-            "MSPM-LIFO-COMBINED-RATIO-NOT-IMPLEMENTED: MSPM+LIFO requires the "
-            "COMBINED absorption ratio applied to the current-year LIFO "
-            "increment (§1.263A-2(c) Example 3), not the two ratios applied "
-            "separately — the output below is on the non-collapsed basis and "
-            "is NOT the LIFO-correct figure.")
 
     # --- SSCM split between pre-production and production pools,
     # §1.263A-2(c)(3)(iii)(B): taxpayer's choice of the direct-material
@@ -262,7 +280,95 @@ def compute_mspm(result: dict, profile) -> dict:
 
     _ratio_sanity(warnings_, "(MSPM pre-production)", pre_ratio)
     _ratio_sanity(warnings_, "(MSPM production)", production_ratio)
-    add_to_inv = _q(pre_ratio * pre_on_hand + production_ratio * prod_on_hand)
+    actual_pre, actual_prod = pre_ratio, production_ratio
+
+    is_lifo = profile.inventory_method in ("lifo_specific", "lifo_dollar_value")
+    har_applied = False
+    if profile.har_election and not is_lifo:
+        # §1.263A-2(c)(4): frozen historic ratios for the qualifying period.
+        if profile.har_preprod_ratio is None or profile.har_production_ratio is None:
+            warnings_.append(
+                "HAR-RATIOS-MISSING: har_election set but the frozen "
+                "pre-production/production historic ratios were not supplied "
+                "— ACTUAL ratios used; supply har_preprod_ratio and "
+                "har_production_ratio.")
+        elif profile.har_qualifying_year_index == 6:
+            # recomputation year: BOTH ratios within ±0.5 percentage points
+            # of actuals (conjunctive) → extension (recomputation year + 5
+            # following); either outside → actuals apply, HAR resumes on the
+            # updated test period in the 3rd year following.
+            band = Decimal("0.005")
+            passes = (abs(profile.har_preprod_ratio - actual_pre) <= band
+                      and abs(profile.har_production_ratio - actual_prod) <= band)
+            if passes:
+                pre_ratio = profile.har_preprod_ratio.quantize(MSPM_RATIO_Q)
+                production_ratio = profile.har_production_ratio.quantize(MSPM_RATIO_Q)
+                har_applied = True
+                warnings_.append(
+                    "HAR-RECOMPUTATION-PASSED: both historic ratios within "
+                    "±0.5pp of actuals — HAR extends through the "
+                    "recomputation year and the five following taxable years "
+                    "(§1.263A-2(c)(4)).")
+            else:
+                warnings_.append(
+                    "HAR-RECOMPUTATION-FAILED: a historic ratio fell outside "
+                    "±0.5pp of the actual ratio (conjunctive test) — ACTUAL "
+                    "ratios applied this year; HAR must RESUME on the "
+                    "updated test period in the third taxable year following "
+                    "the recomputation year (§1.263A-2(c)(4)).")
+        else:
+            pre_ratio = profile.har_preprod_ratio.quantize(MSPM_RATIO_Q)
+            production_ratio = profile.har_production_ratio.quantize(MSPM_RATIO_Q)
+            har_applied = True
+
+    nonlifo_add = _q(pre_ratio * pre_on_hand + production_ratio * prod_on_hand)
+
+    combined_ratio = None
+    if is_lifo:
+        # §1.263A-2(c)(3)(iv): MSPM under LIFO collapses to ONE combined
+        # absorption ratio — total additional §263A allocable to property on
+        # hand ÷ total §471 on hand, both on a NON-LIFO basis — applied to
+        # the current-year increment stated in §471 costs (the regulation's
+        # own Example 3: 284,400 ÷ 3,000,000 = 9.48% × 1,500,000 = 142,200).
+        total_on_hand = pre_on_hand + prod_on_hand
+        if profile.har_election:
+            if profile.har_combined_ratio is not None:
+                combined_ratio = profile.har_combined_ratio.quantize(MSPM_RATIO_Q)
+                har_applied = True
+            else:
+                warnings_.append(
+                    "HAR-RATIOS-MISSING: har_election under LIFO needs the "
+                    "COMBINED historic absorption ratio ((c)(4)(iii)) — "
+                    "har_combined_ratio not supplied; the actual combined "
+                    "ratio was used.")
+        if combined_ratio is None:
+            combined_ratio = (nonlifo_add / total_on_hand).quantize(MSPM_RATIO_Q) \
+                if total_on_hand else Decimal("0")
+            if not total_on_hand:
+                warnings_.append(
+                    "MSPM-LIFO-ZERO-ON-HAND: no §471 costs on hand — the "
+                    "combined absorption ratio was set to 0.")
+        increment = profile.lifo_current_year_increment_471
+        if increment > 0:
+            add_to_inv = _q(combined_ratio * increment)
+        elif increment < 0:
+            add_to_inv = nonlifo_add
+            warnings_.append(
+                "LIFO-DECREMENT-NOT-IMPLEMENTED: a negative increment is a "
+                "LIFO decrement year — the released-§263A computation "
+                "(§1.263A-2(b)(3)(iii)(C)) needs per-layer data this engine "
+                "does not carry; the NON-LIFO figure below is a placeholder, "
+                "NOT the LIFO-correct answer.")
+        else:
+            add_to_inv = nonlifo_add
+            warnings_.append(
+                "MSPM-LIFO-INCREMENT-MISSING: inventory_method is LIFO but "
+                "lifo_current_year_increment_471 was not supplied — the "
+                "figure below is the NON-LIFO computation, not the combined-"
+                "ratio × increment answer (§1.263A-2(c)(3)(iv)). Supply the "
+                "increment.")
+    else:
+        add_to_inv = nonlifo_add
 
     return {
         "exempt": False,
@@ -290,6 +396,10 @@ def compute_mspm(result: dict, profile) -> dict:
         "production_471": profile.production_471,
         "production_ratio": production_ratio,
         "production_471_on_hand": prod_on_hand,
+        "actual_pre_production_ratio": actual_pre,
+        "actual_production_ratio": actual_prod,
+        "har_applied": har_applied,
+        "lifo_combined_ratio": combined_ratio,
         "additional_capitalized_to_inventory": add_to_inv,
         "adjusted_deductible_post": result["deductible_total"] + mixed_ded,
     }

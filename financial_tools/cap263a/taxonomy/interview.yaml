@@ -230,7 +230,7 @@ questions:
     gate: 2
     question: "(Producers) Total indirect costs <= $200,000 (after excluding not-required-to-capitalize categories; related parties aggregated)?"
     answer_type: bool
-    maps_to: flag.PRODUCER_DE_MINIMIS_200K
+    maps_to: profile.producer_de_minimis_200k
     kind: FACT
     authority: "Phase E Gate 2 Q2.5; §1.263A-2(b)(3)(iv)"
     ask_when: "Q1_1a"
@@ -249,11 +249,47 @@ questions:
     gate: 2
     question: "Historic Absorption Ratio (HAR) election?"
     answer_type: bool
-    maps_to: flag.HAR_ELECTION
+    maps_to: profile.har_election
     kind: METHOD-OF-ACCOUNTING
     authority: "Phase E Gate 2 Q2.6; §1.263A-2(c)(4) (MSPM-only mechanic; cut-off basis)"
     ask_when: "Q2_2 == 'MSPM' and Q2_6a and not Q2_5"
     consequence: "If elected: ratio/qualifying-year inputs required; HAR is MSPM-only."
+
+  - id: Q2.6c
+    gate: 2
+    question: "HAR: frozen pre-production historic absorption ratio (fraction)?"
+    answer_type: decimal
+    maps_to: profile.har_preprod_ratio
+    kind: FACT
+    authority: "§1.263A-2(c)(4) (frozen for the 5-year qualifying period)"
+    ask_when: "Q2_6b and Q2_1 == 'FIFO'"
+
+  - id: Q2.6d
+    gate: 2
+    question: "HAR: frozen production historic absorption ratio (fraction)?"
+    answer_type: decimal
+    maps_to: profile.har_production_ratio
+    kind: FACT
+    authority: "§1.263A-2(c)(4)"
+    ask_when: "Q2_6b and Q2_1 == 'FIFO'"
+
+  - id: Q2.6e
+    gate: 2
+    question: "HAR (LIFO): frozen COMBINED historic absorption ratio (fraction)?"
+    answer_type: decimal
+    maps_to: profile.har_combined_ratio
+    kind: FACT
+    authority: "§1.263A-2(c)(4)(iii)"
+    ask_when: "Q2_6b and Q2_1 and Q2_1 != 'FIFO'"
+
+  - id: Q2.6f
+    gate: 2
+    question: "HAR: qualifying-year index (1-5 within the qualifying period; 6 = recomputation year)?"
+    answer_type: int
+    maps_to: profile.har_qualifying_year_index
+    kind: FACT
+    authority: "§1.263A-2(c)(4): recomputation-year ±0.5pp conjunctive test; pass extends 6 years; fail -> actuals now, mandatory resumption in the 3rd following year"
+    ask_when: "Q2_6b"
 
   - id: Q2.7a
     gate: 2
@@ -415,6 +451,15 @@ questions:
     kind: FACT
     authority: "Phase E Gate 3 Q3.10 (ADDED 2026-07-09); feeds direct_materials_adjustment"
     ask_when: "Q2_2 == 'MSPM' and not Q2_5"
+
+  - id: Q3.10a
+    gate: 3
+    question: "(MSPM, LIFO) Current-year LIFO increment stated in §471 costs (the combined absorption ratio's multiplicand)?"
+    answer_type: decimal
+    maps_to: profile.lifo_current_year_increment_471
+    kind: FACT
+    authority: "§1.263A-2(c)(3)(iv) (the regulation's Example 3: 9.48% combined ratio x 1,500,000 increment)"
+    ask_when: "Q2_2 == 'MSPM' and not Q2_5 and Q2_1 and Q2_1 != 'FIFO'"
 
   - id: Q3.11
     gate: 3

@@ -73,6 +73,15 @@ def _exclusion_screen(debt: DebtInstrument) -> str:
     if debt.tax_exempt_org_nonbusiness:
         return ("§1.263A-9(a)(4) — tax-exempt organization debt outside an "
                 "unrelated trade or business")
+    if debt.reserve_or_deferred_tax:
+        return ("§1.263A-9(a)(4) — reserve/deferred-tax liability not "
+                "treated as debt for federal income tax purposes")
+    if debt.tax_liability_453a_460b:
+        return ("§1.263A-9(a)(4) — income tax liability / §453A deferred "
+                "tax / §460(b) look-back hypothetical liability")
+    if debt.sale_leaseback_purchase_money:
+        return ("§1.263A-9(a)(4) — sale-leaseback purchase-money "
+                "obligation")
     if debt.non_interest_bearing and not debt.traced_to:
         return ("§1.263A-9(a)(4) — non-interest-bearing debt (accounts "
                 "payable etc.) that is not itself traced debt")
