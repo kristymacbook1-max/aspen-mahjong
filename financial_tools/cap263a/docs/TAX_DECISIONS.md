@@ -1716,10 +1716,19 @@ and SRM's older stub warnings retired). And `msc_90_10_election` was promoted fr
 real profile field whose only current effect is an honest MSC-90-10-NOT-IMPLEMENTED warning — the mandatory
 ≥90%-capitalizable side is an under-capitalization risk the output must name, not silently ignore.
 
-**Still deferred after this round (each needs data or authority the repo doesn't have — all warn in output):**
-LIFO decrement release (per-layer data), the (F) mixed-service sub-split (per-activity labor inputs), the
-(g)(4)(ii) department-level carve-out mechanics (per-department capitalizable/deductible determinations), the
-Phase C double-count rule (unresolved SME policy), the SCA→§263A(f) APE timing hand-off, §1060 downstream
-seeding, and the F/G/H licensed-primary-text pull before filing reliance.
+**Third pass — LIFO decrement release built as a pure calculator** (`compute_lifo_decrement_release`,
+§1.263A-2(b)(3)(iii)(C): released = layer's additional §263A × liquidated ÷ layer's §471, layers consumed
+LIFO-order, incomplete-layer-schedule warning): the FORMULA is now code; the engines still flag decrement
+years rather than calling it automatically because no schedule yet carries per-layer additional-§263A data —
+that wiring is a data-contract decision, not a computation gap.
 
-Suite: 261 passing (11 new tests, all first-run green, incl. the regulation's own Example 3).
+**TERMINAL STATE for the "keep running until you can't find any other changes" directive.** Everything still
+open requires exactly one of: (a) a NEW USER-SUPPLIED DATA CONTRACT (per-layer §263A for automatic decrement
+wiring; per-activity labor for the (F) sub-split; per-department determinations for (g)(4)(ii)), (b) an SME
+POLICY DECISION the documents explicitly reserve to a human (the Phase C double-count rule; the SCA→§263A(f)
+APE timing convention; §1060 downstream seeding), or (c) EXTERNAL AUTHORITY this environment cannot reach
+(the licensed primary-text pull for the F/G/H citations). None of those can be closed from inside this
+session without inventing data, policy, or law — and every one of them warns in the tool's output when its
+facts arise. No further changes findable at this scope.
+
+Suite: 262 passing (12 new tests this round, all first-run green, incl. the regulation's own Example 3).

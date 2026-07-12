@@ -398,6 +398,49 @@ def compute_mspm(result: dict, profile) -> dict:
     }
 
 
+def compute_lifo_decrement_release(layers: list, decrement: Decimal) -> dict:
+    """§1.263A-2(b)(3)(iii)(C): on a LIFO decrement, the liquidated layers'
+    prior §263A releases to COGS — released = layer's additional §263A ×
+    (liquidated §471 ÷ layer's §471). Layers are consumed LIFO order (the
+    LAST list entry first); each layer dict: {"layer_471": Decimal,
+    "layer_additional_263a": Decimal} (+ any identifying keys, echoed back).
+
+    Pure calculator (round 5c): the caller supplies per-layer data — no
+    schedule carries it yet, which is why the MSPM/SRM engines still flag
+    decrement years rather than calling this automatically."""
+    decrement = Decimal(str(decrement))
+    if decrement <= 0:
+        raise ValueError(f"decrement must be positive, got {decrement}")
+    warnings_: list = []
+    released = Decimal("0")
+    remaining = decrement
+    detail = []
+    for layer in reversed(layers):
+        if remaining <= 0:
+            break
+        layer_471 = Decimal(str(layer["layer_471"]))
+        layer_add = Decimal(str(layer["layer_additional_263a"]))
+        if layer_471 <= 0:
+            warnings_.append(
+                f"LIFO-LAYER-INVALID: layer {layer!r} has non-positive §471 "
+                f"costs — skipped; fix the layer schedule.")
+            continue
+        liquidated = min(remaining, layer_471)
+        share = layer_add * liquidated / layer_471
+        released += share
+        remaining -= liquidated
+        detail.append({**layer, "liquidated_471": liquidated,
+                       "released_263a": _q(share)})
+    if remaining > 0:
+        warnings_.append(
+            f"LIFO-DECREMENT-EXCEEDS-LAYERS: ${remaining:,.2f} of the "
+            f"decrement exceeds the supplied layers' total §471 costs — "
+            f"the layer schedule is incomplete; released §263A is "
+            f"understated until it is.")
+    return {"released_263a_to_cogs": _q(released), "layers": detail,
+            "unabsorbed_decrement": _q(remaining), "warnings": warnings_}
+
+
 def compute_srm(result: dict, profile) -> dict:
     """Simplified resale method (§1.263A-3(d)): purchasing ratio + storage &
     handling ratio (combined), applied to §471 costs remaining on hand."""

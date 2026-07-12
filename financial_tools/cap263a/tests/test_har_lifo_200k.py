@@ -171,6 +171,28 @@ def test_msc_90_10_election_warns_not_implemented():
     assert any("MSC-90-10-NOT-IMPLEMENTED" in w for w in u["warnings"])
 
 
+def test_lifo_decrement_release_formula():
+    """§1.263A-2(b)(3)(iii)(C), LIFO order (last layer first). Layers:
+    2024 {471: 100,000, add'l: 8,000}; 2025 {471: 200,000, add'l: 25,000}.
+    Decrement 250,000: liquidates ALL of 2025 (releases 25,000) then
+    50,000 of 2024 (releases 8,000 x 50,000/100,000 = 4,000) -> 29,000."""
+    from financial_tools.cap263a.engines.inventory import \
+        compute_lifo_decrement_release
+    layers = [{"year": 2024, "layer_471": Decimal("100000"),
+               "layer_additional_263a": Decimal("8000")},
+              {"year": 2025, "layer_471": Decimal("200000"),
+               "layer_additional_263a": Decimal("25000")}]
+    out = compute_lifo_decrement_release(layers, Decimal("250000"))
+    assert out["released_263a_to_cogs"] == Decimal("29000.00")
+    assert out["unabsorbed_decrement"] == Decimal("0.00")
+    assert out["layers"][0]["year"] == 2025          # LIFO order
+
+    # decrement beyond the supplied layers -> loud incompleteness warning
+    out2 = compute_lifo_decrement_release(layers, Decimal("400000"))
+    assert out2["unabsorbed_decrement"] == Decimal("100000.00")
+    assert any("EXCEEDS-LAYERS" in w for w in out2["warnings"])
+
+
 def test_remaining_a4_debt_screens_excluded_and_named():
     unit = CIPProject(project_id="U", snapshots=[
         CIPSnapshot(measurement_date=date(2026, 3, 31),
