@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>§263A / §263(a) Capitalization Calculator</title>
+<style>
+:root {
+  --bg: #f6f7f9; --panel: #ffffff; --ink: #1a1d21; --muted: #5b6470;
+  --line: #d9dee5; --accent: #1f5f8b; --accent-ink: #ffffff;
+  --warn-bg: #fff4e0; --warn-line: #e0a33a; --bad: #b3362c; --ok: #2c7a3f;
+  --input-bg: #ffffff; --head-bg: #eef1f5; --code-bg: #eef1f5;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14171b; --panel: #1d2127; --ink: #e6e9ed; --muted: #9aa4b0;
+    --line: #333a43; --accent: #5b9bd0; --accent-ink: #10161c;
+    --warn-bg: #3a2f17; --warn-line: #b98a2e; --bad: #e07a70; --ok: #6fbf82;
+    --input-bg: #14171b; --head-bg: #242a32; --code-bg: #242a32;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--ink);
+  font: 14px/1.45 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  display: flex; min-height: 100vh;
+}
+nav {
+  width: 232px; flex: 0 0 auto; border-right: 1px solid var(--line);
+  background: var(--panel); padding: 14px 0; position: sticky; top: 0;
+  height: 100vh; overflow-y: auto;
+}
+nav h1 { font-size: 15px; margin: 0 14px 4px; }
+nav .sub { font-size: 11px; color: var(--muted); margin: 0 14px 12px; }
+nav button {
+  display: block; width: 100%; text-align: left; border: 0;
+  background: none; color: var(--ink); padding: 7px 14px; font: inherit;
+  cursor: pointer; border-left: 3px solid transparent;
+}
+nav button:hover { background: var(--head-bg); }
+nav button.active { border-left-color: var(--accent); font-weight: 600;
+  background: var(--head-bg); }
+nav .badge { float: right; font-size: 11px; padding: 0 6px; border-radius: 8px; }
+nav .badge.ok { background: var(--ok); color: var(--accent-ink); }
+nav .badge.bad { background: var(--bad); color: var(--accent-ink); }
+main { flex: 1 1 auto; padding: 20px 26px 60px; max-width: 1200px; }
+section.panel { display: none; }
+section.panel.active { display: block; }
+h2 { font-size: 18px; margin: 4px 0 4px; }
+h3 { font-size: 14px; margin: 18px 0 6px; }
+p.note { color: var(--muted); font-size: 12.5px; margin: 2px 0 12px; max-width: 78ch; }
+fieldset {
+  border: 1px solid var(--line); border-radius: 6px; margin: 0 0 14px;
+  padding: 10px 12px; background: var(--panel);
+}
+legend { font-size: 12.5px; font-weight: 600; color: var(--muted); padding: 0 6px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px 16px; }
+label.f { display: flex; flex-direction: column; font-size: 12px; color: var(--muted); gap: 2px; }
+label.chk { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--ink); }
+input[type=text], input[type=number], input[type=date], select, textarea {
+  font: inherit; color: var(--ink); background: var(--input-bg);
+  border: 1px solid var(--line); border-radius: 4px; padding: 4px 6px;
+}
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+table.io { border-collapse: collapse; width: 100%; background: var(--panel);
+  border: 1px solid var(--line); font-size: 13px; }
+table.io th { background: var(--head-bg); text-align: left; padding: 5px 7px;
+  border-bottom: 1px solid var(--line); font-weight: 600; white-space: nowrap; }
+table.io td { padding: 3px 5px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.io input, table.io select, table.io textarea { width: 100%; min-width: 60px; }
+table.io td.num input { text-align: right; }
+table.io tr:last-child td { border-bottom: 0; }
+.tblwrap { overflow-x: auto; margin-bottom: 6px; }
+button.act {
+  background: var(--accent); color: var(--accent-ink); border: 0;
+  border-radius: 5px; padding: 7px 16px; font: inherit; font-weight: 600;
+  cursor: pointer; margin: 8px 8px 8px 0;
+}
+button.act:hover { filter: brightness(1.1); }
+button.mini {
+  background: none; border: 1px solid var(--line); color: var(--ink);
+  border-radius: 4px; padding: 2px 9px; font-size: 12px; cursor: pointer;
+  margin: 4px 6px 4px 0;
+}
+button.mini:hover { border-color: var(--accent); color: var(--accent); }
+.results { margin-top: 10px; }
+table.kv { border-collapse: collapse; background: var(--panel);
+  border: 1px solid var(--line); min-width: 420px; font-size: 13px; }
+table.kv td { padding: 4px 10px; border-bottom: 1px solid var(--line); }
+table.kv td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+table.kv tr.hl td { font-weight: 700; background: var(--head-bg); }
+table.kv tr:last-child td { border-bottom: 0; }
+.warn { background: var(--warn-bg); border-left: 3px solid var(--warn-line);
+  padding: 6px 10px; margin: 5px 0; font-size: 12.5px; max-width: 100ch;
+  overflow-wrap: break-word; }
+.err { color: var(--bad); font-weight: 600; }
+.ok { color: var(--ok); font-weight: 600; }
+details.raw { margin-top: 10px; }
+details.raw pre { background: var(--code-bg); border: 1px solid var(--line);
+  border-radius: 5px; padding: 10px; overflow-x: auto; font-size: 12px;
+  max-height: 420px; overflow-y: auto; }
+.selftest-row { padding: 3px 8px; border-bottom: 1px solid var(--line); font-size: 12.5px; }
+.selftest-row .diff { color: var(--bad); font-size: 12px; white-space: pre-wrap; margin-left: 18px; }
+.pill { display: inline-block; border-radius: 9px; padding: 1px 9px; font-size: 12px; font-weight: 600; }
+.pill.ok { background: var(--ok); color: var(--accent-ink); }
+.pill.bad { background: var(--bad); color: var(--accent-ink); }
+.toolbar { margin-bottom: 14px; }
+@media (max-width: 760px) {
+  body { flex-direction: column; }
+  nav { width: auto; height: auto; position: static; display: flex; flex-wrap: wrap; }
+  nav h1, nav .sub { width: 100%; }
+  nav button { width: auto; }
+}
+</style>
+</head>
+<body>
+<nav id="nav">
+  <h1>§263A / §263(a) Calculator</h1>
+  <div class="sub">Standalone — runs entirely in this file. Parity-tested
+    against the Python engines.<br><span id="selftest-badge"></span></div>
+</nav>
+<main id="main"></main>
+
+<script id="goldens-data" type="application/json"><!--GOLDENS_JSON--></script>
+<script><!--ENGINES_JS--></script>
+<script><!--SELFTEST_JS--></script>
+<script><!--APP_JS--></script>
+</body>
+</html>
