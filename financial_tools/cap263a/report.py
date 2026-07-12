@@ -237,6 +237,11 @@ class CapitalizationReport:
             row += 1
         row += 1
 
+        # Fetched here (not just later, at the UNICAP-block build below) so
+        # the waterfall can fold the SSCM mixed-service split into the
+        # headline totals — see the discrepancy this closes, next.
+        u_early = self._r["unicap"]
+
         apply_section_header(ws, row, 1, 4, "Capitalization waterfall")
         row += 1
         self._label(ws, row, 1, "Starting income-statement total", bold=True)
@@ -253,27 +258,53 @@ class CapitalizationReport:
             cc.value = self._sumifs(b, "G")
             cap_rows.append(row)
             row += 1
+        # Mixed-service costs split by the SSCM ratio (computed at generation,
+        # not a live SUMIFS): the capitalizable share is a real current-year
+        # basis addition exactly like the bucket rows above it, and belongs in
+        # the same total. Previously the ENTIRE mixed bucket sat outside both
+        # "Total capitalized" and "Adjusted currently-deductible" — every
+        # dollar of mixed_capitalized was missing from every grand total in
+        # the workbook (Asset Basis Schedule's "Total basis additions" never
+        # picked it up either), and "Adjusted currently-deductible" understated
+        # the true deductible total (computed independently on the Adjusted IS
+        # tab, which DOES add mixed_deductible back in) by mixed_deductible —
+        # two tabs of the same workbook silently disagreeing (confirmed by a
+        # synthetic engagement: $100,000 apart, zero warning). Static values,
+        # so a Bucket/Cap % override still requires "re-run the CLI" — same
+        # caveat as the UNICAP block below.
+        self._label(ws, row, 1, "  Mixed service — SSCM capitalized share")
+        mcap = self._money(ws, row, 3, float(u_early.get("mixed_capitalized", 0)))
+        mixed_cap_row = row
+        cap_rows.append(row)
+        row += 1
         self._label(ws, row, 1, "Total capitalized", bold=True)
         tc = self._money(ws, row, 3, None, fill=FILL_HIGHLIGHT_GREEN, bold=True)
         tc.value = f"=SUM(C{cap_rows[0]}:C{cap_rows[-1]})"
         cap_total_row = row
         row += 1
-        self._label(ws, row, 1, "  Mixed service (pending §263A allocation)")
-        mc = self._money(ws, row, 3, None, fill=FILL_HIGHLIGHT_ORANGE)
-        mc.value = self._sumifs("Mixed (allocable)", "D")
-        mixed_row = row
+        self._label(ws, row, 1, "  Mixed service — SSCM remaining deductible")
+        mded = self._money(ws, row, 3, float(u_early.get("mixed_deductible", 0)),
+                           fill=FILL_HIGHLIGHT_ORANGE)
+        mixed_ded_row = row
         row += 1
         # No leading "=" in the label: openpyxl stores any "="-prefixed string
         # as a formula, which Excel then renders as #NAME?.
         self._label(ws, row, 1, "Adjusted currently-deductible", bold=True)
         adj = self._money(ws, row, 3, None, bold=True, fill=FILL_HIGHLIGHT_GREEN)
-        adj.value = f"=C{start_row}-C{cap_total_row}-C{mixed_row}"
+        # Starting IS total already carries the FULL mixed bucket (both
+        # shares); Total capitalized above has already pulled the
+        # capitalized share out of it, so subtracting only Total capitalized
+        # leaves exactly (Deductible + Non-Operating + mixed_deductible) —
+        # do NOT also subtract mixed_ded_row here, or mixed_deductible is
+        # removed twice (the bug this row exists to fix, re-introduced).
+        adj.value = f"=C{start_row}-C{cap_total_row}"
         adjusted_row = row
         row += 1
         note = self._label(
             ws, row, 1,
-            "Bucket/Cap % edits recompute this waterfall live; the UNICAP block below "
-            "and tabs 3-5 are computed at generation — re-run the CLI after overrides.")
+            "Bucket/Cap % edits recompute the bucket rows live; the mixed-service split "
+            "and the UNICAP block below are computed at generation — re-run the CLI "
+            "after overrides.")
         note.font = FONT_BODY
         row += 2
 
@@ -285,7 +316,8 @@ class CapitalizationReport:
         # This live formula DOES react to analyst edits (the Python-side
         # partition tie_check is 0 by construction and is not a correctness
         # check). A non-zero value here flags Cap%/Bucket overrides.
-        ded = self._sumifs("Deductible", "D")[1:] + "+" + self._sumifs("Non-Operating", "D")[1:]
+        ded = (self._sumifs("Deductible", "D")[1:] + "+" + self._sumifs("Non-Operating", "D")[1:]
+               + f"+C{mixed_ded_row}")
         tie.value = f"=C{adjusted_row}-(" + ded + ")"
         row += 1
         self._label(ws, row, 1, "Lines needing review (REVIEW flag / conf < 40)", bold=True)
@@ -403,6 +435,16 @@ class CapitalizationReport:
              "Reg §1.263(a)-2/-3/-4/-5"),
             ("§263(a) Elective (safe-harbor capitalize)", b["§263(a) Elective"],
              "Reg §1.263(a)-1(f)/-3(h)(i)(n)"),
+            # The SSCM-capitalized share of mixed-service costs is a current-
+            # year basis addition to the §263A Additional regime just like the
+            # bucket-classified lines above — omitting it here understated
+            # "Total basis additions" by the full mixed_capitalized amount
+            # (confirmed with a synthetic engagement) and left it with nowhere
+            # in the whole workbook where it was ever summed. (Always 0 under
+            # SRM by the engine's own input contract — see SRM-MSC-INPUT-
+            # CONTRACT — so this is safe to add unconditionally.)
+            ("§263A additional cost — mixed-service capitalized (SSCM)",
+             u.get("mixed_capitalized", 0), "Reg §1.263A-1(h)"),
             ("§263A additional cost to ending inventory",
              u.get("additional_capitalized_to_inventory", 0),
              {"MSPM": "MSPM Reg §1.263A-2(c)", "SRM": "SRM Reg §1.263A-3(d)"}.get(
