@@ -2270,6 +2270,296 @@ function computeTaxBasisTB(tbLines, btds) {
     warnings, unmatched_btds: unmatched, applied };
 }
 
+/* ============ §263(a) tangible property — capitalize vs deduct ============ */
+/* Port of engines/tangible_263a.py — decision order verbatim (see that
+ * module's docstring for the full citation-by-citation walkthrough):
+ * 1. negative amount -> sme_review.
+ * 2. de minimis safe harbor (§1.263(a)-1(f)) if elected.
+ * 3. materials & supplies (§1.162-3) if flagged.
+ * 4. small taxpayer building safe harbor (§1.263(a)-3(h)) if elected + building.
+ * 5. BAR improvement tests (betterment/adaptation/restoration, §1.263(a)-3(j)/(l)/(k)).
+ * 6. routine maintenance safe harbor (§1.263(a)-3(i)).
+ * 7. repair (§162; §1.263(a)-3(d)) or the (n) capitalize-per-books election.
+ * Every step short-circuits to a `continue` in the Python; missing BAR facts
+ * capitalize CONSERVATIVELY and emit an open question — never a silent deduct. */
+
+const STSH_GROSS_RECEIPTS_CEILING = D.from("10000000");
+const STSH_BASIS_CEILING = D.from("1000000");
+const STSH_DOLLAR_CEILING = D.from("10000");
+const STSH_BASIS_PCT = D.from("0.02");
+
+function computeTangible263a(items, profile, opts) {
+  opts = opts || {};
+  const deMinimisElection = !!opts.de_minimis_election;
+  const smallTaxpayerBuildingElection = !!opts.small_taxpayer_building_election;
+  const capitalizeRepairsFollowingBooks = !!opts.capitalize_repairs_following_books;
+  const explicitAgg = opts.total_building_repairs_maintenance_improvements || null;
+
+  const warnings = [];
+  const openQuestions = [];
+  const seenQuestions = new Set();
+  function ask(item, question, why) {
+    if (seenQuestions.has(question)) return;
+    seenQuestions.add(question);
+    openQuestions.push({ item_id: item.item_id, question, why });
+  }
+
+  if (deMinimisElection && profile.has_afs) {
+    warnings.push("DE-MINIMIS-POLICY-CONDITION: the §1.263(a)-1(f) de minimis safe " +
+      "harbor is elected and the taxpayer has an AFS — a WRITTEN accounting " +
+      "policy expensing amounts under the ceiling, in place as of the START " +
+      "of the taxable year, is a condition of the election ((f)(1)(i)(B)). " +
+      "Confirm it exists; the election is annual, irrevocable, and " +
+      "all-or-nothing for qualifying items.");
+  }
+  if (smallTaxpayerBuildingElection
+      && profile.avg_gross_receipts.gt(STSH_GROSS_RECEIPTS_CEILING)) {
+    warnings.push("STSH-INELIGIBLE-RECEIPTS: the §1.263(a)-3(h) small-taxpayer " +
+      "building safe harbor is elected but average annual gross receipts (" +
+      money0(profile.avg_gross_receipts) + ") exceed the $10,000,000 ceiling " +
+      "— the safe harbor is unavailable; no item was deducted under it.");
+  }
+
+  const uopSums = {};
+  for (const it of items) {
+    const amt = D.from(it.amount || 0);
+    if (it.unit_of_property && amt.ge(0)) {
+      uopSums[it.unit_of_property] = (uopSums[it.unit_of_property] || D.zero()).plus(amt);
+    }
+  }
+
+  let msTimingWarned = false, stshScheduleAggWarned = false;
+  let repairsBookCapitalized = 0, repairsBookExpensed = 0;
+
+  const rows = [];
+  let deductibleTotal = D.zero(), capitalizedTotal = D.zero(),
+    electiveCapitalizedTotal = D.zero();
+
+  for (const itRaw of items) {
+    const it = Object.assign({}, itRaw);
+    it.amount = D.from(it.amount || 0);
+    it.building_unadjusted_basis = D.from(it.building_unadjusted_basis || 0);
+    it.invoice_or_item_cost = (it.invoice_or_item_cost === null
+      || it.invoice_or_item_cost === undefined || it.invoice_or_item_cost === "")
+      ? null : D.from(it.invoice_or_item_cost);
+    const label = it.item_id || it.description;
+    const row = { item_id: it.item_id, description: it.description,
+      amount: it.amount, treatment: "", authority: "", flags: [],
+      deductible: D.zero(), capitalized: D.zero() };
+
+    // 1. negative amount
+    if (it.amount.lt(0)) {
+      row.treatment = "sme_review";
+      row.flags.push("NEGATIVE-AMOUNT");
+      warnings.push("NEGATIVE-AMOUNT [tangible " + label + "]: " + money(it.amount) +
+        " — nothing computed; route credits/refunds through the schedule, " +
+        "not a negative expenditure.");
+      rows.push(row);
+      continue;
+    }
+
+    let fellThrough = false;
+
+    // 2. de minimis safe harbor
+    if (deMinimisElection) {
+      if (it.invoice_or_item_cost !== null) {
+        if (it.invoice_or_item_cost.le(deMinimisCeiling(profile))) {
+          row.treatment = "de_minimis_deduct";
+          row.authority = "Reg. §1.263(a)-1(f); Notice 2015-82";
+          row.deductible = it.amount;
+          deductibleTotal = deductibleTotal.plus(it.amount);
+          rows.push(row);
+          continue;
+        }
+      } else {
+        row.flags.push("DE-MINIMIS-COST-UNKNOWN");
+        const ceiling = deMinimisCeiling(profile);
+        ask(it,
+          "Item " + label + " '" + it.description + "': what is the " +
+          "per-invoice (or per-item as substantiated on the invoice) cost " +
+          "(Reg. §1.263(a)-1(f))? Supply invoice_or_item_cost to test it " +
+          "against the " + money0(ceiling) + " de minimis ceiling.",
+          "The de minimis election is on but the schedule does not carry " +
+          "the per-invoice/per-item cost — the item continued down the " +
+          "decision tree conservatively.");
+      }
+    }
+
+    // 3. materials & supplies (§1.162-3)
+    if (it.is_material_or_supply) {
+      if (it.ms_unit_cost_200_or_less || it.ms_economic_life_12mo_or_less) {
+        const prongs = [];
+        if (it.ms_unit_cost_200_or_less) prongs.push("§1.162-3(c)(1)(iv) unit cost ≤ $200");
+        if (it.ms_economic_life_12mo_or_less)
+          prongs.push("§1.162-3(c)(1)(iii) economic life ≤ 12 months");
+        row.treatment = "materials_supplies_deduct";
+        row.authority = prongs.join("; ");
+        row.flags.push("MS-TIMING-NOT-DETERMINED");
+        if (!msTimingWarned) {
+          msTimingWarned = true;
+          warnings.push("MS-TIMING-NOT-DETERMINED: materials & supplies were " +
+            "deducted under §1.162-3, but the incidental (deduct when " +
+            "paid/incurred, (a)(2)) vs non-incidental (deduct when used or " +
+            "consumed, (a)(1)) TIMING distinction is out of scope for this " +
+            "engine — confirm the deduction year per item.");
+        }
+        row.deductible = it.amount;
+        deductibleTotal = deductibleTotal.plus(it.amount);
+        rows.push(row);
+        continue;
+      }
+      if ((it.ms_unit_cost_200_or_less === null || it.ms_unit_cost_200_or_less === undefined)
+          && (it.ms_economic_life_12mo_or_less === null || it.ms_economic_life_12mo_or_less === undefined)) {
+        ask(it,
+          "Item " + label + " '" + it.description + "': is the unit " +
+          "acquisition/production cost $200 or less (§1.162-3(c)(1)(iv)), " +
+          "or is the economic useful life 12 months or less " +
+          "(§1.162-3(c)(1)(iii))? Answer ms_unit_cost_200_or_less and " +
+          "ms_economic_life_12mo_or_less True/False.",
+          "The item is marked as a materials & supplies candidate but " +
+          "neither §1.162-3 prong is established — it continued down the " +
+          "decision tree.");
+      }
+    }
+
+    // 4. small taxpayer building safe harbor
+    if (smallTaxpayerBuildingElection && it.is_building) {
+      const eligible = profile.avg_gross_receipts.le(STSH_GROSS_RECEIPTS_CEILING)
+        && it.building_unadjusted_basis.le(STSH_BASIS_CEILING);
+      if (!eligible) {
+        row.flags.push("STSH-NOT-ELIGIBLE");
+      } else {
+        const uop = it.unit_of_property;
+        let aggregate;
+        if (explicitAgg && uop in explicitAgg) {
+          aggregate = D.from(explicitAgg[uop]);
+        } else {
+          aggregate = uop ? (uopSums[uop] || D.zero()) : it.amount;
+          if (!stshScheduleAggWarned) {
+            stshScheduleAggWarned = true;
+            warnings.push("STSH-AGGREGATE-FROM-SCHEDULE-ONLY: the §1.263(a)-3(h) " +
+              "per-building aggregate was summed from the items ON THIS " +
+              "SCHEDULE only — the test requires ALL amounts paid during " +
+              "the year for repairs, maintenance, and improvements on the " +
+              "building, including amounts outside this schedule. Supply " +
+              "total_building_repairs_maintenance_improvements to test the " +
+              "true aggregate.");
+          }
+        }
+        const ceiling = D.min(STSH_DOLLAR_CEILING,
+          STSH_BASIS_PCT.times(it.building_unadjusted_basis));
+        if (aggregate.le(ceiling)) {
+          row.treatment = "small_taxpayer_sh_deduct";
+          row.authority = "Reg. §1.263(a)-3(h) small taxpayer building safe harbor";
+          row.deductible = it.amount;
+          deductibleTotal = deductibleTotal.plus(it.amount);
+          rows.push(row);
+          continue;
+        }
+        row.flags.push("STSH-CEILING-EXCEEDED");
+      }
+    }
+
+    // 5. BAR improvement tests
+    const barTrue = [];
+    if (it.betterment) barTrue.push("Reg. §1.263(a)-3(j) betterment");
+    if (it.adaptation) barTrue.push("Reg. §1.263(a)-3(l) adaptation to a new/different use");
+    if (it.restoration) barTrue.push("Reg. §1.263(a)-3(k) restoration");
+    if (barTrue.length) {
+      row.treatment = "improvement_capitalize";
+      row.authority = barTrue.join("; ");
+      row.capitalized = it.amount;
+      capitalizedTotal = capitalizedTotal.plus(it.amount);
+      rows.push(row);
+      continue;
+    }
+    const prompts = {
+      betterment: "betterment (§1.263(a)-3(j)) — does the work ameliorate a " +
+        "pre-existing material condition or defect, or materially add to or " +
+        "increase the capacity, productivity, efficiency, strength, or " +
+        "quality of the unit of property?",
+      adaptation: "adaptation (§1.263(a)-3(l)) — does the work adapt the " +
+        "unit of property to a new or different use?",
+      restoration: "restoration (§1.263(a)-3(k)) — does the work replace a " +
+        "major component or substantial structural part, restore after a " +
+        "basis-adjusted loss, or return the property to ordinary efficient " +
+        "operating condition after deterioration to a state of disrepair " +
+        "where it was no longer functional?",
+    };
+    const missing = ["betterment", "adaptation", "restoration"]
+      .filter(p => it[p] === null || it[p] === undefined);
+    if (missing.length) {
+      row.treatment = "open_question_capitalize_pending";
+      row.authority = "Reg. §1.263(a)-3(d)/(j)/(k)/(l) — improvement facts " +
+        "pending; capitalized conservatively";
+      row.flags.push("BAR-FACTS-INCOMPLETE");
+      row.capitalized = it.amount;
+      capitalizedTotal = capitalizedTotal.plus(it.amount);
+      ask(it,
+        "Item " + label + " '" + it.description + "': the following " +
+        "improvement facts are not established: " + missing.join(", ") +
+        ". Answer each True/False: " + missing.map(p => prompts[p]).join(" "),
+        "Any single True prong requires capitalization as an improvement " +
+        "(§1.263(a)-3(d)(2)); all-False opens the repair / " +
+        "routine-maintenance path. The amount is capitalized CONSERVATIVELY " +
+        "pending the answer — never silently deducted on missing facts.");
+      rows.push(row);
+      continue;
+    }
+
+    // 6. routine maintenance safe harbor
+    if (it.routine_maintenance_expected_more_than_once) {
+      row.treatment = "routine_maintenance_deduct";
+      row.authority = "Reg. §1.263(a)-3(i) routine maintenance safe harbor";
+      row.deductible = it.amount;
+      deductibleTotal = deductibleTotal.plus(it.amount);
+      rows.push(row);
+      continue;
+    }
+    if (it.routine_maintenance_expected_more_than_once === null
+        || it.routine_maintenance_expected_more_than_once === undefined) {
+      ask(it,
+        "Item " + label + " '" + it.description + "': at the time the unit " +
+        "of property was placed in service, was this maintenance expected " +
+        "to be performed more than once over the property's class life " +
+        "(for a building: more than once in 10 years) (§1.263(a)-3(i))? " +
+        "Answer routine_maintenance_expected_more_than_once True/False.",
+        "All BAR prongs are False, so the amount is deductible either way " +
+        "— the answer only settles whether the routine maintenance safe " +
+        "harbor or the general repair rule is the cited authority.");
+    }
+
+    // 7. repair / (n) election
+    if (capitalizeRepairsFollowingBooks && it.book_capitalized) {
+      repairsBookCapitalized++;
+      row.treatment = "elective_capitalize_books";
+      row.authority = "Reg. §1.263(a)-3(n) election to capitalize repairs " +
+        "capitalized on books";
+      row.capitalized = it.amount;
+      electiveCapitalizedTotal = electiveCapitalizedTotal.plus(it.amount);
+      rows.push(row);
+      continue;
+    }
+    if (capitalizeRepairsFollowingBooks) repairsBookExpensed++;
+    row.treatment = "repair_deduct";
+    row.authority = "§162; Reg. §1.263(a)-3(d)";
+    row.deductible = it.amount;
+    deductibleTotal = deductibleTotal.plus(it.amount);
+    rows.push(row);
+  }
+
+  if (capitalizeRepairsFollowingBooks && repairsBookCapitalized && repairsBookExpensed) {
+    warnings.push("N-ELECTION-CONSISTENCY: the §1.263(a)-3(n) election is on, but " +
+      "some repair items are capitalized on books and others are not — the " +
+      "election applies to ALL amounts paid for repair and maintenance " +
+      "capitalized on the books and records for the year. Verify the book " +
+      "treatment of every repair line is consistent with the election.");
+  }
+
+  return { items: rows, open_questions: openQuestions,
+    deductible_total: deductibleTotal, capitalized_total: capitalizedTotal,
+    elective_capitalized_total: electiveCapitalizedTotal, warnings };
+}
 /* ============================== exports ================================== */
 
 const CAP263A = {
@@ -2287,6 +2577,7 @@ const CAP263A = {
   compute1060Allocation,
   computeSCA, SCA_DRIVERS,
   computeTaxBasisTB,
+  computeTangible263a,
 };
 
 if (typeof module !== "undefined" && module.exports) module.exports = CAP263A;

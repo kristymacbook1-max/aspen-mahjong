@@ -133,3 +133,29 @@ def test_title_sheet_plus_one_tb_sheet_is_not_ambiguous(tmp_path):
     lines = read_trial_balance(p)
     assert len(lines) == 1
     assert lines[0].acct_desc == "Direct labor"
+
+
+def test_csv_trial_balance_same_path_as_xlsx(tmp_path):
+    """CSV TBs must run through the SAME alias/header/amount pipeline as
+    xlsx (goal: any upload format) — preamble rows, quoted commas, $/parens
+    amounts, and a semicolon variant."""
+    p = tmp_path / "tb.csv"
+    p.write_text(
+        "Acme Manufacturing\n"
+        "Trial Balance FY2026\n"
+        "GL Account,Account Description,Dept Number,Department,Net Balance\n"
+        '5000,"Direct labor, plant",100,Production,"$1,000,000.00"\n'
+        "7000,Advertising,400,Marketing,(200000)\n",
+        encoding="utf-8")
+    lines = read_trial_balance(str(p))
+    assert [(l.acct_num, l.amount) for l in lines] == [
+        ("5000", Decimal("1000000.00")), ("7000", Decimal("-200000"))]
+    assert lines[0].acct_desc == "Direct labor, plant"
+    assert lines[0].cc_desc == "Production"
+
+    p2 = tmp_path / "tb_semicolon.csv"
+    p2.write_text("Account Description;Amount\nDirect labor;5000\n",
+                  encoding="utf-8")
+    lines2 = read_trial_balance(str(p2))
+    assert [(l.acct_desc, l.amount) for l in lines2] == [
+        ("Direct labor", Decimal("5000"))]

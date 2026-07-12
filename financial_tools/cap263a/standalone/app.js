@@ -26,6 +26,11 @@
       individual_amt_exposure: false, overlapping: "" } },
     s1060: { transaction_id: "", aggregate_consideration: "",
       class_fmv: { I: "", II: "", III: "", IV: "", V: "", VI: "" } },
+    tangible: { items: [], opts: { de_minimis_election: false,
+      small_taxpayer_building_election: false,
+      capitalize_repairs_following_books: false,
+      total_building_repairs_maintenance_improvements: "" } },
+    interview_answers: {},
   };
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
@@ -322,6 +327,412 @@
     refreshDerived();
   });
 
+  /* ---- Import Files ---- */
+  const I = window.CAP263A_INGEST;
+
+  /** Generic header/column detector parameterized by a field->aliases map
+   *  (mirrors ingest.js's own detectHeader, which is hardcoded to the TB
+   *  fields) — lets every schedule in the app use the SAME alias-scoring
+   *  algorithm, not just the trial balance. */
+  function genericDetectHeader(rows, aliasMap) {
+    const lookup = new Map();
+    for (const field of Object.keys(aliasMap)) {
+      for (const a of aliasMap[field]) {
+        const n = I.normHeader(a);
+        if (!lookup.has(n)) lookup.set(n, field);
+      }
+    }
+    let best = { headerIndex: 0, mapping: {} }, bestScore = 0;
+    const limit = Math.min(rows.length, 10);
+    for (let r = 0; r < limit; r++) {
+      const row = rows[r] || [];
+      const mapping = {}, taken = new Set();
+      let score = 0;
+      for (let c = 0; c < row.length; c++) {
+        const field = lookup.get(I.normHeader(row[c]));
+        if (field && !taken.has(field)) { mapping[c] = field; taken.add(field); score++; }
+      }
+      if (score > bestScore) { best = { headerIndex: r, mapping }; bestScore = score; }
+    }
+    return best;
+  }
+
+  function genericRowsToObjects(rows, headerIndex, mapping) {
+    const out = [];
+    for (let r = headerIndex + 1; r < rows.length; r++) {
+      const row = rows[r] || [];
+      const nonEmpty = row.filter(c => c !== null && c !== undefined && String(c).trim() !== "").length;
+      if (nonEmpty === 0) continue;
+      const obj = {};
+      for (const [ci, field] of Object.entries(mapping)) {
+        const raw = row[Number(ci)];
+        obj[field] = raw === null || raw === undefined ? "" : String(raw).trim();
+      }
+      if (Object.values(obj).every(v => v === "")) continue;
+      out.push(obj);
+    }
+    return out;
+  }
+
+  function toBoolStr(v, dflt) {
+    if (v === undefined || v === "") return dflt;
+    const s = String(v).trim().toLowerCase();
+    return ["true", "1", "yes", "y", "x"].includes(s);
+  }
+
+  /* Import destinations: every schedule the app models. Each entry's
+   * `aliases` reuses the Python-derived alias tables from ingest.js where
+   * one exists (btd/re/transaction_costs/intangibles/startup/
+   * qualified_expenditures/debt/cip — ported verbatim from reader.py/
+   * readers.py); the rest (lifo, sca pools/assets, tangible items) are new
+   * schedules this UI introduces, given a matching alias table here. */
+  const TANGIBLE_ALIASES = {
+    item_id: ["item id", "id"], description: ["description"],
+    amount: ["amount", "cost"],
+    invoice_or_item_cost: ["invoice cost", "invoice or item cost", "per-item cost"],
+    unit_of_property: ["unit of property", "uop"],
+    is_building: ["is building", "building"],
+    building_unadjusted_basis: ["building unadjusted basis", "building basis"],
+    is_material_or_supply: ["materials and supplies", "materials & supplies", "m&s"],
+    betterment: ["betterment"], adaptation: ["adaptation"],
+    restoration: ["restoration"],
+  };
+  const LIFO_ALIASES = {
+    year: ["year", "layer year"],
+    layer_471: ["layer 471", "layer §471", "471 costs"],
+    layer_additional_263a: ["layer additional 263a", "additional §263a"],
+  };
+  const SCA_POOL_ALIASES = {
+    pool_id: ["pool id", "id"], description: ["description"],
+    amount: ["amount"], driver: ["driver"],
+    is_mixed_service: ["is mixed service", "mixed service"],
+  };
+  const SCA_ASSET_ALIASES = {
+    asset_id: ["asset id", "id"], book_cost: ["book cost", "cost"],
+    sscm_eligible: ["sscm eligible", "eligible"],
+  };
+
+  const IMPORT_TARGETS = [
+    { key: "tb", label: "Trial Balance", aliases: I.TB_ALIASES,
+      get: () => state.tb_lines,
+      map: o => ({ acct_num: o.acct_num || "", acct_desc: o.acct_desc || "",
+        cc_num: o.cc_num || "", cc_desc: o.cc_desc || "", amount: o.amount || "0",
+        tier1: "Excluded", cap_vs_deduct: "", is_labor: false }) },
+    { key: "btd", label: "Book-Tax Differences", aliases: I.SCHEDULE_ALIASES.btd,
+      get: () => state.btds,
+      map: o => ({ btd_id: o.btd_id || "", acct_num: o.acct_num || "",
+        cc_num: o.cc_num || "", description: o.description || "",
+        adjustment: o.adjustment || "0" }) },
+    { key: "re", label: "§174 R&E Expenditures", aliases: I.SCHEDULE_ALIASES.re,
+      get: () => state.s174.expenditures,
+      map: o => ({ re_id: o.re_id || "", description: o.description || "",
+        amount: o.amount || "0", domestic: toBoolStr(o.domestic, true),
+        tax_year: o.tax_year || "", book_capitalized_amount: o.book_capitalized_amount || "0" }) },
+    { key: "transaction_costs", label: "§1.263(a)-5 Transaction Costs",
+      aliases: I.SCHEDULE_ALIASES.transaction_costs,
+      get: () => state.intang.transaction_costs,
+      map: o => ({ item_id: o.item_id || "", transaction_id: o.transaction_id || "",
+        description: o.description || "", amount: o.amount || "0",
+        covered_transaction: toBoolStr(o.covered_transaction, false),
+        inherently_facilitative: toBoolStr(o.inherently_facilitative, false),
+        success_based: toBoolStr(o.success_based, false),
+        transaction_abandoned: toBoolStr(o.transaction_abandoned, false),
+        incurred_date: o.incurred_date || "", bright_line_date: o.bright_line_date || "" }) },
+    { key: "intangibles", label: "§1.263(a)-4 Intangibles",
+      aliases: I.SCHEDULE_ALIASES.intangibles,
+      get: () => state.intang.intangibles,
+      map: o => ({ item_id: o.item_id || "", description: o.description || "",
+        amount: o.amount || "0",
+        acquired_with_business: toBoolStr(o.acquired_with_business, false),
+        benefit_start: o.benefit_start || "", benefit_end: o.benefit_end || "",
+        payment_year: o.payment_year || "",
+        facilitative_costs: o.facilitative_costs || "0",
+        prior_capitalized_basis: o.prior_capitalized_basis || "0" }) },
+    { key: "startup", label: "§195/§248/§709 Start-up Pools",
+      aliases: I.SCHEDULE_ALIASES.startup,
+      get: () => state.intang.startup_pools,
+      map: o => ({ pool_id: o.pool_id || "", kind: o.kind || "startup",
+        total: o.total || "0", business_commencement: o.business_commencement || "" }) },
+    { key: "qualified_expenditures", label: "§59(e) Elections",
+      aliases: I.SCHEDULE_ALIASES.qualified_expenditures,
+      get: () => state.s59e.elections,
+      map: o => ({ item_id: o.item_id || "", category: o.category || "idc",
+        amount: o.amount || "0", elected: toBoolStr(o.elected, true),
+        election_year: o.election_year || "" }) },
+    { key: "debt", label: "§263A(f) Debt Schedule", aliases: I.SCHEDULE_ALIASES.debt,
+      get: () => state.interest.debts,
+      map: o => {
+        const screenKeys = ["related_party_below_afr", "non_interest_bearing",
+          "personal_or_qualified_residence", "tax_exempt_org_nonbusiness",
+          "disallowed_163_8T", "reserve_or_deferred_tax",
+          "tax_liability_453a_460b", "sale_leaseback_purchase_money"];
+        let screen = "";
+        for (const k of screenKeys) if (toBoolStr(o[k], false)) { screen = k; break; }
+        return { debt_id: o.debt_id || "", principal: o.principal || "0",
+          interest_incurred: o.interest_incurred || "0",
+          traced_to: o.traced_to || "", screen, outstanding_by_date: "" };
+      } },
+    { key: "cip", label: "§263A(f) Designated-Property Units", aliases: I.SCHEDULE_ALIASES.cip,
+      get: () => state.interest.projects,
+      map: o => ({ project_id: o.project_id || "",
+        book_capitalized_interest: o.book_capitalized_interest || "0",
+        is_common_feature: toBoolStr(o.is_common_feature, false) }) },
+    { key: "lifo", label: "LIFO Layers", aliases: LIFO_ALIASES,
+      get: () => state.lifo.layers,
+      map: o => ({ year: o.year || "", layer_471: o.layer_471 || "0",
+        layer_additional_263a: o.layer_additional_263a || "0" }) },
+    { key: "sca_pools", label: "SCA Cost Pools", aliases: SCA_POOL_ALIASES,
+      get: () => state.sca.pools,
+      map: o => ({ pool_id: o.pool_id || "", description: o.description || "",
+        amount: o.amount || "0", driver: o.driver || "",
+        is_mixed_service: toBoolStr(o.is_mixed_service, false), targets: "" }) },
+    { key: "sca_assets", label: "SCA Assets", aliases: SCA_ASSET_ALIASES,
+      get: () => state.sca.assets,
+      map: o => ({ asset_id: o.asset_id || "", book_cost: o.book_cost || "0",
+        sscm_eligible: toBoolStr(o.sscm_eligible, false) }) },
+    { key: "tangible", label: "§263(a) Tangible-Property Items", aliases: TANGIBLE_ALIASES,
+      get: () => state.tangible.items,
+      map: o => ({ item_id: o.item_id || "", description: o.description || "",
+        amount: o.amount || "0",
+        invoice_or_item_cost: o.invoice_or_item_cost || "",
+        unit_of_property: o.unit_of_property || "",
+        is_building: toBoolStr(o.is_building, false),
+        building_unadjusted_basis: o.building_unadjusted_basis || "0",
+        is_material_or_supply: toBoolStr(o.is_material_or_supply, false),
+        betterment: "", adaptation: "", restoration: "" }) },
+  ];
+
+  panel("import", "Import Files", function (root) {
+    root.appendChild(el("h2", {}, "Import Files — CSV / XLSX / JSON, any schedule"));
+    root.appendChild(el("p", { class: "note" },
+      "Fully offline: XLSX is parsed with a native ZIP/OOXML reader, CSV with " +
+      "delimiter sniffing (comma/tab/semicolon/pipe), both reusing the SAME " +
+      "column-alias tables as the Python reader (financial_tools/cap263a/" +
+      "reader.py, readers.py) — so a real ERP export TB or schedule export " +
+      "maps onto the right fields automatically. Preview the detected mapping " +
+      "before appending; nothing imports silently. Not every schedule has a " +
+      "dedicated tab yet — Fixed Assets uploads parse but currently have no " +
+      "destination in this app (they seed the desktop tool's Asset Basis " +
+      "Schedule / SCA targets, not modeled standalone)."));
+
+    const destSel = el("select", {},
+      IMPORT_TARGETS.map(t => el("option", { value: t.key }, t.label)));
+    root.appendChild(el("label", { class: "f", style: "max-width:360px" },
+      "Import into", destSel));
+    const fileInput = el("input", { type: "file", multiple: "multiple",
+      accept: ".csv,.tsv,.txt,.xlsx,.xlsm,.json" });
+    root.appendChild(el("div", { style: "margin:8px 0" }, fileInput));
+    const out = el("div", { class: "results" });
+    root.appendChild(out);
+
+    fileInput.addEventListener("change", async () => {
+      clear(out);
+      const target = IMPORT_TARGETS.find(t => t.key === destSel.value);
+      for (const file of Array.from(fileInput.files)) {
+        const box = el("div", {}, el("h3", {}, file.name));
+        out.appendChild(box);
+        try {
+          const buf = await file.arrayBuffer();
+          const ext = (file.name.split(".").pop() || "").toLowerCase();
+          const isTextFmt = ["csv", "tsv", "txt", "json"].includes(ext);
+          const data = isTextFmt ? new TextDecoder("utf-8").decode(buf) : buf;
+          const parsed = await I.sniffAndParse(file.name, data);
+          if (parsed.kind === "json") {
+            box.appendChild(el("p", { class: "note" },
+              "Parsed as a JSON engagement file. Full-engagement JSON import " +
+              "(the multi-schedule format the Python CLI accepts) isn't wired " +
+              "into this UI yet — showing the raw structure for reference."));
+            box.appendChild(el("details", { class: "raw" },
+              el("summary", {}, "Parsed JSON"),
+              el("pre", {}, JSON.stringify(parsed.data, null, 2).slice(0, 20000))));
+            continue;
+          }
+          for (const sheet of parsed.sheets) {
+            const sheetBox = el("div", {},
+              el("h4", { style: "margin:8px 0 2px" },
+                parsed.sheets.length > 1 ? "Sheet: " + sheet.name : "Preview"));
+            box.appendChild(sheetBox);
+            const { headerIndex, mapping } = genericDetectHeader(sheet.rows, target.aliases);
+            const fieldNames = Object.keys(target.aliases);
+            const mappedCount = Object.keys(mapping).length;
+            sheetBox.appendChild(el("p", { class: "note" },
+              "Detected header row " + (headerIndex + 1) + "; matched " +
+              mappedCount + " of " + fieldNames.length + " target fields (" +
+              fieldNames.join(", ") + ")."));
+            const objs = genericRowsToObjects(sheet.rows, headerIndex, mapping);
+            const prev = el("table", { class: "io" });
+            const headerRow = sheet.rows[headerIndex] || [];
+            prev.appendChild(el("tr", {}, headerRow.map((h, ci) =>
+              el("th", {}, String(h == null ? "" : h) +
+                (mapping[ci] ? " → " + mapping[ci] : "")))));
+            for (const row of sheet.rows.slice(headerIndex + 1, headerIndex + 6)) {
+              prev.appendChild(el("tr", {}, headerRow.map((_, ci) =>
+                el("td", {}, String(row[ci] == null ? "" : row[ci])))));
+            }
+            sheetBox.appendChild(el("div", { class: "tblwrap" }, prev));
+            sheetBox.appendChild(el("button", { class: "act", onclick: () => {
+              const arr = target.get();
+              for (const o of objs) arr.push(target.map(o));
+              save();
+              alert("Imported " + objs.length + " row(s) into " + target.label +
+                ". Open that tab to review/edit.");
+            } }, "Import " + objs.length + " row(s) into " + target.label));
+          }
+        } catch (err) {
+          box.appendChild(el("div", { class: "warn err" }, String(err)));
+        }
+      }
+    });
+  });
+
+  /* ---- Interview ---- */
+  const INTERVIEW_SPEC = JSON.parse(
+    document.getElementById("interview-spec-data").textContent);
+
+  function evalCond(c, answers) {
+    if (c.any) return c.any.some(sub => evalCond(sub, answers));
+    if (c.all) return c.all.every(sub => evalCond(sub, answers));
+    if (c.derived) return derivedValue(c.derived, answers) === c.equals;
+    const v = answers[c.question];
+    if ("in" in c) return c.in.includes(v);
+    return v === c.equals;
+  }
+  function derivedValue(name, answers) {
+    const receipts = answers["Q0.4"];
+    const taxYear = answers["Q0.2"] || 2026;
+    const threshold = E.THRESHOLDS[taxYear] ? Number(E.THRESHOLDS[taxYear]) : 32000000;
+    const under = receipts !== undefined && receipts !== "" && Number(receipts) <= threshold;
+    if (name === "under_448c_threshold") return under;
+    if (name === "small_business_exempt") return under && !answers["Q0.3"];
+    if (name === "srm_available")
+      return answers["Q1.2"] === "de_minimis" && !!answers["Q1.3"];
+    return undefined;
+  }
+  function questionVisible(q, answers) {
+    if (!q.show_if) return true;
+    return q.show_if.every(c => evalCond(c, answers));
+  }
+
+  panel("interview", "Interview", function (root) {
+    root.appendChild(el("h2", {}, "Guided Interview — every fact the calculations need"));
+    root.appendChild(el("p", { class: "note" },
+      "Mirrors the desktop tool's Phase E interview graph (" +
+      INTERVIEW_SPEC.gates.reduce((n, g) => n + g.questions.length, 0) +
+      " questions across " + INTERVIEW_SPEC.gates.length + " gates), plus a " +
+      "new tangible-property gate. Questions appear only when relevant to " +
+      "your prior answers. \"Apply to Profile\" copies mapped answers onto " +
+      "the Entity Profile; \"Check completeness\" re-runs the same missing-" +
+      "input checks the engines would otherwise only surface as a warning " +
+      "AFTER computing."));
+
+    const body = el("div", {});
+    root.appendChild(body);
+
+    function fieldFor(q) {
+      const answers = state.interview_answers;
+      const val = answers[q.id];
+      let input;
+      if (q.type === "bool") {
+        input = el("select", { onchange: e => {
+          answers[q.id] = e.target.value === "" ? undefined
+            : e.target.value === "true"; save(); render(); } },
+          [["", "— unanswered —"], ["true", "Yes"], ["false", "No"]].map(([v, l]) => {
+            const o = el("option", { value: v }, l);
+            const cur = val === undefined ? "" : String(val);
+            if (cur === v) o.selected = true;
+            return o;
+          }));
+      } else if (q.type === "choice") {
+        input = el("select", { onchange: e => {
+          answers[q.id] = e.target.value || undefined; save(); render(); } },
+          [["", "— unanswered —"]].concat(q.choices.map(c => [c.value, c.label]))
+            .map(([v, l]) => {
+              const o = el("option", { value: v }, l);
+              if ((val || "") === v) o.selected = true;
+              return o;
+            }));
+      } else {
+        input = el("input", { type: "text", value: val == null ? "" : val,
+          oninput: e => { answers[q.id] = e.target.value; save(); },
+          onchange: render });
+      }
+      return input;
+    }
+
+    function render() {
+      clear(body);
+      for (const g of INTERVIEW_SPEC.gates) {
+        const visible = g.questions.filter(q => questionVisible(q, state.interview_answers));
+        if (!visible.length) continue;
+        const fs = el("fieldset", {}, el("legend", {}, g.title || g.id));
+        for (const q of visible) {
+          const row = el("div", { style: "margin-bottom:10px" },
+            el("label", { class: "f" }, q.id + ". " + q.text, fieldFor(q)),
+            q.help ? el("p", { class: "note", style: "margin:2px 0 0" }, q.help) : null);
+          fs.appendChild(row);
+        }
+        body.appendChild(fs);
+      }
+      const actions = el("div", {});
+      actions.appendChild(el("button", { class: "act", onclick: applyToProfile },
+        "Apply answers to Profile"));
+      actions.appendChild(el("button", { class: "act", onclick: () => {
+        clear(checkOut);
+        checkOut.appendChild(runCompletenessCheck());
+      } }, "Check completeness"));
+      body.appendChild(actions);
+      body.appendChild(checkOut);
+    }
+
+    function applyToProfile() {
+      let applied = 0;
+      for (const g of INTERVIEW_SPEC.gates) {
+        for (const q of g.questions) {
+          const val = state.interview_answers[q.id];
+          if (val === undefined || val === "") continue;
+          const mt = q.maps_to || {};
+          if (mt.profile_field) { state.profile[mt.profile_field] = val; applied++; }
+        }
+      }
+      save();
+      alert("Applied " + applied + " answer(s) to the Entity Profile.");
+    }
+
+    function runCompletenessCheck() {
+      const box = el("div", {});
+      box.appendChild(el("h3", {}, "Completeness"));
+      let profile;
+      try { profile = currentProfile(); }
+      catch (err) {
+        box.appendChild(el("div", { class: "warn err" }, String(err)));
+        return box;
+      }
+      const fires = [];
+      for (const c of INTERVIEW_SPEC.completeness || []) {
+        const w = c.when || {};
+        let matches = true;
+        if ("profile_field" in w) matches = String(profile[w.profile_field]) === String(w.equals);
+        if (!matches) continue;
+        const missing = (c.then_required || []).filter(f => {
+          const v = profile[f];
+          return v === null || v === undefined || v === "" ||
+            (v instanceof D && v.isZero());
+        });
+        if (missing.length) fires.push(c.question || ("Missing: " + missing.join(", ")));
+      }
+      if (!fires.length) {
+        box.appendChild(el("p", { class: "note ok" },
+          "No missing-input gaps detected for the current profile."));
+      } else {
+        for (const f of fires) box.appendChild(el("div", { class: "warn" }, "⚠ " + f));
+      }
+      return box;
+    }
+
+    const checkOut = el("div", { class: "results" });
+    render();
+  });
+
   /* ---- Trial balance & UNICAP ---- */
   panel("tb", "Trial Balance & UNICAP", function (root) {
     root.appendChild(el("h2", {}, "Trial Balance → Waterfall → §263A UNICAP"));
@@ -424,6 +835,137 @@
       }
       save();
     }
+  });
+
+  /* ---- Tangible §263(a) ---- */
+  panel("tangible", "§263(a) Tangible Property", function (root) {
+    root.appendChild(el("h2", {}, "§263(a) Tangible Property — Capitalize vs. Deduct"));
+    root.appendChild(el("p", { class: "note" },
+      "Repair regulations decision order: negative-amount guard → de minimis " +
+      "safe harbor (§1.263(a)-1(f)) → materials & supplies (§1.162-3) → small " +
+      "taxpayer building safe harbor (§1.263(a)-3(h)) → betterment/adaptation/" +
+      "restoration (BAR) tests (§1.263(a)-3(j)/(l)/(k)) → routine maintenance " +
+      "safe harbor (§1.263(a)-3(i)) → repair (§162) or the §1.263(a)-3(n) " +
+      "capitalize-per-books election. Leave a BAR/safe-harbor cell blank when " +
+      "the fact is unknown — the engine capitalizes CONSERVATIVELY and asks " +
+      "an explicit question rather than guessing; it never silently deducts " +
+      "on a missing fact."));
+
+    const TRI = [["", "— unknown —"], ["true", "Yes"], ["false", "No"]];
+    root.appendChild(ioTable(state.tangible.items, [
+      { key: "item_id", label: "Id", width: "70px" },
+      { key: "description", label: "Description", width: "180px" },
+      { key: "amount", label: "Amount", type: "money", width: "100px" },
+      { key: "invoice_or_item_cost", label: "Invoice/item cost (de minimis)", type: "money", width: "110px" },
+      { key: "unit_of_property", label: "Unit of property", width: "100px" },
+      { key: "is_building", label: "Building", type: "check", width: "55px" },
+      { key: "building_unadjusted_basis", label: "Building unadj. basis", type: "money", width: "110px" },
+      { key: "is_material_or_supply", label: "M&S candidate", type: "check", width: "60px" },
+      { key: "ms_unit_cost_200_or_less", label: "M&S: unit cost ≤$200?", type: "select", options: TRI, width: "110px" },
+      { key: "ms_economic_life_12mo_or_less", label: "M&S: life ≤12mo?", type: "select", options: TRI, width: "100px" },
+      { key: "betterment", label: "Betterment?", type: "select", options: TRI, width: "100px" },
+      { key: "adaptation", label: "Adaptation?", type: "select", options: TRI, width: "100px" },
+      { key: "restoration", label: "Restoration?", type: "select", options: TRI, width: "100px" },
+      { key: "routine_maintenance_expected_more_than_once", label: "Routine maint. >1x?",
+        type: "select", options: TRI, width: "110px" },
+      { key: "book_capitalized", label: "Book capitalized", type: "check", width: "60px" },
+    ]));
+
+    const O = state.tangible.opts;
+    root.appendChild(el("div", { class: "grid", style: "max-width:1000px" },
+      el("label", { class: "chk" },
+        el("input", { type: "checkbox", checked: !!O.de_minimis_election,
+          onchange: e => { O.de_minimis_election = e.target.checked; save(); } }),
+        "§1.263(a)-1(f) de minimis safe harbor election (annual, irrevocable)"),
+      el("label", { class: "chk" },
+        el("input", { type: "checkbox", checked: !!O.small_taxpayer_building_election,
+          onchange: e => { O.small_taxpayer_building_election = e.target.checked; save(); } }),
+        "§1.263(a)-3(h) small taxpayer building safe harbor election"),
+      el("label", { class: "chk" },
+        el("input", { type: "checkbox", checked: !!O.capitalize_repairs_following_books,
+          onchange: e => { O.capitalize_repairs_following_books = e.target.checked; save(); } }),
+        "§1.263(a)-3(n) capitalize repairs per books election"),
+      el("label", { class: "f" },
+        "Per-building TRUE aggregate override (unit_of_property=total, one per line — overrides the schedule-only fallback)",
+        el("textarea", { rows: 2,
+          value: O.total_building_repairs_maintenance_improvements || "",
+          oninput: e => { O.total_building_repairs_maintenance_improvements = e.target.value; save(); } }))));
+
+    const out = el("div", { class: "results" });
+    root.appendChild(el("button", { class: "act", onclick: () => {
+      clear(out);
+      try {
+        const profile = currentProfile();
+        const items = state.tangible.items.map(it => ({
+          item_id: it.item_id || "", description: it.description || "",
+          amount: orZero(it.amount),
+          invoice_or_item_cost: it.invoice_or_item_cost === "" || it.invoice_or_item_cost == null
+            ? null : it.invoice_or_item_cost,
+          unit_of_property: it.unit_of_property || "",
+          is_building: !!it.is_building,
+          building_unadjusted_basis: orZero(it.building_unadjusted_basis),
+          is_material_or_supply: !!it.is_material_or_supply,
+          ms_unit_cost_200_or_less: it.ms_unit_cost_200_or_less === "" || it.ms_unit_cost_200_or_less == null
+            ? null : it.ms_unit_cost_200_or_less === "true" || it.ms_unit_cost_200_or_less === true,
+          ms_economic_life_12mo_or_less: it.ms_economic_life_12mo_or_less === "" || it.ms_economic_life_12mo_or_less == null
+            ? null : it.ms_economic_life_12mo_or_less === "true" || it.ms_economic_life_12mo_or_less === true,
+          routine_maintenance_expected_more_than_once:
+            it.routine_maintenance_expected_more_than_once === "" || it.routine_maintenance_expected_more_than_once == null
+              ? null : it.routine_maintenance_expected_more_than_once === "true" || it.routine_maintenance_expected_more_than_once === true,
+          betterment: it.betterment === "" || it.betterment == null
+            ? null : it.betterment === "true" || it.betterment === true,
+          adaptation: it.adaptation === "" || it.adaptation == null
+            ? null : it.adaptation === "true" || it.adaptation === true,
+          restoration: it.restoration === "" || it.restoration == null
+            ? null : it.restoration === "true" || it.restoration === true,
+          book_capitalized: !!it.book_capitalized,
+        }));
+        const tbrmi = parseKV(O.total_building_repairs_maintenance_improvements);
+        const r = E.computeTangible263a(items, profile, {
+          de_minimis_election: !!O.de_minimis_election,
+          small_taxpayer_building_election: !!O.small_taxpayer_building_election,
+          capitalize_repairs_following_books: !!O.capitalize_repairs_following_books,
+          total_building_repairs_maintenance_improvements:
+            Object.keys(tbrmi).length ? tbrmi : null });
+
+        out.appendChild(kvTable([
+          ["Deductible total", r.deductible_total, { hl: true }],
+          ["Capitalized total (mandatory improvements + pending)", r.capitalized_total, { hl: true }],
+          ["Elective capitalized total ((n) election)", r.elective_capitalized_total],
+        ]));
+
+        if (r.open_questions.length) {
+          out.appendChild(el("h3", {}, "Open questions — answer these to finalize the treatment"));
+          for (const q of r.open_questions) {
+            out.appendChild(el("div", { class: "warn" },
+              "❓ " + q.question, el("div", { class: "note", style: "margin-top:4px" }, q.why)));
+          }
+        }
+
+        out.appendChild(el("h3", {}, "Items"));
+        const t = el("table", { class: "io" });
+        t.appendChild(el("tr", {}, el("th", {}, "Item"), el("th", {}, "Amount"),
+          el("th", {}, "Treatment"), el("th", {}, "Authority"),
+          el("th", {}, "Deductible"), el("th", {}, "Capitalized"), el("th", {}, "Flags")));
+        for (const row of r.items) {
+          t.appendChild(el("tr", {},
+            el("td", {}, (row.item_id || "") + " " + (row.description || "")),
+            el("td", { class: "num" }, "$" + E.fmt(row.amount, 2)),
+            el("td", {}, row.treatment),
+            el("td", {}, row.authority),
+            el("td", { class: "num" }, "$" + E.fmt(row.deductible, 2)),
+            el("td", { class: "num" }, "$" + E.fmt(row.capitalized, 2)),
+            el("td", {}, (row.flags || []).join(", "))));
+        }
+        out.appendChild(el("div", { class: "tblwrap" }, t));
+        out.appendChild(el("h3", {}, "Warnings"));
+        out.appendChild(warnList(r.warnings));
+        out.appendChild(rawDetails(r));
+      } catch (err) {
+        out.appendChild(el("div", { class: "warn err" }, String(err)));
+      }
+    } }, "Compute"));
+    root.appendChild(out);
   });
 
   /* ---- Tax-basis TB ---- */
@@ -1205,6 +1747,51 @@
     } catch (err) {
       document.body.appendChild(el("div", { id: "smoke-status",
         "data-status": "FAIL ui-smoke " + err }));
+    }
+
+    /* import-pipeline smoke: run a real CSV through I.sniffAndParse +
+     * genericDetectHeader/genericRowsToObjects for the "re" (§174) target,
+     * exercising the exact code path the Import Files tab's file handler
+     * uses, without needing to simulate a <input type=file> change event. */
+    (async () => {
+      try {
+        const csv = "RE Id,Description,Amount,Domestic,Year Incurred\n" +
+          "F1,Foreign lab,900000,No,2026\nD1,US bench,150000,Yes,2026\n";
+        const parsed = await I.sniffAndParse("re.csv", csv);
+        const target = IMPORT_TARGETS.find(t => t.key === "re");
+        const { headerIndex, mapping } = genericDetectHeader(parsed.sheets[0].rows, target.aliases);
+        const objs = genericRowsToObjects(parsed.sheets[0].rows, headerIndex, mapping);
+        const mapped = objs.map(target.map);
+        const ok = parsed.kind === "csv" && objs.length === 2 &&
+          mapped[0].re_id === "F1" && mapped[0].amount === "900000" &&
+          mapped[1].re_id === "D1";
+        document.body.appendChild(el("div", { id: "import-smoke-status",
+          "data-status": ok ? "PASS import-smoke"
+            : "FAIL import-smoke " + JSON.stringify(mapped) }));
+      } catch (err) {
+        document.body.appendChild(el("div", { id: "import-smoke-status",
+          "data-status": "FAIL import-smoke " + err }));
+      }
+    })();
+
+    /* tangible engine smoke: a conservative-capitalize case (missing BAR
+     * facts) must produce an open question and NOT silently deduct. */
+    try {
+      state.tangible.items.length = 0;
+      state.tangible.items.push({ item_id: "P1", description: "Roof work",
+        amount: "4000", betterment: "", adaptation: "false", restoration: "" });
+      show("tangible");
+      const tbtn = Array.from(sections.tangible.sec.querySelectorAll("button.act"))
+        .find(b => b.textContent === "Compute");
+      tbtn.click();
+      const ttxt = sections.tangible.sec.textContent;
+      const tok = ttxt.indexOf("open_question_capitalize_pending") !== -1 &&
+        ttxt.indexOf("Open questions") !== -1;
+      document.body.appendChild(el("div", { id: "tangible-smoke-status",
+        "data-status": tok ? "PASS tangible-smoke" : "FAIL tangible-smoke" }));
+    } catch (err) {
+      document.body.appendChild(el("div", { id: "tangible-smoke-status",
+        "data-status": "FAIL tangible-smoke " + err }));
     }
   }
 

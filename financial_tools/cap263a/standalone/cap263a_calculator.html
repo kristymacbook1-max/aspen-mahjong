@@ -6134,8 +6134,1794 @@ details.raw pre { background: var(--code-bg); border: 1px solid var(--line);
     "TAX-BASIS TB TIE-CHECK FAILED: -999 — a BTD was dropped or double-applied. Do not proceed."
    ]
   }
+ },
+ {
+  "name": "tangible_de_minimis_afs_ceiling",
+  "engine": "tangible",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "5000000",
+    "has_afs": true
+   },
+   "items": [
+    {
+     "item_id": "D1",
+     "description": "D1",
+     "amount": "5000",
+     "invoice_or_item_cost": "5000"
+    },
+    {
+     "item_id": "D2",
+     "description": "D2",
+     "amount": "5000",
+     "invoice_or_item_cost": "5000.01",
+     "betterment": false,
+     "adaptation": false,
+     "restoration": false,
+     "routine_maintenance_expected_more_than_once": false
+    }
+   ],
+   "opts": {
+    "de_minimis_election": true
+   }
+  },
+  "expected": {
+   "items": [
+    {
+     "item_id": "D1",
+     "description": "D1",
+     "amount": "5000",
+     "treatment": "de_minimis_deduct",
+     "authority": "Reg. §1.263(a)-1(f); Notice 2015-82",
+     "flags": [],
+     "deductible": "5000",
+     "capitalized": "0"
+    },
+    {
+     "item_id": "D2",
+     "description": "D2",
+     "amount": "5000",
+     "treatment": "repair_deduct",
+     "authority": "§162; Reg. §1.263(a)-3(d)",
+     "flags": [],
+     "deductible": "5000",
+     "capitalized": "0"
+    }
+   ],
+   "open_questions": [],
+   "deductible_total": "10000",
+   "capitalized_total": "0",
+   "elective_capitalized_total": "0",
+   "warnings": [
+    "DE-MINIMIS-POLICY-CONDITION: the §1.263(a)-1(f) de minimis safe harbor is elected and the taxpayer has an AFS — a WRITTEN accounting policy expensing amounts under the ceiling, in place as of the START of the taxable year, is a condition of the election ((f)(1)(i)(B)). Confirm it exists; the election is annual, irrevocable, and all-or-nothing for qualifying items."
+   ]
+  }
+ },
+ {
+  "name": "tangible_de_minimis_no_afs_2500",
+  "engine": "tangible",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "5000000",
+    "has_afs": false
+   },
+   "items": [
+    {
+     "item_id": "D1",
+     "description": "D1",
+     "amount": "2500",
+     "invoice_or_item_cost": "2500"
+    },
+    {
+     "item_id": "D2",
+     "description": "D2",
+     "amount": "2500",
+     "invoice_or_item_cost": "2500.01",
+     "betterment": false,
+     "adaptation": false,
+     "restoration": false,
+     "routine_maintenance_expected_more_than_once": false
+    }
+   ],
+   "opts": {
+    "de_minimis_election": true
+   }
+  },
+  "expected": {
+   "items": [
+    {
+     "item_id": "D1",
+     "description": "D1",
+     "amount": "2500",
+     "treatment": "de_minimis_deduct",
+     "authority": "Reg. §1.263(a)-1(f); Notice 2015-82",
+     "flags": [],
+     "deductible": "2500",
+     "capitalized": "0"
+    },
+    {
+     "item_id": "D2",
+     "description": "D2",
+     "amount": "2500",
+     "treatment": "repair_deduct",
+     "authority": "§162; Reg. §1.263(a)-3(d)",
+     "flags": [],
+     "deductible": "2500",
+     "capitalized": "0"
+    }
+   ],
+   "open_questions": [],
+   "deductible_total": "5000",
+   "capitalized_total": "0",
+   "elective_capitalized_total": "0",
+   "warnings": []
+  }
+ },
+ {
+  "name": "tangible_de_minimis_cost_unknown_open_question",
+  "engine": "tangible",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "5000000"
+   },
+   "items": [
+    {
+     "item_id": "U1",
+     "description": "Shop equipment",
+     "amount": "3000"
+    }
+   ],
+   "opts": {
+    "de_minimis_election": true
+   }
+  },
+  "expected": {
+   "items": [
+    {
+     "item_id": "U1",
+     "description": "Shop equipment",
+     "amount": "3000",
+     "treatment": "open_question_capitalize_pending",
+     "authority": "Reg. §1.263(a)-3(d)/(j)/(k)/(l) — improvement facts pending; capitalized conservatively",
+     "flags": [
+      "DE-MINIMIS-COST-UNKNOWN",
+      "BAR-FACTS-INCOMPLETE"
+     ],
+     "deductible": "0",
+     "capitalized": "3000"
+    }
+   ],
+   "open_questions": [
+    {
+     "item_id": "U1",
+     "question": "Item U1 'Shop equipment': what is the per-invoice (or per-item as substantiated on the invoice) cost (Reg. §1.263(a)-1(f))? Supply invoice_or_item_cost to test it against the $5,000 de minimis ceiling.",
+     "why": "The de minimis election is on but the schedule does not carry the per-invoice/per-item cost — the item continued down the decision tree conservatively."
+    },
+    {
+     "item_id": "U1",
+     "question": "Item U1 'Shop equipment': the following improvement facts are not established: betterment, adaptation, restoration. Answer each True/False: betterment (§1.263(a)-3(j)) — does the work ameliorate a pre-existing material condition or defect, or materially add to or increase the capacity, productivity, efficiency, strength, or quality of the unit of property? adaptation (§1.263(a)-3(l)) — does the work adapt the unit of property to a new or different use? restoration (§1.263(a)-3(k)) — does the work replace a major component or substantial structural part, restore after a basis-adjusted loss, or return the property to ordinary efficient operating condition after deterioration to a state of disrepair where it was no longer functional?",
+     "why": "Any single True prong requires capitalization as an improvement (§1.263(a)-3(d)(2)); all-False opens the repair / routine-maintenance path. The amount is capitalized CONSERVATIVELY pending the answer — never silently deducted on missing facts."
+    }
+   ],
+   "deductible_total": "0",
+   "capitalized_total": "3000",
+   "elective_capitalized_total": "0",
+   "warnings": [
+    "DE-MINIMIS-POLICY-CONDITION: the §1.263(a)-1(f) de minimis safe harbor is elected and the taxpayer has an AFS — a WRITTEN accounting policy expensing amounts under the ceiling, in place as of the START of the taxable year, is a condition of the election ((f)(1)(i)(B)). Confirm it exists; the election is annual, irrevocable, and all-or-nothing for qualifying items."
+   ]
+  }
+ },
+ {
+  "name": "tangible_materials_supplies_both_prongs",
+  "engine": "tangible",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "5000000"
+   },
+   "items": [
+    {
+     "item_id": "M1",
+     "description": "M1",
+     "amount": "150",
+     "is_material_or_supply": true,
+     "ms_unit_cost_200_or_less": true
+    },
+    {
+     "item_id": "M2",
+     "description": "M2",
+     "amount": "500",
+     "is_material_or_supply": true,
+     "ms_economic_life_12mo_or_less": true
+    },
+    {
+     "item_id": "M3",
+     "description": "M3",
+     "amount": "300",
+     "is_material_or_supply": true,
+     "betterment": false,
+     "adaptation": false,
+     "restoration": false,
+     "routine_maintenance_expected_more_than_once": false
+    }
+   ],
+   "opts": {}
+  },
+  "expected": {
+   "items": [
+    {
+     "item_id": "M1",
+     "description": "M1",
+     "amount": "150",
+     "treatment": "materials_supplies_deduct",
+     "authority": "§1.162-3(c)(1)(iv) unit cost ≤ $200",
+     "flags": [
+      "MS-TIMING-NOT-DETERMINED"
+     ],
+     "deductible": "150",
+     "capitalized": "0"
+    },
+    {
+     "item_id": "M2",
+     "description": "M2",
+     "amount": "500",
+     "treatment": "materials_supplies_deduct",
+     "authority": "§1.162-3(c)(1)(iii) economic life ≤ 12 months",
+     "flags": [
+      "MS-TIMING-NOT-DETERMINED"
+     ],
+     "deductible": "500",
+     "capitalized": "0"
+    },
+    {
+     "item_id": "M3",
+     "description": "M3",
+     "amount": "300",
+     "treatment": "repair_deduct",
+     "authority": "§162; Reg. §1.263(a)-3(d)",
+     "flags": [],
+     "deductible": "300",
+     "capitalized": "0"
+    }
+   ],
+   "open_questions": [
+    {
+     "item_id": "M3",
+     "question": "Item M3 'M3': is the unit acquisition/production cost $200 or less (§1.162-3(c)(1)(iv)), or is the economic useful life 12 months or less (§1.162-3(c)(1)(iii))? Answer ms_unit_cost_200_or_less and ms_economic_life_12mo_or_less True/False.",
+     "why": "The item is marked as a materials & supplies candidate but neither §1.162-3 prong is established — it continued down the decision tree."
+    }
+   ],
+   "deductible_total": "950",
+   "capitalized_total": "0",
+   "elective_capitalized_total": "0",
+   "warnings": [
+    "MS-TIMING-NOT-DETERMINED: materials & supplies were deducted under §1.162-3, but the incidental (deduct when paid/incurred, (a)(2)) vs non-incidental (deduct when used or consumed, (a)(1)) TIMING distinction is out of scope for this engine — confirm the deduction year per item."
+   ]
+  }
+ },
+ {
+  "name": "tangible_stsh_at_and_over_ceiling",
+  "engine": "tangible",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "5000000"
+   },
+   "items": [
+    {
+     "item_id": "B1",
+     "description": "B1",
+     "amount": "8000",
+     "is_building": true,
+     "unit_of_property": "BLDG1",
+     "building_unadjusted_basis": "400000"
+    },
+    {
+     "item_id": "B2",
+     "description": "B2",
+     "amount": "8000.01",
+     "is_building": true,
+     "unit_of_property": "BLDG2",
+     "building_unadjusted_basis": "400000",
+     "betterment": false,
+     "adaptation": false,
+     "restoration": false,
+     "routine_maintenance_expected_more_than_once": false
+    }
+   ],
+   "opts": {
+    "small_taxpayer_building_election": true
+   }
+  },
+  "expected": {
+   "items": [
+    {
+     "item_id": "B1",
+     "description": "B1",
+     "amount": "8000",
+     "treatment": "small_taxpayer_sh_deduct",
+     "authority": "Reg. §1.263(a)-3(h) small taxpayer building safe harbor",
+     "flags": [],
+     "deductible": "8000",
+     "capitalized": "0"
+    },
+    {
+     "item_id": "B2",
+     "description": "B2",
+     "amount": "8000.01",
+     "treatment": "repair_deduct",
+     "authority": "§162; Reg. §1.263(a)-3(d)",
+     "flags": [
+      "STSH-CEILING-EXCEEDED"
+     ],
+     "deductible": "8000.01",
+     "capitalized": "0"
+    }
+   ],
+   "open_questions": [],
+   "deductible_total": "16000.01",
+   "capitalized_total": "0",
+   "elective_capitalized_total": "0",
+   "warnings": [
+    "STSH-AGGREGATE-FROM-SCHEDULE-ONLY: the §1.263(a)-3(h) per-building aggregate was summed from the items ON THIS SCHEDULE only — the test requires ALL amounts paid during the year for repairs, maintenance, and improvements on the building, including amounts outside this schedule. Supply total_building_repairs_maintenance_improvements to test the true aggregate."
+   ]
+  }
+ },
+ {
+  "name": "tangible_stsh_ineligible_receipts",
+  "engine": "tangible",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "15000000"
+   },
+   "items": [
+    {
+     "item_id": "B1",
+     "description": "B1",
+     "amount": "1000",
+     "is_building": true,
+     "unit_of_property": "BLDG1",
+     "building_unadjusted_basis": "400000",
+     "betterment": false,
+     "adaptation": false,
+     "restoration": false,
+     "routine_maintenance_expected_more_than_once": false
+    }
+   ],
+   "opts": {
+    "small_taxpayer_building_election": true
+   }
+  },
+  "expected": {
+   "items": [
+    {
+     "item_id": "B1",
+     "description": "B1",
+     "amount": "1000",
+     "treatment": "repair_deduct",
+     "authority": "§162; Reg. §1.263(a)-3(d)",
+     "flags": [
+      "STSH-NOT-ELIGIBLE"
+     ],
+     "deductible": "1000",
+     "capitalized": "0"
+    }
+   ],
+   "open_questions": [],
+   "deductible_total": "1000",
+   "capitalized_total": "0",
+   "elective_capitalized_total": "0",
+   "warnings": [
+    "STSH-INELIGIBLE-RECEIPTS: the §1.263(a)-3(h) small-taxpayer building safe harbor is elected but average annual gross receipts ($15,000,000) exceed the $10,000,000 ceiling — the safe harbor is unavailable; no item was deducted under it."
+   ]
+  }
+ },
+ {
+  "name": "tangible_stsh_explicit_aggregate",
+  "engine": "tangible",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "5000000"
+   },
+   "items": [
+    {
+     "item_id": "B1",
+     "description": "B1",
+     "amount": "5000",
+     "is_building": true,
+     "unit_of_property": "BLDG1",
+     "building_unadjusted_basis": "1000000"
+    }
+   ],
+   "opts": {
+    "small_taxpayer_building_election": true,
+    "total_building_repairs_maintenance_improvements": {
+     "BLDG1": "9999"
+    }
+   }
+  },
+  "expected": {
+   "items": [
+    {
+     "item_id": "B1",
+     "description": "B1",
+     "amount": "5000",
+     "treatment": "small_taxpayer_sh_deduct",
+     "authority": "Reg. §1.263(a)-3(h) small taxpayer building safe harbor",
+     "flags": [],
+     "deductible": "5000",
+     "capitalized": "0"
+    }
+   ],
+   "open_questions": [],
+   "deductible_total": "5000",
+   "capitalized_total": "0",
+   "elective_capitalized_total": "0",
+   "warnings": []
+  }
+ },
+ {
+  "name": "tangible_bar_each_prong_capitalizes",
+  "engine": "tangible",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "5000000"
+   },
+   "items": [
+    {
+     "item_id": "I1",
+     "description": "I1",
+     "amount": "10000",
+     "betterment": true,
+     "adaptation": false,
+     "restoration": false
+    },
+    {
+     "item_id": "I2",
+     "description": "I2",
+     "amount": "20000",
+     "betterment": false,
+     "adaptation": true,
+     "restoration": false
+    },
+    {
+     "item_id": "I3",
+     "description": "I3",
+     "amount": "30000",
+     "betterment": false,
+     "adaptation": false,
+     "restoration": true
+    }
+   ],
+   "opts": {}
+  },
+  "expected": {
+   "items": [
+    {
+     "item_id": "I1",
+     "description": "I1",
+     "amount": "10000",
+     "treatment": "improvement_capitalize",
+     "authority": "Reg. §1.263(a)-3(j) betterment",
+     "flags": [],
+     "deductible": "0",
+     "capitalized": "10000"
+    },
+    {
+     "item_id": "I2",
+     "description": "I2",
+     "amount": "20000",
+     "treatment": "improvement_capitalize",
+     "authority": "Reg. §1.263(a)-3(l) adaptation to a new/different use",
+     "flags": [],
+     "deductible": "0",
+     "capitalized": "20000"
+    },
+    {
+     "item_id": "I3",
+     "description": "I3",
+     "amount": "30000",
+     "treatment": "improvement_capitalize",
+     "authority": "Reg. §1.263(a)-3(k) restoration",
+     "flags": [],
+     "deductible": "0",
+     "capitalized": "30000"
+    }
+   ],
+   "open_questions": [],
+   "deductible_total": "0",
+   "capitalized_total": "60000",
+   "elective_capitalized_total": "0",
+   "warnings": []
+  }
+ },
+ {
+  "name": "tangible_bar_missing_facts_conservative",
+  "engine": "tangible",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "5000000"
+   },
+   "items": [
+    {
+     "item_id": "P1",
+     "description": "Roof membrane replacement",
+     "amount": "4000",
+     "betterment": null,
+     "adaptation": false,
+     "restoration": null
+    }
+   ],
+   "opts": {}
+  },
+  "expected": {
+   "items": [
+    {
+     "item_id": "P1",
+     "description": "Roof membrane replacement",
+     "amount": "4000",
+     "treatment": "open_question_capitalize_pending",
+     "authority": "Reg. §1.263(a)-3(d)/(j)/(k)/(l) — improvement facts pending; capitalized conservatively",
+     "flags": [
+      "BAR-FACTS-INCOMPLETE"
+     ],
+     "deductible": "0",
+     "capitalized": "4000"
+    }
+   ],
+   "open_questions": [
+    {
+     "item_id": "P1",
+     "question": "Item P1 'Roof membrane replacement': the following improvement facts are not established: betterment, restoration. Answer each True/False: betterment (§1.263(a)-3(j)) — does the work ameliorate a pre-existing material condition or defect, or materially add to or increase the capacity, productivity, efficiency, strength, or quality of the unit of property? restoration (§1.263(a)-3(k)) — does the work replace a major component or substantial structural part, restore after a basis-adjusted loss, or return the property to ordinary efficient operating condition after deterioration to a state of disrepair where it was no longer functional?",
+     "why": "Any single True prong requires capitalization as an improvement (§1.263(a)-3(d)(2)); all-False opens the repair / routine-maintenance path. The amount is capitalized CONSERVATIVELY pending the answer — never silently deducted on missing facts."
+    }
+   ],
+   "deductible_total": "0",
+   "capitalized_total": "4000",
+   "elective_capitalized_total": "0",
+   "warnings": []
+  }
+ },
+ {
+  "name": "tangible_routine_maintenance",
+  "engine": "tangible",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "5000000"
+   },
+   "items": [
+    {
+     "item_id": "R1",
+     "description": "R1",
+     "amount": "1500",
+     "betterment": false,
+     "adaptation": false,
+     "restoration": false,
+     "routine_maintenance_expected_more_than_once": true
+    },
+    {
+     "item_id": "R2",
+     "description": "R2",
+     "amount": "1600",
+     "betterment": false,
+     "adaptation": false,
+     "restoration": false,
+     "routine_maintenance_expected_more_than_once": null
+    }
+   ],
+   "opts": {}
+  },
+  "expected": {
+   "items": [
+    {
+     "item_id": "R1",
+     "description": "R1",
+     "amount": "1500",
+     "treatment": "routine_maintenance_deduct",
+     "authority": "Reg. §1.263(a)-3(i) routine maintenance safe harbor",
+     "flags": [],
+     "deductible": "1500",
+     "capitalized": "0"
+    },
+    {
+     "item_id": "R2",
+     "description": "R2",
+     "amount": "1600",
+     "treatment": "repair_deduct",
+     "authority": "§162; Reg. §1.263(a)-3(d)",
+     "flags": [],
+     "deductible": "1600",
+     "capitalized": "0"
+    }
+   ],
+   "open_questions": [
+    {
+     "item_id": "R2",
+     "question": "Item R2 'R2': at the time the unit of property was placed in service, was this maintenance expected to be performed more than once over the property's class life (for a building: more than once in 10 years) (§1.263(a)-3(i))? Answer routine_maintenance_expected_more_than_once True/False.",
+     "why": "All BAR prongs are False, so the amount is deductible either way — the answer only settles whether the routine maintenance safe harbor or the general repair rule is the cited authority."
+    }
+   ],
+   "deductible_total": "3100",
+   "capitalized_total": "0",
+   "elective_capitalized_total": "0",
+   "warnings": []
+  }
+ },
+ {
+  "name": "tangible_repair_and_n_election",
+  "engine": "tangible",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "5000000"
+   },
+   "items": [
+    {
+     "item_id": "N1",
+     "description": "N1",
+     "amount": "700",
+     "betterment": false,
+     "adaptation": false,
+     "restoration": false,
+     "routine_maintenance_expected_more_than_once": false,
+     "book_capitalized": true
+    },
+    {
+     "item_id": "N2",
+     "description": "N2",
+     "amount": "800",
+     "betterment": false,
+     "adaptation": false,
+     "restoration": false,
+     "routine_maintenance_expected_more_than_once": false,
+     "book_capitalized": false
+    }
+   ],
+   "opts": {
+    "capitalize_repairs_following_books": true
+   }
+  },
+  "expected": {
+   "items": [
+    {
+     "item_id": "N1",
+     "description": "N1",
+     "amount": "700",
+     "treatment": "elective_capitalize_books",
+     "authority": "Reg. §1.263(a)-3(n) election to capitalize repairs capitalized on books",
+     "flags": [],
+     "deductible": "0",
+     "capitalized": "700"
+    },
+    {
+     "item_id": "N2",
+     "description": "N2",
+     "amount": "800",
+     "treatment": "repair_deduct",
+     "authority": "§162; Reg. §1.263(a)-3(d)",
+     "flags": [],
+     "deductible": "800",
+     "capitalized": "0"
+    }
+   ],
+   "open_questions": [],
+   "deductible_total": "800",
+   "capitalized_total": "0",
+   "elective_capitalized_total": "700",
+   "warnings": [
+    "N-ELECTION-CONSISTENCY: the §1.263(a)-3(n) election is on, but some repair items are capitalized on books and others are not — the election applies to ALL amounts paid for repair and maintenance capitalized on the books and records for the year. Verify the book treatment of every repair line is consistent with the election."
+   ]
+  }
+ },
+ {
+  "name": "tangible_negative_amount",
+  "engine": "tangible",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "5000000"
+   },
+   "items": [
+    {
+     "item_id": "X1",
+     "description": "X1",
+     "amount": "-500"
+    }
+   ],
+   "opts": {}
+  },
+  "expected": {
+   "items": [
+    {
+     "item_id": "X1",
+     "description": "X1",
+     "amount": "-500",
+     "treatment": "sme_review",
+     "authority": "",
+     "flags": [
+      "NEGATIVE-AMOUNT"
+     ],
+     "deductible": "0",
+     "capitalized": "0"
+    }
+   ],
+   "open_questions": [],
+   "deductible_total": "0",
+   "capitalized_total": "0",
+   "elective_capitalized_total": "0",
+   "warnings": [
+    "NEGATIVE-AMOUNT [tangible X1]: $-500.00 — nothing computed; route credits/refunds through the schedule, not a negative expenditure."
+   ]
+  }
  }
 ]</script>
+<script id="interview-spec-data" type="application/json">{
+  "version": 1,
+  "source_of_truth": "financial_tools/cap263a/interview.py + taxonomy/interview.yaml (Phase E Gates 0-10); gateT from the new tangible-property engine spec",
+  "renderer_contract": {
+    "conditions": "A condition is one of: {question, equals}, {question, in:[..]}, {question, lte:n}, {question, answered:bool}, {derived, equals}, {any:[conds]}, {all:[conds]}, {differs:[qidA,qidB]}. Every entry of a show_if/when list must hold (AND).",
+    "unanswered_semantics": "An unanswered question evaluates as null. For bool questions {equals:false} matches null OR false (falsy semantics, mirroring interview.py where never-asked answers are None/falsy). {equals:true}, {in:[..]}, {lte:n} and choice {equals:v} never match null. {derived:.., equals:null} tests the three-valued 'unknown' state.",
+    "gate_skip": "A gate with skip_if whose conditions all hold is skipped entirely (mirrors interview.py _EXEMPT_SKIPPED_GATES: gates 1,2,3,6,7 are §263A provisions and switch off for a §448(c)-exempt small business; gates 4,5,8,9,10 and gateT still run).",
+    "maps_to": "Exactly one of profile_field (EntityProfile attribute), flag (interview flag name), election_kwarg (run_engagement / engine kwarg). Answers land on the profile object the HTML engines consume.",
+    "schedules": "requires_schedule_if adds the named schedule tab(s) to the required list when the answer matches. always_required_schedules are appended unconditionally."
+  },
+  "derived": {
+    "under_448c_threshold": {
+      "description": "Q0.4 <= the §448(c) inflation-indexed threshold for Q0.2's year (EntityProfile.THRESHOLDS; unknown years fall back to the 2026 figure and should be flagged as an estimate). null while Q0.4 is unanswered.",
+      "rule": {
+        "type": "receipts_le_threshold",
+        "receipts_question": "Q0.4",
+        "year_question": "Q0.2",
+        "thresholds": { "2024": 30000000, "2025": 31000000, "2026": 32000000 },
+        "fallback_threshold": 32000000
+      }
+    },
+    "small_business_exempt": {
+      "description": "under_448c_threshold AND Q0.3 (tax shelter) is false — §263A(i)/§448(c) small-business exemption; §1.263A-1(b)(1)/(j) bars a tax shelter regardless of receipts. false while receipts are unanswered (interview.py treats undetermined as not-exempt for gate walking, then warns EXEMPTION-UNDETERMINED).",
+      "rule": {
+        "type": "all",
+        "conditions": [
+          { "derived": "under_448c_threshold", "equals": true },
+          { "question": "Q0.3", "equals": false }
+        ]
+      }
+    },
+    "srm_available": {
+      "description": "Gate 1 consequence matrix, §1.263A-3(a)(4) — three-valued. null: Q1.1a unanswered, or a producer whose Q1.2 de minimis determination was never established. true: not a producer (pure reseller), or private-label goods (Q1.4), or de-minimis production incident to resale (Q1.2=de_minimis AND Q1.3). false: otherwise (producer above de minimis with no carve-out) — SPM/MSPM only.",
+      "rule": {
+        "type": "srm_matrix",
+        "produces": "Q1.1a",
+        "production_activity_level": "Q1.2",
+        "incident_to_resale": "Q1.3",
+        "private_label": "Q1.4"
+      }
+    }
+  },
+  "always_required_schedules": ["btd"],
+  "gates": [
+    {
+      "id": "gate0",
+      "title": "Entity & exemption",
+      "purpose": "Identify the taxpayer, the tax year, and whether the §448(c)/§263A(i) small-business exemption switches all of §263A off (Gates 1-3, 6-7 skipped).",
+      "questions": [
+        {
+          "id": "Q0.1",
+          "text": "What type of entity is the taxpayer?",
+          "help": "Determines who signs elections and unlocks partnership-only questions (guaranteed payments, §707(c); syndication costs, §709(b)). §448.",
+          "type": "choice",
+          "choices": [
+            { "value": "c_corp", "label": "C corporation" },
+            { "value": "s_corp", "label": "S corporation" },
+            { "value": "partnership", "label": "Partnership" },
+            { "value": "sole_prop", "label": "Sole proprietorship" }
+          ],
+          "maps_to": { "profile_field": "entity_type" }
+        },
+        {
+          "id": "Q0.2",
+          "text": "What tax year is this engagement for?",
+          "help": "Sets the §448(c) gross-receipts threshold lookup ($30M/2024, $31M/2025, $32M/2026) and the T.D. 10034 pre/post-Oct-2025 interest-capitalization regime.",
+          "type": "number",
+          "maps_to": { "profile_field": "tax_year" }
+        },
+        {
+          "id": "Q0.3",
+          "text": "Is the taxpayer a tax shelter under §448(a)(3) (syndicate / loss-allocation tests)?",
+          "help": "A §448(a)(3) tax shelter is statutorily barred from the small-business exemption regardless of gross receipts. §1.263A-1(b)(1)/(j).",
+          "type": "bool",
+          "maps_to": { "profile_field": "is_tax_shelter" }
+        },
+        {
+          "id": "Q0.4",
+          "text": "Aggregated 3-year average annual gross receipts under §448(c)(2)/§1.448-2 (related entities combined)?",
+          "help": "Must be the single-employer AGGREGATED figure, not this entity's receipts alone. At or under the threshold (and not a tax shelter): all of §263A — including (f) interest — is off; Gates 1-3 and 6-7 are skipped. §448(c)(2); §1.448-2.",
+          "type": "money",
+          "maps_to": { "profile_field": "avg_gross_receipts" }
+        },
+        {
+          "id": "Q0.5",
+          "text": "Is this the first taxable year with production or resale activities?",
+          "help": "In the first §263A year, methods below are ADOPTED — no Form 3115 and no prior-method reconciliation. §1.263A-7(a).",
+          "type": "bool",
+          "maps_to": { "profile_field": "is_first_263a_year" }
+        },
+        {
+          "id": "Q0.6",
+          "text": "What §263A method was established last year?",
+          "help": "Any divergence from this year's method-of-accounting answers triggers Form 3115 / §481(a) and §1.263A-7 revalued beginning-inventory inputs. §446(e); §1.263A-7.",
+          "type": "choice",
+          "choices": [
+            { "value": "SPM", "label": "Simplified production method (SPM)" },
+            { "value": "MSPM", "label": "Modified simplified production method (MSPM)" },
+            { "value": "SRM", "label": "Simplified resale method (SRM)" },
+            { "value": "facts_and_circumstances", "label": "Facts-and-circumstances method" },
+            { "value": "none_noncompliant", "label": "None / not compliant with §263A" }
+          ],
+          "maps_to": { "profile_field": "prior_year_method" },
+          "show_if": [
+            { "question": "Q0.5", "equals": false },
+            { "derived": "small_business_exempt", "equals": false }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gate1",
+      "title": "Producer / reseller status",
+      "purpose": "Establish producer vs reseller status and the §1.263A-3(a)(4) SRM-availability consequence matrix (computed, not asked).",
+      "skip_if": [{ "derived": "small_business_exempt", "equals": true }],
+      "questions": [
+        {
+          "id": "Q1.1a",
+          "text": "Does the taxpayer produce real or tangible personal property?",
+          "help": "Producer status under §1.263A-2(a) — construction, manufacturing, growing, improvement all count.",
+          "type": "bool",
+          "maps_to": { "profile_field": "produces" }
+        },
+        {
+          "id": "Q1.1b",
+          "text": "Does the taxpayer acquire property for resale?",
+          "help": "Reseller status under §1.263A-3(a).",
+          "type": "bool",
+          "maps_to": { "profile_field": "acquires_for_resale" }
+        },
+        {
+          "id": "Q1.2",
+          "text": "Are production gross receipts and production labor each 10% or less of the trade or business (the de minimis presumption)?",
+          "help": "The 10%/10% presumption of §1.263A-3(a)(5)(ii). Above either threshold, the facts-and-circumstances follow-up is an SME review-queue call, not a formula.",
+          "type": "choice",
+          "choices": [
+            { "value": "de_minimis", "label": "De minimis (within the 10%/10% presumption)" },
+            { "value": "more_than_de_minimis", "label": "More than de minimis" }
+          ],
+          "maps_to": { "profile_field": "production_activity_level" },
+          "show_if": [
+            { "question": "Q1.1a", "equals": true },
+            { "question": "Q1.1b", "equals": true }
+          ]
+        },
+        {
+          "id": "Q1.3",
+          "text": "Is the de minimis production incident to resale of §1221(a)(1) property?",
+          "help": "The §1.263A-3(a)(4)(ii) route that keeps SRM available for a de-minimis producer.",
+          "type": "bool",
+          "maps_to": { "profile_field": "production_incident_to_resale" },
+          "show_if": [{ "question": "Q1.2", "equals": "de_minimis" }]
+        },
+        {
+          "id": "Q1.4",
+          "text": "Private-label production — goods produced under contract by an UNRELATED party, incident to resale, sold to customers?",
+          "help": "Asked always (not gated on Q1.3): the §1.263A-3(a)(4)(iii) private-label carve-out can qualify even a more-than-de-minimis producer for SRM.",
+          "type": "bool",
+          "maps_to": { "profile_field": "private_label_goods" }
+        }
+      ]
+    },
+    {
+      "id": "gate2",
+      "title": "Inventory & §263A method elections",
+      "purpose": "Inventory method, this year's §263A simplified method, and the SSCM / HAR / split sub-elections.",
+      "skip_if": [{ "derived": "small_business_exempt", "equals": true }],
+      "questions": [
+        {
+          "id": "Q2.1",
+          "text": "What inventory method is established?",
+          "help": "§471/§472 established method. LIFO routes the MSPM combined-ratio and SRM increment mechanics.",
+          "type": "choice",
+          "choices": [
+            { "value": "FIFO", "label": "FIFO" },
+            { "value": "lifo_specific", "label": "LIFO — specific goods" },
+            { "value": "lifo_dollar_value", "label": "LIFO — dollar value" }
+          ],
+          "maps_to": { "profile_field": "inventory_method" }
+        },
+        {
+          "id": "Q2.2",
+          "text": "Which §263A method applies this year?",
+          "help": "SPM/MSPM per §1.263A-2; SRM per §1.263A-3. The menu is constrained by Gate 1's srm_available matrix; differing from Q0.6 in a non-first year requires Form 3115 / §481(a) (see derived checks).",
+          "type": "choice",
+          "choices": [
+            { "value": "SPM", "label": "Simplified production method (SPM)" },
+            { "value": "MSPM", "label": "Modified simplified production method (MSPM)" },
+            { "value": "SRM", "label": "Simplified resale method (SRM)" }
+          ],
+          "maps_to": { "profile_field": "method" }
+        },
+        {
+          "id": "Q2.3",
+          "text": "(SPM only) Are 3-year average gross receipts over $50 million?",
+          "help": "§1.263A-1(d)(3)(ii)(B)(1): a producer over $50M may not include negative §263A adjustments under the SPM (MSPM has no size limit).",
+          "type": "bool",
+          "maps_to": { "flag": "SPM_OVER_50M" },
+          "show_if": [{ "question": "Q2.2", "equals": "SPM" }]
+        },
+        {
+          "id": "Q2.4",
+          "text": "Include negative §263A adjustments?",
+          "help": "§1.263A-1(d)(3)(ii). Not offered to an over-$50M SPM taxpayer. If yes, the (d)(3)(ii)(C)-(E) restrictions apply.",
+          "type": "bool",
+          "maps_to": { "profile_field": "include_negative_263a" },
+          "show_if": [
+            { "question": "Q2.2", "in": ["SPM", "MSPM", "SRM"] },
+            { "any": [
+              { "question": "Q2.2", "in": ["MSPM", "SRM"] },
+              { "question": "Q2.3", "equals": false }
+            ] }
+          ],
+          "warning_if": [
+            {
+              "equals": true,
+              "code": "NEGATIVE-263A-RESTRICTIONS",
+              "text": "§1.263A-1(d)(3)(ii)(C)-(E): no negative adjustments for cash/trade discounts or §162(c)/(e)/(f)/(g) items; consistency required."
+            }
+          ]
+        },
+        {
+          "id": "Q2.5",
+          "text": "(Producers) Are total indirect costs $200,000 or less (after excluding not-required-to-capitalize categories; related parties aggregated)?",
+          "help": "§1.263A-2(b)(3)(iv): if yes, additional §263A costs are DEEMED ZERO — the ratio-input questions below are skipped and the HAR election is barred.",
+          "type": "bool",
+          "maps_to": { "profile_field": "producer_de_minimis_200k" },
+          "show_if": [{ "question": "Q1.1a", "equals": true }]
+        },
+        {
+          "id": "Q2.6a",
+          "text": "(MSPM) Has the taxpayer used MSPM with actual ratios for 3 or more consecutive prior years?",
+          "help": "Eligibility fact for the Historic Absorption Ratio election. §1.263A-2(c)(4).",
+          "type": "bool",
+          "maps_to": { "flag": "MSPM_3YR_ACTUAL_RATIO_HISTORY" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "MSPM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q2.6b",
+          "text": "Elect the Historic Absorption Ratio (HAR)?",
+          "help": "§1.263A-2(c)(4) — MSPM-only, applied on a cut-off basis; frozen ratio and qualifying-year inputs are then required.",
+          "type": "bool",
+          "maps_to": { "profile_field": "har_election" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "MSPM" },
+            { "question": "Q2.6a", "equals": true },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q2.6c",
+          "text": "HAR: frozen PRE-PRODUCTION historic absorption ratio (fraction)?",
+          "help": "Frozen for the 5-year qualifying period. §1.263A-2(c)(4).",
+          "type": "number",
+          "maps_to": { "profile_field": "har_preprod_ratio" },
+          "show_if": [
+            { "question": "Q2.6b", "equals": true },
+            { "question": "Q2.1", "equals": "FIFO" }
+          ]
+        },
+        {
+          "id": "Q2.6d",
+          "text": "HAR: frozen PRODUCTION historic absorption ratio (fraction)?",
+          "help": "Frozen for the 5-year qualifying period. §1.263A-2(c)(4).",
+          "type": "number",
+          "maps_to": { "profile_field": "har_production_ratio" },
+          "show_if": [
+            { "question": "Q2.6b", "equals": true },
+            { "question": "Q2.1", "equals": "FIFO" }
+          ]
+        },
+        {
+          "id": "Q2.6e",
+          "text": "HAR (LIFO): frozen COMBINED historic absorption ratio (fraction)?",
+          "help": "The LIFO variant uses a single combined ratio. §1.263A-2(c)(4)(iii).",
+          "type": "number",
+          "maps_to": { "profile_field": "har_combined_ratio" },
+          "show_if": [
+            { "question": "Q2.6b", "equals": true },
+            { "question": "Q2.1", "in": ["lifo_specific", "lifo_dollar_value"] }
+          ]
+        },
+        {
+          "id": "Q2.6f",
+          "text": "HAR: qualifying-year index (1-5 within the qualifying period; 6 = recomputation year)?",
+          "help": "§1.263A-2(c)(4): in the recomputation year, BOTH frozen ratios must be within ±0.5 percentage points of actuals (conjunctive) — pass extends 6 years; fail means actuals now with mandatory resumption in the 3rd following year.",
+          "type": "number",
+          "maps_to": { "profile_field": "har_qualifying_year_index" },
+          "show_if": [{ "question": "Q2.6b", "equals": true }]
+        },
+        {
+          "id": "Q2.7a",
+          "text": "(MSPM) SSCM-split method — direct-material or labor?",
+          "help": "How capitalizable mixed-service costs split between the pre-production and production pools. §1.263A-2(c)(3)(iii)(B).",
+          "type": "choice",
+          "choices": [
+            { "value": "direct_material", "label": "Direct-material proportion" },
+            { "value": "labor", "label": "Labor proportion" }
+          ],
+          "maps_to": { "profile_field": "mspm_mixed_split_method" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "MSPM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q2.7b",
+          "text": "(MSPM) Elect the 90% one-bucket split?",
+          "help": "§1.263A-2(c)(3)(iii)(C): if 90% or more of capitalizable mixed-service costs would land in one pool, elect to put ALL of them there.",
+          "type": "bool",
+          "maps_to": { "profile_field": "mspm_90pct_split_election" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "MSPM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q2.8a",
+          "text": "Elect the simplified service cost method (SSCM)?",
+          "help": "§1.263A-1(h): allocates mixed-service costs by a simple ratio instead of department-level allocation.",
+          "type": "bool",
+          "maps_to": { "flag": "SSCM_ELECTED" },
+          "show_if": [{ "question": "Q2.5", "equals": false }]
+        },
+        {
+          "id": "Q2.8b",
+          "text": "SSCM ratio method?",
+          "help": "§1.263A-1(h)(3)(ii): the production-cost ratio is offered ONLY to producers; a reseller must use the labor-based ratio (see derived check SSCM-RATIO-RESELLER).",
+          "type": "choice",
+          "choices": [
+            { "value": "labor", "label": "Labor-based ratio" },
+            { "value": "production_cost", "label": "Production-cost ratio (producers only)" }
+          ],
+          "maps_to": { "profile_field": "sscm_ratio_method" },
+          "show_if": [
+            { "question": "Q2.8a", "equals": true },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q2.8c",
+          "text": "SSCM: elect to EXCLUDE self-constructed assets?",
+          "help": "§1.263A-1(h)(2)(ii): routes self-constructed-asset mixed costs to the general (g)(4) method instead of SSCM.",
+          "type": "bool",
+          "maps_to": { "flag": "SSCM_EXCLUDE_SELF_CONSTRUCTED" },
+          "show_if": [
+            { "question": "Q2.8a", "equals": true },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q2.8d",
+          "text": "Elect the (g)(4)(ii) all-departments 90% mixed-service treatment?",
+          "help": "§1.263A-1(g)(4)(ii). Note: the department-level carve-out mechanics are not built in this tool — setting this triggers an honesty-gate warning downstream.",
+          "type": "bool",
+          "maps_to": { "profile_field": "msc_90_10_election" },
+          "show_if": [
+            { "question": "Q2.8a", "equals": true },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q2.9",
+          "text": "Book-conformity check: does financial-statement capitalization match the §471 / Additional-§263A tier split (including TD 9843 elective methods (d)(2)(iii)/(iv)/(v))?",
+          "help": "§1.263A-1(d)(2); TD 9843. A review-queue flag, not a computed field.",
+          "type": "bool",
+          "maps_to": { "flag": "BOOK_CONFORMITY_REVIEW" }
+        }
+      ]
+    },
+    {
+      "id": "gate3",
+      "title": "Method inputs (SPM / MSPM / SRM balances)",
+      "purpose": "The dollar inputs each simplified method needs. Menu strictly follows Q2.2; all inputs suppressed when Q2.5's $200K deemed-zero applies.",
+      "skip_if": [{ "derived": "small_business_exempt", "equals": true }],
+      "questions": [
+        {
+          "id": "Q3.1",
+          "text": "(SPM) §471 costs remaining in ending inventory?",
+          "help": "The SPM absorption ratio's multiplicand. §1.263A-2(b).",
+          "type": "money",
+          "maps_to": { "profile_field": "ending_inventory_471" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "SPM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q3.2",
+          "text": "(MSPM) Pre-production §471 costs incurred during the year (direct material + resale)?",
+          "help": "§1.263A-2(c)(3).",
+          "type": "money",
+          "maps_to": { "profile_field": "pre_production_471" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "MSPM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q3.3",
+          "text": "(MSPM) Production §471 costs incurred during the year?",
+          "help": "§1.263A-2(c)(3).",
+          "type": "money",
+          "maps_to": { "profile_field": "production_471" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "MSPM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q3.4",
+          "text": "(MSPM) Pre-production additional §263A costs incurred?",
+          "help": "§1.263A-2(c)(3).",
+          "type": "money",
+          "maps_to": { "profile_field": "pre_production_additional_263A" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "MSPM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q3.5",
+          "text": "(MSPM) Production additional §263A costs incurred?",
+          "help": "§1.263A-2(c)(3).",
+          "type": "money",
+          "maps_to": { "profile_field": "production_additional_263A" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "MSPM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q3.6",
+          "text": "(MSPM) Pre-production §471 costs on hand at year end (current-year-incurred only)?",
+          "help": "§1.263A-2(c)(3)(ii)(C)/(E).",
+          "type": "money",
+          "maps_to": { "profile_field": "pre_production_471_on_hand" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "MSPM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q3.7",
+          "text": "(MSPM) Production §471 costs on hand at year end (current-year-incurred only)?",
+          "help": "§1.263A-2(c)(3)(ii)(C)/(E).",
+          "type": "money",
+          "maps_to": { "profile_field": "production_471_on_hand" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "MSPM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q3.8",
+          "text": "(MSPM) Beginning direct materials not yet in production?",
+          "help": "§1.263A-2(c)(3); feeds the direct-materials adjustment.",
+          "type": "money",
+          "maps_to": { "profile_field": "beginning_DM_not_yet_in_production" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "MSPM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q3.9",
+          "text": "(MSPM) Ending direct materials not yet in production?",
+          "help": "§1.263A-2(c)(3); feeds the direct-materials adjustment.",
+          "type": "money",
+          "maps_to": { "profile_field": "ending_DM_not_yet_in_production" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "MSPM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q3.10",
+          "text": "(MSPM) Direct materials purchased during the year?",
+          "help": "Feeds the direct-materials adjustment. §1.263A-2(c)(3).",
+          "type": "money",
+          "maps_to": { "profile_field": "DM_purchased_during_year" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "MSPM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q3.10a",
+          "text": "(MSPM, LIFO) Current-year LIFO increment stated in §471 costs?",
+          "help": "The combined absorption ratio's multiplicand under §1.263A-2(c)(3)(iv) (the regulation's Example 3: 9.48% × $1,500,000 increment). Without it the engine warns MSPM-LIFO-INCREMENT-MISSING.",
+          "type": "money",
+          "maps_to": { "profile_field": "lifo_current_year_increment_471" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "MSPM" },
+            { "question": "Q2.5", "equals": false },
+            { "question": "Q2.1", "in": ["lifo_specific", "lifo_dollar_value"] }
+          ]
+        },
+        {
+          "id": "Q3.11",
+          "text": "(SRM) Current year's purchases — §471 costs incurred on property acquired for resale during the year?",
+          "help": "The purchasing-ratio DENOMINATOR. §1.263A-3(d)(3).",
+          "type": "money",
+          "maps_to": { "profile_field": "current_year_471_costs" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "SRM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q3.12",
+          "text": "(SRM) Purchasing-department cost pool?",
+          "help": "The purchasing-ratio NUMERATOR. §1.263A-3(d)(3).",
+          "type": "money",
+          "maps_to": { "profile_field": "purchasing_costs" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "SRM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q3.13",
+          "text": "(SRM) Storage and handling costs?",
+          "help": "The storage-and-handling ratio's numerator pool. §1.263A-3(d)(3).",
+          "type": "money",
+          "maps_to": { "profile_field": "storage_handling_costs" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "SRM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q3.14",
+          "text": "(SRM) Beginning inventory §471 costs (LIFO carrying value if Q2.1 is LIFO)?",
+          "help": "Part of the S&H ratio denominator (unless variation A excludes it). §1.263A-3(d)(3).",
+          "type": "money",
+          "maps_to": { "profile_field": "beginning_inventory_471" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "SRM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q3.15",
+          "text": "(SRM) §471 costs remaining on hand at year end (LIFO: the current-year increment, unless variation B is elected)?",
+          "help": "The combined ratio's multiplicand. §1.263A-3(d)(3)(i)(C).",
+          "type": "money",
+          "maps_to": { "profile_field": "ending_inventory_471" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "SRM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q3.16",
+          "text": "(SRM) Elect the 1/3-2/3 purchasing-labor allocation (all-or-nothing)?",
+          "help": "§1.263A-3(d): dual-function purchasing personnel may be allocated 1/3-2/3 instead of by time — but for ALL such personnel or none.",
+          "type": "bool",
+          "maps_to": { "flag": "SRM_ONE_THIRD_TWO_THIRDS_ELECTION" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "SRM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q3.18a",
+          "text": "(SRM) Permissible variation A — exclude beginning inventory from the storage-and-handling denominator?",
+          "help": "§1.263A-3(d)(3)(iii)(A). A method of accounting once used.",
+          "type": "bool",
+          "maps_to": { "profile_field": "srm_variation_a" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "SRM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q3.18b",
+          "text": "(SRM, LIFO) Permissible variation B — multiply the S&H ratio by TOTAL ending-inventory §471 costs instead of the increment?",
+          "help": "§1.263A-3(d)(3)(iii)(B). Requires the total ending-inventory §471 figure at LIFO carrying value (see completeness rule SRM-VARIATION-B-INPUT-MISSING).",
+          "type": "bool",
+          "maps_to": { "profile_field": "srm_variation_b" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "SRM" },
+            { "question": "Q2.5", "equals": false },
+            { "question": "Q2.1", "in": ["lifo_specific", "lifo_dollar_value"] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gate4",
+      "title": "§263(a) tangible-property facts & elections (interview.py Gate 4)",
+      "purpose": "AFS / written-policy facts and the annual tangible-property elections as interview.py records them (flags). gateT below carries the same three elections as engine kwargs for the new tangible engine.",
+      "questions": [
+        {
+          "id": "Q4.1a",
+          "text": "Does the taxpayer have an applicable financial statement (AFS)?",
+          "help": "Sets the de minimis safe-harbor ceiling authority: $5,000 per invoice/item with an AFS, $2,500 without (Notice 2015-82 raise of the reg's $500). §1.263(a)-1(f)(1).",
+          "type": "bool",
+          "maps_to": { "profile_field": "has_afs" }
+        },
+        {
+          "id": "Q4.1b",
+          "text": "Were written accounting procedures in place at the BEGINNING of the year?",
+          "help": "A precondition of the de minimis safe harbor. §1.263(a)-1(f)(1)(i)(B)/(ii)(B).",
+          "type": "bool",
+          "maps_to": { "flag": "WRITTEN_CAP_PROCEDURES" }
+        },
+        {
+          "id": "Q4.1c",
+          "text": "Elect the de minimis safe harbor this year?",
+          "help": "§1.263(a)-1(f): an ANNUAL statement election, irrevocable for the year — NOT a method change ((f)(5)).",
+          "type": "bool",
+          "maps_to": { "flag": "DE_MINIMIS_SAFE_HARBOR_ELECTION" },
+          "show_if": [{ "question": "Q4.1b", "equals": true }]
+        },
+        {
+          "id": "Q4.2a",
+          "text": "Small-taxpayer building safe harbor: are average gross receipts $10M or less under §1.263(a)-3(h)(3)'s OWN definition (not §448(c))?",
+          "help": "§1.263(a)-3(h)(3) has its own receipts test — do not reuse the Q0.4 §448(c) figure.",
+          "type": "bool",
+          "maps_to": { "flag": "SMALL_TAXPAYER_UNDER_10M" }
+        },
+        {
+          "id": "Q4.4a",
+          "text": "Elect to capitalize repairs following books (§1.263(a)-3(n))?",
+          "help": "An ANNUAL election that ADDS capitalization of amounts otherwise deductible as repairs, conforming tax to book capitalization.",
+          "type": "bool",
+          "maps_to": { "flag": "CAPITALIZE_REPAIRS_PER_BOOKS" }
+        }
+      ]
+    },
+    {
+      "id": "gate5",
+      "title": "§266 carrying-charge elections",
+      "purpose": "Elective capitalization of taxes and carrying charges.",
+      "questions": [
+        {
+          "id": "Q5.1",
+          "text": "Is property unimproved AND unproductive this year — elect §266 capitalization of taxes/carrying charges?",
+          "help": "§1.266-1(b)(1)(i): an annual, year-by-year election.",
+          "type": "bool",
+          "maps_to": { "flag": "SEC266_UNIMPROVED_ELECTION" }
+        },
+        {
+          "id": "Q5.2",
+          "text": "Development/construction project — elect §266 capitalization?",
+          "help": "§1.266-1(b)(1)(ii): sticks until the work completes. ORDERING NOTE: for an asset flagged in BOTH Gate 5 and Gate 7, §§1.263A-8..-15 apply FIRST (§1.266-1(a)(2)).",
+          "type": "bool",
+          "maps_to": { "flag": "SEC266_DEVELOPMENT_ELECTION" }
+        },
+        {
+          "id": "Q5.3",
+          "text": "Was the §266 election statement confirmed filed with the original return?",
+          "help": "§1.266-1(c)(3) requires a statement with the original return.",
+          "type": "bool",
+          "maps_to": { "flag": "SEC266_STATEMENT_FILED" },
+          "show_if": [
+            { "any": [
+              { "question": "Q5.1", "equals": true },
+              { "question": "Q5.2", "equals": true }
+            ] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gate6",
+      "title": "Self-constructed assets",
+      "purpose": "Presence screen for the SCA engine (per-asset detail lives in the Self-Constructed Assets tab, not the wizard).",
+      "skip_if": [{ "derived": "small_business_exempt", "equals": true }],
+      "questions": [
+        {
+          "id": "Q6.0",
+          "text": "Any self-constructed assets (SCA) this year?",
+          "help": "If yes, the fixed-asset and CIP schedules are required and the per-asset SCA detail (cost-allocation method, SSCM eligibility route, pool/driver assignments) is entered on the SCA tab.",
+          "type": "bool",
+          "maps_to": { "flag": "HAS_SCA" },
+          "requires_schedule_if": [
+            { "equals": true, "schedule": "fixed_assets" },
+            { "equals": true, "schedule": "cip" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gate7",
+      "title": "§263A(f) interest capitalization",
+      "purpose": "Designated-property presence screen and the taxpayer-level interest-method answers (per-unit and per-debt detail lives in the §263A(f) tab).",
+      "skip_if": [{ "derived": "small_business_exempt", "equals": true }],
+      "questions": [
+        {
+          "id": "Q7.0",
+          "text": "Any §263A(f) designated-property candidates?",
+          "help": "§1.263A-8(b): real property, or tangible personal property with a long class life / production period. If yes, CIP and debt schedules are required.",
+          "type": "bool",
+          "maps_to": { "profile_field": "has_designated_property" },
+          "requires_schedule_if": [
+            { "equals": true, "schedule": "cip" },
+            { "equals": true, "schedule": "debt" }
+          ]
+        },
+        {
+          "id": "Q7.16",
+          "text": "Computation period and measurement-date frequency?",
+          "help": "§1.263A-9(f): the taxpayer's chosen computation period (e.g. annual, quarterly) and measurement dates — a method of accounting.",
+          "type": "text",
+          "maps_to": { "flag": "INTEREST_COMPUTATION_PERIOD" },
+          "show_if": [{ "question": "Q7.0", "equals": true }]
+        },
+        {
+          "id": "Q7.17",
+          "text": "Tracing posture: trace, §1.263A-9(d) no-tracing election, or AFR-plus-3?",
+          "help": "§1.263A-8/-9. AFR-plus-3 requires the $10M since-1994 receipts test OR the small-business route and forecloses tracing.",
+          "type": "choice",
+          "choices": [
+            { "value": "trace", "label": "Trace debt to expenditures" },
+            { "value": "no_tracing", "label": "No-tracing election (§1.263A-9(d))" },
+            { "value": "afr_plus_3", "label": "AFR-plus-3 simplified rate" }
+          ],
+          "maps_to": { "flag": "TRACING_POSTURE" },
+          "show_if": [{ "question": "Q7.0", "equals": true }]
+        },
+        {
+          "id": "Q7.18",
+          "text": "Since-1994 average annual gross receipts (for the AFR-plus-3 $10M eligibility test)?",
+          "help": "A LONGER look-back window than Q0.4's 3-year §448(c) test — do not reuse Q0.4.",
+          "type": "money",
+          "maps_to": { "flag": "SINCE_1994_AVG_RECEIPTS" },
+          "show_if": [{ "question": "Q7.17", "equals": "afr_plus_3" }]
+        },
+        {
+          "id": "Q7.19",
+          "text": "Accounts-payable fold-in sub-election (lowers the WAIR denominator)?",
+          "help": "§1.263A-9(d)(1): available under the no-tracing election.",
+          "type": "bool",
+          "maps_to": { "flag": "AP_FOLD_IN_ELECTION" },
+          "show_if": [{ "question": "Q7.17", "equals": "no_tracing" }]
+        },
+        {
+          "id": "Q7.23",
+          "text": "(Partnerships) Guaranteed payments for the use of capital?",
+          "help": "§1.263A-9(c)(2)(iii); §707(c): treated as interest for the avoided-cost computation.",
+          "type": "money",
+          "maps_to": { "flag": "GUARANTEED_PAYMENTS_FOR_CAPITAL" },
+          "show_if": [
+            { "question": "Q7.0", "equals": true },
+            { "question": "Q0.1", "equals": "partnership" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gate8",
+      "title": "§174/§174A research & experimental",
+      "purpose": "R&E presence screen, the §174A(c) capitalization election, and the OBBBA 2022-2024 catch-up options (per-project detail lives in the R&E tab).",
+      "questions": [
+        {
+          "id": "Q8.0",
+          "text": "Any R&E-tagged costs (§174/§174A)?",
+          "help": "If yes, the R&E schedule is required; domestic vs foreign detail is entered per project on the R&E tab.",
+          "type": "bool",
+          "maps_to": { "flag": "HAS_RE_COSTS" },
+          "requires_schedule_if": [{ "equals": true, "schedule": "re" }]
+        },
+        {
+          "id": "Q8.2a",
+          "text": "(Domestic) Elect 60-month-or-longer capitalization instead of current expensing, per §174A(c)?",
+          "help": "§174A(c): an elective capitalization of domestic R&E that would otherwise be currently expensed.",
+          "type": "bool",
+          "maps_to": { "flag": "RE_CAPITALIZATION_ELECTION" },
+          "show_if": [{ "question": "Q8.0", "equals": true }]
+        },
+        {
+          "id": "Q8.2b",
+          "text": "Elected capitalization period in months (minimum 60)?",
+          "help": "§174A(c).",
+          "type": "number",
+          "maps_to": { "flag": "RE_CAPITALIZATION_PERIOD_MONTHS" },
+          "show_if": [
+            { "question": "Q8.0", "equals": true },
+            { "question": "Q8.2a", "equals": true }
+          ]
+        },
+        {
+          "id": "Q8.3a",
+          "text": "Is 2022-2024 domestic R&E still being amortized under the old 5-year schedule?",
+          "help": "OBBBA transition: unamortized 2022-2024 domestic R&E can be caught up.",
+          "type": "bool",
+          "maps_to": { "flag": "RE_LEGACY_AMORTIZATION" },
+          "show_if": [{ "question": "Q8.0", "equals": true }]
+        },
+        {
+          "id": "Q8.3b",
+          "text": "Catch-up method: 1-year (all in 2025) or 2-year (split 2025-2026)?",
+          "help": "OBBBA transition. Mutually exclusive with Q8.4's retroactive election.",
+          "type": "choice",
+          "choices": [
+            { "value": "one_year", "label": "One year (all in 2025)" },
+            { "value": "two_year", "label": "Two years (split 2025-2026)" }
+          ],
+          "maps_to": { "flag": "RE_CATCHUP_METHOD" },
+          "show_if": [
+            { "question": "Q8.0", "equals": true },
+            { "question": "Q8.3a", "equals": true }
+          ]
+        },
+        {
+          "id": "Q8.4",
+          "text": "(Small business at or under the §448(c) threshold) Elect the RETROACTIVE amendment instead of the catch-up?",
+          "help": "OBBBA small-business retroactive election — amended-return deadline July 6, 2026. Mutually exclusive with Q8.3b. Eligibility keys off Q0.4 (not re-asked).",
+          "type": "bool",
+          "maps_to": { "flag": "RE_SMALL_BUSINESS_RETROACTIVE_ELECTION" },
+          "show_if": [
+            { "question": "Q8.0", "equals": true },
+            { "question": "Q8.3a", "equals": true },
+            { "derived": "under_448c_threshold", "equals": true }
+          ]
+        },
+        {
+          "id": "Q8.5",
+          "text": "Are software development costs among these expenditures?",
+          "help": "§174/§174A software scope is an SME confirmation — a review-queue flag.",
+          "type": "bool",
+          "maps_to": { "flag": "RE_SOFTWARE_SCOPE_REVIEW" },
+          "show_if": [{ "question": "Q8.0", "equals": true }]
+        }
+      ]
+    },
+    {
+      "id": "gate9",
+      "title": "Transaction costs, intangibles, start-up, §1060",
+      "purpose": "Presence screens that route the intangibles/transaction-cost/start-up/PPA schedules (per-transaction and per-intangible detail lives in those tabs).",
+      "questions": [
+        {
+          "id": "Q9.0",
+          "text": "Any flagged transaction or intangible-tagged costs (§1.263(a)-4/-5)?",
+          "help": "If yes: transaction-cost, intangibles, and start-up schedules are required; covered-transaction, bright-line-date, 12-month-rule, and $5K-cliff detail is entered per item on those tabs.",
+          "type": "bool",
+          "maps_to": { "flag": "HAS_TRANSACTION_COSTS" },
+          "requires_schedule_if": [
+            { "equals": true, "schedule": "transaction_costs" },
+            { "equals": true, "schedule": "intangibles" },
+            { "equals": true, "schedule": "startup" }
+          ]
+        },
+        {
+          "id": "Q9.7a",
+          "text": "Is a start-up or organizational cost pool present?",
+          "help": "§195/§248/§709: $5,000 first-year allowance with a $50,000 phase-out, 180-month amortization from business commencement (totals and dates are entered on the start-up tab).",
+          "type": "bool",
+          "maps_to": { "flag": "HAS_STARTUP_ORG_COSTS" },
+          "requires_schedule_if": [{ "equals": true, "schedule": "startup" }]
+        },
+        {
+          "id": "Q9.8",
+          "text": "(Partnerships) Does any portion represent SYNDICATION costs under §709(b) (fees to promote or sell partnership interests)?",
+          "help": "§709(b): syndication costs are PERMANENTLY non-amortizable — not on the $5,000/180-month schedule.",
+          "type": "bool",
+          "maps_to": { "flag": "SYNDICATION_COSTS" },
+          "show_if": [
+            { "question": "Q9.7a", "equals": true },
+            { "question": "Q0.1", "equals": "partnership" }
+          ],
+          "warning_if": [
+            {
+              "equals": true,
+              "code": "SYNDICATION-PERMANENT-NONAMORTIZATION",
+              "text": "§709(b) syndication costs: PERMANENT non-amortization, not the $5,000/180-month schedule."
+            }
+          ]
+        },
+        {
+          "id": "Q9.9a",
+          "text": "Acquired a trade or business this year (asset acquisition or deemed asset acquisition under §338)?",
+          "help": "§1060; §338. If yes, the Form 8594 residual-method PPA schedule is required and SEEDS basis for the per-asset gates — complete it before Gate 3/6/7 detail for acquired assets.",
+          "type": "bool",
+          "maps_to": { "flag": "ACQUIRED_TRADE_OR_BUSINESS" },
+          "requires_schedule_if": [{ "equals": true, "schedule": "ppa" }]
+        }
+      ]
+    },
+    {
+      "id": "gate10",
+      "title": "§59(e) qualified expenditures",
+      "purpose": "AMT-exposure gating for the §59(e) election (per-expenditure elections are entered on the §59(e) tab).",
+      "questions": [
+        {
+          "id": "Q10.1",
+          "text": "Is the taxpayer an individual, or a pass-through entity whose owners may report AMT preference items (§55/§56/§57 individual AMT)?",
+          "help": "§59(e) only matters where individual AMT can apply — TCJA repealed corporate AMT and the IRA 2022 CAMT does not use §57 preferences. If no (pure C-corp, no AMT-exposed owners), the rest of Gate 10 is skipped.",
+          "type": "bool",
+          "maps_to": { "flag": "AMT_EXPOSURE" },
+          "requires_schedule_if": [{ "equals": true, "schedule": "qualified_expenditures" }]
+        }
+      ]
+    },
+    {
+      "id": "gateT",
+      "title": "Tangible-property engine elections (NEW — not from interview.py)",
+      "purpose": "The three annual tangible-property elections the NEW standalone tangible engine consumes as engine kwargs. Conditions reuse gate4's fact questions (Q4.1a/Q4.1b/Q4.2a) rather than re-asking them; gate4's Q4.1c/Q4.4a record the same facts as interview flags for the workpaper summary.",
+      "gate": "gateT",
+      "questions": [
+        {
+          "id": "QT.1",
+          "text": "Apply the de minimis safe harbor election in the tangible-property computation?",
+          "help": "§1.263(a)-1(f): deducts items at or under the ceiling — $5,000 per invoice/item with an AFS (Q4.1a), $2,500 without (Notice 2015-82). Requires written accounting procedures in place at the beginning of the year (Q4.1b); an annual, irrevocable-for-the-year statement election.",
+          "type": "bool",
+          "maps_to": { "election_kwarg": "de_minimis_election" },
+          "show_if": [{ "question": "Q4.1b", "equals": true }]
+        },
+        {
+          "id": "QT.2",
+          "text": "Apply the small-taxpayer building safe harbor election?",
+          "help": "§1.263(a)-3(h): a qualifying small taxpayer (≤$10M receipts under (h)(3)'s own test — Q4.2a) may deduct repairs/improvements on a building with unadjusted basis ≤$1M when the year's total is ≤ the lesser of 2% of basis or $10,000. Annual, per-building.",
+          "type": "bool",
+          "maps_to": { "election_kwarg": "small_taxpayer_building_election" },
+          "show_if": [{ "question": "Q4.2a", "equals": true }]
+        },
+        {
+          "id": "QT.3",
+          "text": "Apply the election to capitalize repairs following books?",
+          "help": "§1.263(a)-3(n): an annual election to capitalize for tax any repair amounts capitalized on the books — it ADDS capitalization, never reduces it.",
+          "type": "bool",
+          "maps_to": { "election_kwarg": "capitalize_repairs_following_books" }
+        }
+      ]
+    }
+  ],
+  "derived_checks": [
+    {
+      "code": "SRM-METHOD-CONFLICT",
+      "when": [
+        { "question": "Q2.2", "equals": "SRM" },
+        { "derived": "srm_available", "equals": false }
+      ],
+      "text": "Q2.2 = SRM but Gate 1's consequence matrix makes SRM unavailable (producer above de minimis, no incident-to-resale route, no private-label goods) — SPM/MSPM only (§1.263A-3(a)(4))."
+    },
+    {
+      "code": "SRM-AVAILABILITY-UNKNOWN",
+      "when": [
+        { "question": "Q2.2", "equals": "SRM" },
+        { "derived": "srm_available", "equals": null },
+        { "question": "Q1.1a", "equals": true }
+      ],
+      "text": "Q2.2 = SRM but the de minimis determination (Q1.2) was never established for this producer — the §1.263A-3(a)(4) availability gate cannot be evaluated. Resolve Gate 1 before relying on SRM figures."
+    },
+    {
+      "code": "SSCM-RATIO-RESELLER",
+      "when": [
+        { "question": "Q2.8b", "equals": "production_cost" },
+        { "question": "Q1.1b", "equals": true },
+        { "question": "Q1.1a", "equals": false }
+      ],
+      "text": "The production-cost allocation ratio is a producer-only formula (§1.263A-1(h)(3)(ii)) — a reseller electing it is a regulation violation; use the labor-based ratio."
+    },
+    {
+      "code": "PRIOR-METHOD-IMPERMISSIBLE",
+      "when": [
+        { "question": "Q0.5", "equals": false },
+        { "question": "Q0.6", "answered": true },
+        { "any": [
+          { "question": "Q0.6", "equals": "none_noncompliant" },
+          { "all": [
+            { "question": "Q0.6", "equals": "SRM" },
+            { "derived": "srm_available", "equals": false }
+          ] }
+        ] }
+      ],
+      "text": "The Q0.6 prior-year method was never legally available for this activity profile — a discovered impermissible method, an error-correction event under §446(e) (Form 3115 with a different DCN/§481(a) posture than an elective switch)."
+    },
+    {
+      "code": "METHOD-CHANGE-3115-481A-REQUIRED",
+      "when": [
+        { "question": "Q0.5", "equals": false },
+        { "question": "Q0.6", "answered": true },
+        { "question": "Q2.2", "answered": true },
+        { "differs": ["Q2.2", "Q0.6"] }
+      ],
+      "suppressed_by": "PRIOR-METHOD-IMPERMISSIBLE",
+      "text": "This year's §263A method (Q2.2) differs from the established prior-year method (Q0.6) — Form 3115, a §481(a) adjustment, and §1.263A-7 revalued beginning-inventory inputs are required."
+    },
+    {
+      "code": "EXEMPTION-UNDETERMINED",
+      "when": [{ "question": "Q0.4", "answered": false }],
+      "text": "Q0.4 (aggregated 3-yr average gross receipts) was not answered — the §448(c) exemption CANNOT be determined. The profile's receipts default to $0, which downstream reads as EXEMPT (all §263A off); supply Q0.4 before relying on any computation."
+    },
+    {
+      "code": "SRM-INPUTS-INCONSISTENT",
+      "when": [
+        { "question": "Q1.1a", "equals": false },
+        { "question": "Q1.2", "equals": "more_than_de_minimis" }
+      ],
+      "text": "produces=False but production_activity_level='more_than_de_minimis' — the SRM availability gate cannot be evaluated on contradictory inputs. Fix the activity profile. (Mirrors engines/inventory.py; unreachable through the wizard flow itself but fires on imported profiles.)"
+    }
+  ],
+  "completeness": [
+    {
+      "engine_warning_code": "MSPM-LIFO-INCREMENT-MISSING",
+      "when": [
+        { "profile_field": "method", "equals": "MSPM" },
+        { "profile_field": "inventory_method", "in": ["lifo_specific", "lifo_dollar_value"] },
+        { "profile_field": "producer_de_minimis_200k", "equals": false }
+      ],
+      "then_required": ["lifo_current_year_increment_471"],
+      "ask_question_id": "Q3.10a",
+      "question": "What is the current-year LIFO increment stated in §471 costs? Without it the MSPM result is the NON-LIFO computation, not the combined-ratio × increment answer (§1.263A-2(c)(3)(iv))."
+    },
+    {
+      "engine_warning_code": "HAR-RATIOS-MISSING",
+      "when": [
+        { "profile_field": "har_election", "equals": true },
+        { "profile_field": "inventory_method", "equals": "FIFO" }
+      ],
+      "then_required": ["har_preprod_ratio", "har_production_ratio"],
+      "ask_question_id": "Q2.6c",
+      "question": "The HAR election is set but the frozen pre-production and production historic absorption ratios are missing — without them ACTUAL ratios are used (§1.263A-2(c)(4)). Supply both frozen ratios."
+    },
+    {
+      "engine_warning_code": "HAR-RATIOS-MISSING",
+      "when": [
+        { "profile_field": "har_election", "equals": true },
+        { "profile_field": "inventory_method", "in": ["lifo_specific", "lifo_dollar_value"] }
+      ],
+      "then_required": ["har_combined_ratio"],
+      "ask_question_id": "Q2.6e",
+      "question": "The HAR election under LIFO needs the frozen COMBINED historic absorption ratio (§1.263A-2(c)(4)(iii)) — without it the actual combined ratio is used. Supply the frozen combined ratio."
+    },
+    {
+      "engine_warning_code": "MSPM-SPLIT-INPUT-MISSING",
+      "when": [
+        { "profile_field": "method", "equals": "MSPM" },
+        { "profile_field": "mspm_mixed_split_method", "equals": "labor" }
+      ],
+      "then_required": ["mspm_labor_split_proportion"],
+      "question": "What is the pre-production share of labor (pre-production labor ÷ total labor, both excluding mixed-service labor), as a fraction? Required by the §1.263A-2(c)(3)(iii)(B) labor split method — without it the engine silently falls back to the direct-material proportion. (No interview.py question exists for this field.)"
+    },
+    {
+      "engine_warning_code": "SRM-VARIATION-B-INPUT-MISSING",
+      "when": [
+        { "profile_field": "method", "equals": "SRM" },
+        { "profile_field": "srm_variation_b", "equals": true }
+      ],
+      "then_required": ["ending_inventory_471_total_lifo"],
+      "question": "Variation B needs TOTAL ending-inventory §471 costs at LIFO carrying value — the S&H ratio's multiplicand under §1.263A-3(d)(3)(iii)(B) (the purchasing ratio still multiplies the current-year increment). Without it the computation runs WITHOUT the variation. (No interview.py question exists for this field.)"
+    },
+    {
+      "engine_warning_code": "SRM-PRODUCTION-LEVEL-UNKNOWN",
+      "when": [
+        { "profile_field": "method", "equals": "SRM" },
+        { "profile_field": "produces", "equals": true },
+        { "profile_field": "private_label_goods", "equals": false }
+      ],
+      "then_required": ["production_activity_level"],
+      "ask_question_id": "Q1.2",
+      "question": "The taxpayer produces but the de minimis determination (Q1.2) was never established — the §1.263A-3(a)(4) SRM availability gate cannot be evaluated. Establish the production activity level before relying on SRM figures."
+    },
+    {
+      "engine_warning_code": "WAIR-UNAVAILABLE",
+      "when": [
+        { "profile_field": "has_designated_property", "equals": true }
+      ],
+      "then_required_kwargs": ["afr_highest"],
+      "question": "What is the highest applicable Federal rate (§1274(d)) in effect during the computation period (as a decimal fraction)? If no eligible nontraced debt is outstanding, §1.263A-9(c)(5)(iii)(D) substitutes this rate for the WAIR — without it, excess-expenditure amounts compute as ZERO. (Only consumed when the debt schedule leaves no nontraced debt; ask up front since the wizard cannot see the debt balances.)"
+    }
+  ]
+}
+</script>
 <script>/* cap263a standalone engines — faithful JavaScript ports of the Python
  * engines in financial_tools/cap263a (analysis.py, engines/*.py).
  *
@@ -8408,6 +10194,296 @@ function computeTaxBasisTB(tbLines, btds) {
     warnings, unmatched_btds: unmatched, applied };
 }
 
+/* ============ §263(a) tangible property — capitalize vs deduct ============ */
+/* Port of engines/tangible_263a.py — decision order verbatim (see that
+ * module's docstring for the full citation-by-citation walkthrough):
+ * 1. negative amount -> sme_review.
+ * 2. de minimis safe harbor (§1.263(a)-1(f)) if elected.
+ * 3. materials & supplies (§1.162-3) if flagged.
+ * 4. small taxpayer building safe harbor (§1.263(a)-3(h)) if elected + building.
+ * 5. BAR improvement tests (betterment/adaptation/restoration, §1.263(a)-3(j)/(l)/(k)).
+ * 6. routine maintenance safe harbor (§1.263(a)-3(i)).
+ * 7. repair (§162; §1.263(a)-3(d)) or the (n) capitalize-per-books election.
+ * Every step short-circuits to a `continue` in the Python; missing BAR facts
+ * capitalize CONSERVATIVELY and emit an open question — never a silent deduct. */
+
+const STSH_GROSS_RECEIPTS_CEILING = D.from("10000000");
+const STSH_BASIS_CEILING = D.from("1000000");
+const STSH_DOLLAR_CEILING = D.from("10000");
+const STSH_BASIS_PCT = D.from("0.02");
+
+function computeTangible263a(items, profile, opts) {
+  opts = opts || {};
+  const deMinimisElection = !!opts.de_minimis_election;
+  const smallTaxpayerBuildingElection = !!opts.small_taxpayer_building_election;
+  const capitalizeRepairsFollowingBooks = !!opts.capitalize_repairs_following_books;
+  const explicitAgg = opts.total_building_repairs_maintenance_improvements || null;
+
+  const warnings = [];
+  const openQuestions = [];
+  const seenQuestions = new Set();
+  function ask(item, question, why) {
+    if (seenQuestions.has(question)) return;
+    seenQuestions.add(question);
+    openQuestions.push({ item_id: item.item_id, question, why });
+  }
+
+  if (deMinimisElection && profile.has_afs) {
+    warnings.push("DE-MINIMIS-POLICY-CONDITION: the §1.263(a)-1(f) de minimis safe " +
+      "harbor is elected and the taxpayer has an AFS — a WRITTEN accounting " +
+      "policy expensing amounts under the ceiling, in place as of the START " +
+      "of the taxable year, is a condition of the election ((f)(1)(i)(B)). " +
+      "Confirm it exists; the election is annual, irrevocable, and " +
+      "all-or-nothing for qualifying items.");
+  }
+  if (smallTaxpayerBuildingElection
+      && profile.avg_gross_receipts.gt(STSH_GROSS_RECEIPTS_CEILING)) {
+    warnings.push("STSH-INELIGIBLE-RECEIPTS: the §1.263(a)-3(h) small-taxpayer " +
+      "building safe harbor is elected but average annual gross receipts (" +
+      money0(profile.avg_gross_receipts) + ") exceed the $10,000,000 ceiling " +
+      "— the safe harbor is unavailable; no item was deducted under it.");
+  }
+
+  const uopSums = {};
+  for (const it of items) {
+    const amt = D.from(it.amount || 0);
+    if (it.unit_of_property && amt.ge(0)) {
+      uopSums[it.unit_of_property] = (uopSums[it.unit_of_property] || D.zero()).plus(amt);
+    }
+  }
+
+  let msTimingWarned = false, stshScheduleAggWarned = false;
+  let repairsBookCapitalized = 0, repairsBookExpensed = 0;
+
+  const rows = [];
+  let deductibleTotal = D.zero(), capitalizedTotal = D.zero(),
+    electiveCapitalizedTotal = D.zero();
+
+  for (const itRaw of items) {
+    const it = Object.assign({}, itRaw);
+    it.amount = D.from(it.amount || 0);
+    it.building_unadjusted_basis = D.from(it.building_unadjusted_basis || 0);
+    it.invoice_or_item_cost = (it.invoice_or_item_cost === null
+      || it.invoice_or_item_cost === undefined || it.invoice_or_item_cost === "")
+      ? null : D.from(it.invoice_or_item_cost);
+    const label = it.item_id || it.description;
+    const row = { item_id: it.item_id, description: it.description,
+      amount: it.amount, treatment: "", authority: "", flags: [],
+      deductible: D.zero(), capitalized: D.zero() };
+
+    // 1. negative amount
+    if (it.amount.lt(0)) {
+      row.treatment = "sme_review";
+      row.flags.push("NEGATIVE-AMOUNT");
+      warnings.push("NEGATIVE-AMOUNT [tangible " + label + "]: " + money(it.amount) +
+        " — nothing computed; route credits/refunds through the schedule, " +
+        "not a negative expenditure.");
+      rows.push(row);
+      continue;
+    }
+
+    let fellThrough = false;
+
+    // 2. de minimis safe harbor
+    if (deMinimisElection) {
+      if (it.invoice_or_item_cost !== null) {
+        if (it.invoice_or_item_cost.le(deMinimisCeiling(profile))) {
+          row.treatment = "de_minimis_deduct";
+          row.authority = "Reg. §1.263(a)-1(f); Notice 2015-82";
+          row.deductible = it.amount;
+          deductibleTotal = deductibleTotal.plus(it.amount);
+          rows.push(row);
+          continue;
+        }
+      } else {
+        row.flags.push("DE-MINIMIS-COST-UNKNOWN");
+        const ceiling = deMinimisCeiling(profile);
+        ask(it,
+          "Item " + label + " '" + it.description + "': what is the " +
+          "per-invoice (or per-item as substantiated on the invoice) cost " +
+          "(Reg. §1.263(a)-1(f))? Supply invoice_or_item_cost to test it " +
+          "against the " + money0(ceiling) + " de minimis ceiling.",
+          "The de minimis election is on but the schedule does not carry " +
+          "the per-invoice/per-item cost — the item continued down the " +
+          "decision tree conservatively.");
+      }
+    }
+
+    // 3. materials & supplies (§1.162-3)
+    if (it.is_material_or_supply) {
+      if (it.ms_unit_cost_200_or_less || it.ms_economic_life_12mo_or_less) {
+        const prongs = [];
+        if (it.ms_unit_cost_200_or_less) prongs.push("§1.162-3(c)(1)(iv) unit cost ≤ $200");
+        if (it.ms_economic_life_12mo_or_less)
+          prongs.push("§1.162-3(c)(1)(iii) economic life ≤ 12 months");
+        row.treatment = "materials_supplies_deduct";
+        row.authority = prongs.join("; ");
+        row.flags.push("MS-TIMING-NOT-DETERMINED");
+        if (!msTimingWarned) {
+          msTimingWarned = true;
+          warnings.push("MS-TIMING-NOT-DETERMINED: materials & supplies were " +
+            "deducted under §1.162-3, but the incidental (deduct when " +
+            "paid/incurred, (a)(2)) vs non-incidental (deduct when used or " +
+            "consumed, (a)(1)) TIMING distinction is out of scope for this " +
+            "engine — confirm the deduction year per item.");
+        }
+        row.deductible = it.amount;
+        deductibleTotal = deductibleTotal.plus(it.amount);
+        rows.push(row);
+        continue;
+      }
+      if ((it.ms_unit_cost_200_or_less === null || it.ms_unit_cost_200_or_less === undefined)
+          && (it.ms_economic_life_12mo_or_less === null || it.ms_economic_life_12mo_or_less === undefined)) {
+        ask(it,
+          "Item " + label + " '" + it.description + "': is the unit " +
+          "acquisition/production cost $200 or less (§1.162-3(c)(1)(iv)), " +
+          "or is the economic useful life 12 months or less " +
+          "(§1.162-3(c)(1)(iii))? Answer ms_unit_cost_200_or_less and " +
+          "ms_economic_life_12mo_or_less True/False.",
+          "The item is marked as a materials & supplies candidate but " +
+          "neither §1.162-3 prong is established — it continued down the " +
+          "decision tree.");
+      }
+    }
+
+    // 4. small taxpayer building safe harbor
+    if (smallTaxpayerBuildingElection && it.is_building) {
+      const eligible = profile.avg_gross_receipts.le(STSH_GROSS_RECEIPTS_CEILING)
+        && it.building_unadjusted_basis.le(STSH_BASIS_CEILING);
+      if (!eligible) {
+        row.flags.push("STSH-NOT-ELIGIBLE");
+      } else {
+        const uop = it.unit_of_property;
+        let aggregate;
+        if (explicitAgg && uop in explicitAgg) {
+          aggregate = D.from(explicitAgg[uop]);
+        } else {
+          aggregate = uop ? (uopSums[uop] || D.zero()) : it.amount;
+          if (!stshScheduleAggWarned) {
+            stshScheduleAggWarned = true;
+            warnings.push("STSH-AGGREGATE-FROM-SCHEDULE-ONLY: the §1.263(a)-3(h) " +
+              "per-building aggregate was summed from the items ON THIS " +
+              "SCHEDULE only — the test requires ALL amounts paid during " +
+              "the year for repairs, maintenance, and improvements on the " +
+              "building, including amounts outside this schedule. Supply " +
+              "total_building_repairs_maintenance_improvements to test the " +
+              "true aggregate.");
+          }
+        }
+        const ceiling = D.min(STSH_DOLLAR_CEILING,
+          STSH_BASIS_PCT.times(it.building_unadjusted_basis));
+        if (aggregate.le(ceiling)) {
+          row.treatment = "small_taxpayer_sh_deduct";
+          row.authority = "Reg. §1.263(a)-3(h) small taxpayer building safe harbor";
+          row.deductible = it.amount;
+          deductibleTotal = deductibleTotal.plus(it.amount);
+          rows.push(row);
+          continue;
+        }
+        row.flags.push("STSH-CEILING-EXCEEDED");
+      }
+    }
+
+    // 5. BAR improvement tests
+    const barTrue = [];
+    if (it.betterment) barTrue.push("Reg. §1.263(a)-3(j) betterment");
+    if (it.adaptation) barTrue.push("Reg. §1.263(a)-3(l) adaptation to a new/different use");
+    if (it.restoration) barTrue.push("Reg. §1.263(a)-3(k) restoration");
+    if (barTrue.length) {
+      row.treatment = "improvement_capitalize";
+      row.authority = barTrue.join("; ");
+      row.capitalized = it.amount;
+      capitalizedTotal = capitalizedTotal.plus(it.amount);
+      rows.push(row);
+      continue;
+    }
+    const prompts = {
+      betterment: "betterment (§1.263(a)-3(j)) — does the work ameliorate a " +
+        "pre-existing material condition or defect, or materially add to or " +
+        "increase the capacity, productivity, efficiency, strength, or " +
+        "quality of the unit of property?",
+      adaptation: "adaptation (§1.263(a)-3(l)) — does the work adapt the " +
+        "unit of property to a new or different use?",
+      restoration: "restoration (§1.263(a)-3(k)) — does the work replace a " +
+        "major component or substantial structural part, restore after a " +
+        "basis-adjusted loss, or return the property to ordinary efficient " +
+        "operating condition after deterioration to a state of disrepair " +
+        "where it was no longer functional?",
+    };
+    const missing = ["betterment", "adaptation", "restoration"]
+      .filter(p => it[p] === null || it[p] === undefined);
+    if (missing.length) {
+      row.treatment = "open_question_capitalize_pending";
+      row.authority = "Reg. §1.263(a)-3(d)/(j)/(k)/(l) — improvement facts " +
+        "pending; capitalized conservatively";
+      row.flags.push("BAR-FACTS-INCOMPLETE");
+      row.capitalized = it.amount;
+      capitalizedTotal = capitalizedTotal.plus(it.amount);
+      ask(it,
+        "Item " + label + " '" + it.description + "': the following " +
+        "improvement facts are not established: " + missing.join(", ") +
+        ". Answer each True/False: " + missing.map(p => prompts[p]).join(" "),
+        "Any single True prong requires capitalization as an improvement " +
+        "(§1.263(a)-3(d)(2)); all-False opens the repair / " +
+        "routine-maintenance path. The amount is capitalized CONSERVATIVELY " +
+        "pending the answer — never silently deducted on missing facts.");
+      rows.push(row);
+      continue;
+    }
+
+    // 6. routine maintenance safe harbor
+    if (it.routine_maintenance_expected_more_than_once) {
+      row.treatment = "routine_maintenance_deduct";
+      row.authority = "Reg. §1.263(a)-3(i) routine maintenance safe harbor";
+      row.deductible = it.amount;
+      deductibleTotal = deductibleTotal.plus(it.amount);
+      rows.push(row);
+      continue;
+    }
+    if (it.routine_maintenance_expected_more_than_once === null
+        || it.routine_maintenance_expected_more_than_once === undefined) {
+      ask(it,
+        "Item " + label + " '" + it.description + "': at the time the unit " +
+        "of property was placed in service, was this maintenance expected " +
+        "to be performed more than once over the property's class life " +
+        "(for a building: more than once in 10 years) (§1.263(a)-3(i))? " +
+        "Answer routine_maintenance_expected_more_than_once True/False.",
+        "All BAR prongs are False, so the amount is deductible either way " +
+        "— the answer only settles whether the routine maintenance safe " +
+        "harbor or the general repair rule is the cited authority.");
+    }
+
+    // 7. repair / (n) election
+    if (capitalizeRepairsFollowingBooks && it.book_capitalized) {
+      repairsBookCapitalized++;
+      row.treatment = "elective_capitalize_books";
+      row.authority = "Reg. §1.263(a)-3(n) election to capitalize repairs " +
+        "capitalized on books";
+      row.capitalized = it.amount;
+      electiveCapitalizedTotal = electiveCapitalizedTotal.plus(it.amount);
+      rows.push(row);
+      continue;
+    }
+    if (capitalizeRepairsFollowingBooks) repairsBookExpensed++;
+    row.treatment = "repair_deduct";
+    row.authority = "§162; Reg. §1.263(a)-3(d)";
+    row.deductible = it.amount;
+    deductibleTotal = deductibleTotal.plus(it.amount);
+    rows.push(row);
+  }
+
+  if (capitalizeRepairsFollowingBooks && repairsBookCapitalized && repairsBookExpensed) {
+    warnings.push("N-ELECTION-CONSISTENCY: the §1.263(a)-3(n) election is on, but " +
+      "some repair items are capitalized on books and others are not — the " +
+      "election applies to ALL amounts paid for repair and maintenance " +
+      "capitalized on the books and records for the year. Verify the book " +
+      "treatment of every repair line is consistent with the election.");
+  }
+
+  return { items: rows, open_questions: openQuestions,
+    deductible_total: deductibleTotal, capitalized_total: capitalizedTotal,
+    elective_capitalized_total: electiveCapitalizedTotal, warnings };
+}
 /* ============================== exports ================================== */
 
 const CAP263A = {
@@ -8425,10 +10501,741 @@ const CAP263A = {
   compute1060Allocation,
   computeSCA, SCA_DRIVERS,
   computeTaxBasisTB,
+  computeTangible263a,
 };
 
 if (typeof module !== "undefined" && module.exports) module.exports = CAP263A;
 if (typeof window !== "undefined") window.CAP263A = CAP263A;
+</script>
+<script>/* Zero-dependency file ingestion for the standalone §263A calculator.
+ *
+ * Parses spreadsheet uploads (CSV / XLSX / JSON) into row objects entirely
+ * offline — no third-party code, no DOM, no DOMParser. Runs in the browser
+ * (attached as window.CAP263A_INGEST) and under Node 22 (CommonJS module,
+ * exercised by test_ingest.js).
+ *
+ * Format limitations (documented for the UI):
+ *  - Amounts: US formatting only. "$1,234.56", "(500)", "1234.56", "-500"
+ *    are handled; European "1 234,56" / "1.234,56" are NOT (they return null
+ *    or misparse-safe null — internal spaces and comma decimals are rejected).
+ *  - XLSX dates are returned as raw Excel serial numbers; styles.xml is not
+ *    consulted. Callers that know a column is a date can convert with
+ *    excelSerialToISO(n) (1900 date system, incl. the Lotus leap-year bug:
+ *    serial 60 = the nonexistent 1900-02-29 -> null).
+ *  - XLSX: only .xlsx/.xlsm ZIP containers (stored or deflate entries);
+ *    legacy .xls (BIFF) and encrypted workbooks are not supported. Formula
+ *    cells yield their cached values only. Phonetic (rPh) runs are ignored.
+ *  - ZIP64 archives (>4 GB / >65535 entries) are not supported.
+ */
+"use strict";
+
+(function (root, factory) {
+  if (typeof module !== "undefined" && module.exports) {
+    module.exports = factory();
+  } else {
+    root.CAP263A_INGEST = factory();
+  }
+})(typeof self !== "undefined" ? self : this, function () {
+
+  // ------------------------------------------------------------------
+  // Column alias tables
+  //
+  // Ported from financial_tools/cap263a/reader.py (_ALIASES — the trial-
+  // balance reader) and financial_tools/cap263a/readers.py (_SPECS — the
+  // per-schedule engagement readers). A few extra real-world synonyms are
+  // appended and marked "// added": common ERP export headers ("GL Acct",
+  // "YTD Amount") that the Python tables matched only via their broader
+  // openpyxl pipeline.
+  // ------------------------------------------------------------------
+
+  const TB_ALIASES = {
+    acct_num: ["account number", "acct number", "acct #", "acct no",
+      "account no", "gl account", "account #", "gl #", "account",
+      "gl acct", "gl account number", "account num", "acct"], // added
+    acct_desc: ["account description", "acct desc", "acct description",
+      "account desc", "gl description", "gl desc", "description",
+      "account name"], // added
+    cc_num: ["cost center number", "cc number", "cc #", "cc", "dept number",
+      "dept. number", "dept #", "dept no", "department number",
+      "cost center", "cost center #",
+      "dept"], // added (readers.py uses "dept" for cc_num on BTD schedules)
+    cc_desc: ["cost center description", "cc description", "cc desc",
+      "department description", "dept description", "dept desc",
+      "department", "dept name", "cost center name"],
+    // A single net/amount column is preferred (see reader.py: "debit" alone
+    // would zero credit balances on a two-column TB).
+    amount: ["amount", "net balance", "net", "total book amount", "balance",
+      "net amount", "ending balance", "amount (debit / <credit>)",
+      "ytd amount", "ytd balance", "period amount", "current balance"], // added
+    debit: ["debit", "debit amount", "dr"],
+    credit: ["credit", "credit amount", "cr"],
+  };
+
+  // Schedule-specific header synonyms, verbatim from readers.py _SPECS
+  // (field name -> lowercase alias list, keyed by schedule kind).
+  const SCHEDULE_ALIASES = {
+    btd: {
+      btd_id: ["btd id", "btd #", "id"],
+      acct_num: ["account number", "acct number", "acct #", "account", "gl account"],
+      cc_num: ["cost center", "cc", "cc #", "dept", "department", "cost center number"],
+      description: ["description", "btd description", "difference description"],
+      adjustment: ["adjustment", "tax minus book", "btd amount", "amount",
+        "tax-book difference", "difference"],
+      category: ["category", "type", "btd type"],
+      affects_471: ["affects 471", "affects §471", "in 471 costs", "embedded in 471"],
+    },
+    fixed_assets: {
+      asset_id: ["asset id", "asset #", "asset number", "id"],
+      description: ["description", "asset description", "asset name"],
+      asset_type: ["asset type", "type", "property type", "category"],
+      class_life: ["class life", "macrs life", "recovery period", "life"],
+      cost: ["cost", "book cost", "gross book value", "basis", "original cost"],
+      placed_in_service: ["placed in service", "pis date", "pis",
+        "in service date", "placed in service date"],
+      cc_num: ["cost center", "cc", "cc #", "dept", "department"],
+      book_capitalized_interest: ["book capitalized interest",
+        "capitalized interest", "book cap interest"],
+      is_improvement: ["is improvement", "improvement"],
+      demolition_event: ["demolition", "demolition event", "demolished"],
+    },
+    cip: {
+      project_id: ["project id", "project #", "cip id", "id", "project"],
+      description: ["description", "project description", "project name"],
+      linked_asset_id: ["linked asset id", "asset id", "target asset", "asset"],
+      is_real_property: ["is real property", "real property", "real"],
+      class_life: ["class life", "recovery period", "life"],
+      total_estimated_cost: ["total estimated cost", "estimated cost", "budget"],
+      production_start: ["production start", "start date", "construction start"],
+      production_complete: ["production complete", "completion date", "complete date"],
+      is_improvement: ["is improvement", "improvement"],
+      mid_production_purchase_price: ["mid production purchase price", "purchase price"],
+      unit_id: ["unit id", "unit"],
+      is_common_feature: ["is common feature", "common feature"],
+      contract_role: ["contract role", "role"],
+      book_capitalized_interest: ["book capitalized interest", "capitalized interest"],
+    },
+    debt: {
+      debt_id: ["debt id", "loan id", "debt #", "loan #", "id", "loan"],
+      description: ["description", "loan description", "lender"],
+      principal: ["principal", "average outstanding", "avg outstanding",
+        "outstanding", "balance"],
+      rate: ["rate", "interest rate", "annual rate"],
+      interest_incurred: ["interest incurred", "interest", "interest expense"],
+      traced_to: ["traced to", "traced project", "project id", "traced"],
+      related_party_below_afr: ["related party below afr", "below afr"],
+      non_interest_bearing: ["non interest bearing", "non-interest bearing"],
+      personal_or_qualified_residence: ["personal", "qualified residence"],
+      tax_exempt_org_nonbusiness: ["tax exempt", "tax-exempt nonbusiness"],
+      disallowed_163_8T: ["disallowed 163-8t", "disallowed"],
+      reserve_or_deferred_tax: ["reserve", "deferred tax", "dtl"],
+      tax_liability_453a_460b: ["tax liability", "453a", "460b"],
+      sale_leaseback_purchase_money: ["sale leaseback", "sale-leaseback",
+        "purchase money"],
+    },
+    re: {
+      re_id: ["re id", "project id", "id", "project"],
+      description: ["description", "project description"],
+      amount: ["amount", "expenditure", "cost"],
+      domestic: ["domestic", "is domestic", "us"],
+      tax_year: ["tax year", "year", "year incurred"],
+      software_development: ["software development", "software", "software dev"],
+      book_capitalized_amount: ["book capitalized amount", "book capitalized"],
+    },
+    transaction_costs: {
+      item_id: ["item id", "id"],
+      transaction_id: ["transaction id", "transaction", "deal id", "deal"],
+      description: ["description", "cost description"],
+      amount: ["amount", "cost", "fee"],
+      cost_type: ["cost type", "type"],
+      covered_transaction: ["covered transaction", "covered"],
+      inherently_facilitative: ["inherently facilitative", "facilitative"],
+      incurred_date: ["incurred date", "date incurred", "date"],
+      bright_line_date: ["bright line date", "bright-line date"],
+      success_based: ["success based", "success-based", "success fee"],
+      transaction_abandoned: ["abandoned", "transaction abandoned"],
+    },
+    intangibles: {
+      item_id: ["item id", "intangible id", "id"],
+      description: ["description", "intangible description"],
+      amount: ["amount", "cost"],
+      category: ["category", "intangible category", "type"],
+      acquired_with_business: ["acquired with business", "with business",
+        "197 eligible", "§197"],
+      benefit_start: ["benefit start", "start date", "rights start"],
+      benefit_end: ["benefit end", "end date", "rights end"],
+      payment_year: ["payment year", "year paid", "year"],
+      facilitative_costs: ["facilitative costs", "facilitative"],
+      prior_capitalized_basis: ["prior capitalized basis", "prior basis"],
+    },
+    startup: {
+      pool_id: ["pool id", "id"],
+      kind: ["kind", "type", "pool type"],
+      total: ["total", "amount", "total costs"],
+      business_commencement: ["business commencement", "commencement date",
+        "business start", "start date"],
+    },
+    qualified_expenditures: {
+      item_id: ["item id", "id"],
+      category: ["category", "type"],
+      amount: ["amount", "expenditure"],
+      elected: ["elected", "59e election", "elect"],
+      election_year: ["election year", "year"],
+    },
+  };
+
+  // Section headers to skip on a TB (reader.py _SECTION_HEADERS).
+  const SECTION_HEADERS = new Set(["assets", "liabilities", "equity",
+    "revenue", "expenses", "income", "cost of goods sold", "cogs"]);
+
+  // ------------------------------------------------------------------
+  // Normalization + alias lookup
+  // ------------------------------------------------------------------
+
+  /** Case/space/punctuation-insensitive header form: lowercase, every run of
+   *  non-alphanumerics collapses to a single space ("Acct. #" -> "acct",
+   *  "YTD  Amount" -> "ytd amount"). */
+  function normHeader(s) {
+    return String(s == null ? "" : s)
+      .toLowerCase()
+      .replace(/[^a-z0-9§&]+/g, " ")
+      .trim();
+  }
+
+  // Precompute normalized alias -> field lookups for the TB target fields.
+  const TB_FIELDS = ["acct_num", "acct_desc", "cc_num", "cc_desc", "amount"];
+  const TB_LOOKUP = (function () {
+    const m = new Map();
+    for (const field of TB_FIELDS) {
+      for (const a of TB_ALIASES[field]) {
+        const n = normHeader(a);
+        if (!m.has(n)) m.set(n, field); // first field (in TB_FIELDS order) wins
+      }
+    }
+    return m;
+  })();
+
+  // ------------------------------------------------------------------
+  // 1. parseCSV
+  // ------------------------------------------------------------------
+
+  const CSV_DELIMS = [",", "\t", ";", "|"];
+
+  /** RFC-4180-ish record parser for one known delimiter. Handles quoted
+   *  fields containing delimiters/newlines, "" escapes, \r\n and bare \r. */
+  function csvRecords(text, delim) {
+    const rows = [];
+    let row = [], field = "", inQ = false, i = 0;
+    const n = text.length;
+    while (i < n) {
+      const ch = text[i];
+      if (inQ) {
+        if (ch === '"') {
+          if (text[i + 1] === '"') { field += '"'; i += 2; continue; }
+          inQ = false; i++; continue;
+        }
+        field += ch; i++; continue;
+      }
+      if (ch === '"') { inQ = true; i++; continue; }
+      if (ch === delim) { row.push(field); field = ""; i++; continue; }
+      if (ch === "\n" || ch === "\r") {
+        if (ch === "\r" && text[i + 1] === "\n") i++;
+        row.push(field); rows.push(row); row = []; field = ""; i++;
+        continue;
+      }
+      field += ch; i++;
+    }
+    if (field !== "" || row.length) { row.push(field); rows.push(row); }
+    // Drop a trailing fully-empty record (text ending in a newline).
+    while (rows.length && rows[rows.length - 1].every(c => c === "")) rows.pop();
+    return rows;
+  }
+
+  /** Pick the delimiter whose column count is most consistent (and > 1)
+   *  over the first non-empty records of a sample. */
+  function sniffDelimiter(text) {
+    const sample = text.slice(0, 65536);
+    let best = ",", bestScore = -1;
+    for (const d of CSV_DELIMS) {
+      const recs = csvRecords(sample, d)
+        .filter(r => r.some(c => c.trim() !== ""))
+        .slice(0, 10);
+      if (!recs.length) continue;
+      const counts = {};
+      for (const r of recs) counts[r.length] = (counts[r.length] || 0) + 1;
+      let modeCount = 0, modeFreq = 0;
+      for (const k of Object.keys(counts)) {
+        if (counts[k] > modeFreq ||
+            (counts[k] === modeFreq && Number(k) > modeCount)) {
+          modeFreq = counts[k]; modeCount = Number(k);
+        }
+      }
+      if (modeCount <= 1) continue; // a non-occurring delimiter always "wins" with 1 col
+      const score = (modeFreq / recs.length) * 1000 + modeCount;
+      if (score > bestScore) { bestScore = score; best = d; }
+    }
+    return best;
+  }
+
+  /** parseCSV(text) -> {rows: string[][], delimiter} */
+  function parseCSV(text) {
+    let t = String(text);
+    if (t.charCodeAt(0) === 0xFEFF) t = t.slice(1); // BOM
+    const delimiter = sniffDelimiter(t);
+    return { rows: csvRecords(t, delimiter), delimiter };
+  }
+
+  // ------------------------------------------------------------------
+  // 3. cleanAmount
+  // ------------------------------------------------------------------
+
+  const NUM_RE = /^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$/;
+
+  /** cleanAmount(v) -> canonical numeric string, or null when not numeric.
+   *  "$1,234.56" -> "1234.56"; "(500)" -> "-500"; "-" -> null; "" -> null.
+   *  US formats only: "1 234,56" (space thousands / comma decimals) is NOT
+   *  handled and returns null. */
+  function cleanAmount(v) {
+    if (v === null || v === undefined) return null;
+    if (typeof v === "number") {
+      return Number.isFinite(v) ? String(v) : null;
+    }
+    if (typeof v === "boolean") return null;
+    let s = String(v).trim();
+    if (s === "" || s === "-" || s === "–" || s === "—") return null;
+    // currency + thousands separators (US only)
+    s = s.replace(/[$,]/g, "").trim();
+    // accounting negatives: (500) -> -500
+    let neg = false;
+    if (/^\(.*\)$/.test(s)) { neg = true; s = s.slice(1, -1).trim(); }
+    if (s.startsWith("-")) { neg = !neg; s = s.slice(1).trim(); }
+    else if (s.startsWith("+")) { s = s.slice(1).trim(); }
+    if (s === "" || !NUM_RE.test(s)) return null;
+    if (s.startsWith(".")) s = "0" + s;
+    if (Number(s) === 0) neg = false; // no "-0"
+    return (neg ? "-" : "") + s;
+  }
+
+  // ------------------------------------------------------------------
+  // 4. detectHeader
+  // ------------------------------------------------------------------
+
+  const HEADER_SCAN_ROWS = 10;
+
+  /** detectHeader(rows) -> {headerIndex, mapping}
+   *  Scans the first 10 rows for the row matching the most TB aliases
+   *  (case/space/punct-insensitive). mapping = {colIndex: fieldName} for
+   *  acct_num / acct_desc / cc_num / cc_desc / amount. Blank rows and
+   *  section headers score 0 and are skipped naturally. */
+  function detectHeader(rows) {
+    let best = { headerIndex: 0, mapping: {} }, bestScore = 0;
+    const limit = Math.min(rows.length, HEADER_SCAN_ROWS);
+    for (let r = 0; r < limit; r++) {
+      const row = rows[r] || [];
+      const mapping = {}, taken = new Set();
+      let score = 0;
+      for (let c = 0; c < row.length; c++) {
+        const field = TB_LOOKUP.get(normHeader(row[c]));
+        if (field && !taken.has(field)) {
+          mapping[c] = field; taken.add(field); score++;
+        }
+      }
+      if (score > bestScore) { best = { headerIndex: r, mapping }; bestScore = score; }
+    }
+    return best;
+  }
+
+  // ------------------------------------------------------------------
+  // 5. rowsToObjects
+  // ------------------------------------------------------------------
+
+  function cellText(v) {
+    if (v === null || v === undefined) return "";
+    return String(v).trim();
+  }
+
+  /** rowsToObjects(rows, headerIndex, mapping) -> objects[]
+   *  One object per data row below the header, with keys acct_num,
+   *  acct_desc, cc_num, cc_desc (strings, "" when unmapped) and amount
+   *  (cleanAmount string or null), plus row_index (0-based index into rows).
+   *  Skips: rows with no amount AND no description; section-header rows
+   *  (a single non-empty cell and no amount). */
+  function rowsToObjects(rows, headerIndex, mapping) {
+    const out = [];
+    for (let r = headerIndex + 1; r < rows.length; r++) {
+      const row = rows[r] || [];
+      const obj = { acct_num: "", acct_desc: "", cc_num: "", cc_desc: "",
+        amount: null, row_index: r };
+      for (const [ci, field] of Object.entries(mapping)) {
+        const raw = row[Number(ci)];
+        if (field === "amount") obj.amount = cleanAmount(raw);
+        else obj[field] = cellText(raw);
+      }
+      const nonEmpty = row.filter(c => cellText(c) !== "").length;
+      if (nonEmpty === 0) continue;                       // blank row
+      if (obj.amount === null && obj.acct_desc === "") continue;
+      if (nonEmpty === 1 && obj.amount === null) continue; // section header
+      if (obj.amount === null &&
+          SECTION_HEADERS.has(obj.acct_desc.toLowerCase()) &&
+          obj.acct_num === "") continue;                  // "Assets" etc.
+      out.push(obj);
+    }
+    return out;
+  }
+
+  // ------------------------------------------------------------------
+  // 2. parseXLSX — minimal ZIP + OOXML reader, no third-party code
+  // ------------------------------------------------------------------
+
+  function utf8Decode(u8) {
+    return new TextDecoder("utf-8").decode(u8);
+  }
+
+  /** Inflate a raw-deflate stream. Uses DecompressionStream("deflate-raw")
+   *  (global in browsers and Node 22); in Node, feature-test and fall back
+   *  to zlib.inflateRawSync so tests never flake. */
+  async function inflateRaw(u8) {
+    if (typeof DecompressionStream === "function") {
+      try {
+        const ds = new DecompressionStream("deflate-raw");
+        const stream = new Blob([u8]).stream().pipeThrough(ds);
+        const ab = await new Response(stream).arrayBuffer();
+        return new Uint8Array(ab);
+      } catch (e) {
+        // fall through to zlib in Node
+        if (typeof require !== "function") throw e;
+      }
+    }
+    if (typeof require === "function") {
+      return new Uint8Array(require("zlib").inflateRawSync(Buffer.from(u8)));
+    }
+    throw new Error("No deflate-raw decompressor available");
+  }
+
+  /** Parse a ZIP archive: EOCD -> central directory -> entries.
+   *  Returns Map<name, {method, dataStart, compSize}> plus the byte array. */
+  function zipDirectory(u8) {
+    const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
+    // End Of Central Directory: scan backwards (max 64K comment).
+    let eocd = -1;
+    const lo = Math.max(0, u8.length - 22 - 65535);
+    for (let i = u8.length - 22; i >= lo; i--) {
+      if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+    }
+    if (eocd < 0) throw new Error("Not a ZIP file (no end-of-central-directory)");
+    const count = dv.getUint16(eocd + 10, true);
+    let p = dv.getUint32(eocd + 16, true);
+    const entries = new Map();
+    for (let e = 0; e < count; e++) {
+      if (dv.getUint32(p, true) !== 0x02014b50) {
+        throw new Error("Corrupt ZIP central directory");
+      }
+      const method = dv.getUint16(p + 10, true);
+      const compSize = dv.getUint32(p + 20, true);
+      const nameLen = dv.getUint16(p + 28, true);
+      const extraLen = dv.getUint16(p + 30, true);
+      const commentLen = dv.getUint16(p + 32, true);
+      const localOff = dv.getUint32(p + 42, true);
+      const name = utf8Decode(u8.subarray(p + 46, p + 46 + nameLen));
+      // Local header gives the actual data start (its own name/extra lengths
+      // may differ from the central directory's).
+      if (dv.getUint32(localOff, true) !== 0x04034b50) {
+        throw new Error("Corrupt ZIP local header for " + name);
+      }
+      const lNameLen = dv.getUint16(localOff + 26, true);
+      const lExtraLen = dv.getUint16(localOff + 28, true);
+      entries.set(name, {
+        method, compSize,
+        dataStart: localOff + 30 + lNameLen + lExtraLen,
+      });
+      p += 46 + nameLen + extraLen + commentLen;
+    }
+    return entries;
+  }
+
+  async function zipExtract(u8, entries, name) {
+    const ent = entries.get(name);
+    if (!ent) return null;
+    const comp = u8.subarray(ent.dataStart, ent.dataStart + ent.compSize);
+    if (ent.method === 0) return comp.slice();       // stored
+    if (ent.method === 8) return inflateRaw(comp);   // deflate
+    throw new Error("Unsupported ZIP compression method " + ent.method +
+      " for " + name);
+  }
+
+  // ---- tiny XML helpers (xlsx-produced XML only: standard attribute
+  // quoting, well-formed, no CDATA in the parts we read) ----
+
+  function decodeXML(s) {
+    return String(s)
+      .replace(/&#x([0-9A-Fa-f]+);/g, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+      .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(parseInt(d, 10)))
+      .replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"').replace(/&apos;/g, "'")
+      .replace(/&amp;/g, "&");
+  }
+
+  function xmlAttr(tag, name) {
+    const re = new RegExp("(?:^|\\s)" +
+      name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") +
+      "\\s*=\\s*(?:\"([^\"]*)\"|'([^']*)')");
+    const m = re.exec(tag);
+    if (!m) return null;
+    return decodeXML(m[1] !== undefined ? m[1] : m[2]);
+  }
+
+  /** Concatenate the text of every <t> descendant (rich-text runs), ignoring
+   *  phonetic <rPh> blocks. Handles <t/> and <t xml:space="preserve">. */
+  function textRuns(xml) {
+    const cleaned = xml.replace(/<rPh\b[\s\S]*?<\/rPh>/g, "");
+    let out = "";
+    const re = /<t(?:\s[^>]*)?>([\s\S]*?)<\/t>|<t(?:\s[^>]*)?\/>/g;
+    let m;
+    while ((m = re.exec(cleaned)) !== null) {
+      if (m[1] !== undefined) out += decodeXML(m[1]);
+    }
+    return out;
+  }
+
+  /** "BC" -> 54 (0-based column index). */
+  function colIndex(ref) {
+    let n = 0;
+    for (let i = 0; i < ref.length; i++) {
+      const c = ref.charCodeAt(i);
+      if (c < 65 || c > 90) break;
+      n = n * 26 + (c - 64);
+    }
+    return n - 1;
+  }
+
+  function parseSharedStrings(xml) {
+    if (!xml) return [];
+    const out = [];
+    const re = /<si(?:\s[^>]*)?>([\s\S]*?)<\/si>|<si(?:\s[^>]*)?\/>/g;
+    let m;
+    while ((m = re.exec(xml)) !== null) {
+      out.push(m[1] !== undefined ? textRuns(m[1]) : "");
+    }
+    return out;
+  }
+
+  const MAX_SHEET_ROWS = 262144; // guard: a stray cell at row ~1M must not OOM
+
+  function parseWorksheet(xml, shared) {
+    const sparse = []; // sparse array of sparse rows
+    let maxCol = -1, maxRow = -1, autoRow = -1;
+    const rowRe = /<row\b([^>]*)>([\s\S]*?)<\/row>|<row\b([^>]*)\/>/g;
+    let rm;
+    while ((rm = rowRe.exec(xml)) !== null) {
+      const attrs = rm[1] !== undefined ? rm[1] : rm[3];
+      const inner = rm[2];
+      const rAttr = xmlAttr("<row " + attrs + ">", "r");
+      let rIdx = rAttr ? parseInt(rAttr, 10) - 1 : autoRow + 1;
+      if (!(rIdx >= 0)) rIdx = autoRow + 1;
+      autoRow = rIdx;
+      if (rIdx >= MAX_SHEET_ROWS) continue;
+      if (inner === undefined) { if (rIdx > maxRow) maxRow = rIdx; continue; }
+      const cells = [];
+      let autoCol = -1;
+      const cellRe = /<c\b([^>]*)\/>|<c\b([^>]*)>([\s\S]*?)<\/c>/g;
+      let cm;
+      while ((cm = cellRe.exec(inner)) !== null) {
+        const cAttrs = cm[1] !== undefined ? cm[1] : cm[2];
+        const body = cm[3];
+        const tag = "<c " + cAttrs + ">";
+        const ref = xmlAttr(tag, "r");
+        let cIdx = ref ? colIndex(ref) : autoCol + 1;
+        if (!(cIdx >= 0)) cIdx = autoCol + 1;
+        autoCol = cIdx;
+        const t = xmlAttr(tag, "t") || "";
+        let val = "";
+        if (body !== undefined) {
+          if (t === "inlineStr") {
+            const is = /<is(?:\s[^>]*)?>([\s\S]*?)<\/is>/.exec(body);
+            val = is ? textRuns(is[1]) : "";
+          } else {
+            const vm = /<v(?:\s[^>]*)?>([\s\S]*?)<\/v>/.exec(body);
+            const raw = vm ? decodeXML(vm[1]) : "";
+            if (t === "s") {
+              const si = parseInt(raw, 10);
+              val = Number.isInteger(si) && shared[si] !== undefined ? shared[si] : "";
+            } else if (t === "str" || t === "e" || t === "d") {
+              val = raw;
+            } else if (t === "b") {
+              val = raw === "1" ? "TRUE" : "FALSE";
+            } else { // n / default: numeric
+              if (raw === "") val = "";
+              else {
+                const num = Number(raw);
+                val = Number.isFinite(num) ? num : raw;
+              }
+            }
+          }
+        }
+        cells[cIdx] = val;
+        if (cIdx > maxCol) maxCol = cIdx;
+      }
+      sparse[rIdx] = cells;
+      if (rIdx > maxRow) maxRow = rIdx;
+    }
+    // Densify: every row is an array of length maxCol+1; gaps are "".
+    const rows = [];
+    for (let r = 0; r <= maxRow; r++) {
+      const src = sparse[r] || [];
+      const row = new Array(Math.max(maxCol + 1, 0)).fill("");
+      for (let c = 0; c <= maxCol; c++) {
+        if (src[c] !== undefined) row[c] = src[c];
+      }
+      rows.push(row);
+    }
+    return rows;
+  }
+
+  function resolveTarget(target) {
+    let t = String(target || "");
+    if (t.startsWith("/")) return t.slice(1);
+    while (t.startsWith("../")) t = t.slice(3); // "../foo" from xl/ -> "foo"
+    return "xl/" + t;
+  }
+
+  /** parseXLSX(arrayBuffer) -> Promise<{sheets: [{name, rows}]}>
+   *  rows: dense (string|number)[][]; dates stay as raw serial numbers
+   *  (convert with excelSerialToISO). */
+  async function parseXLSX(arrayBuffer) {
+    const u8 = arrayBuffer instanceof Uint8Array
+      ? arrayBuffer
+      : new Uint8Array(arrayBuffer);
+    const entries = zipDirectory(u8);
+
+    async function xmlOf(name) {
+      const bytes = await zipExtract(u8, entries, name);
+      if (bytes === null) return null;
+      let s = utf8Decode(bytes);
+      if (s.charCodeAt(0) === 0xFEFF) s = s.slice(1);
+      return s;
+    }
+
+    const wbXml = await xmlOf("xl/workbook.xml");
+    if (wbXml === null) throw new Error("Not an XLSX workbook (missing xl/workbook.xml)");
+    const relsXml = await xmlOf("xl/_rels/workbook.xml.rels");
+    const ssXml = await xmlOf("xl/sharedStrings.xml");
+    const shared = parseSharedStrings(ssXml || "");
+
+    // rId -> target from the rels part
+    const rels = new Map();
+    if (relsXml) {
+      const rre = /<Relationship\b[^>]*\/?>/g;
+      let m;
+      while ((m = rre.exec(relsXml)) !== null) {
+        const id = xmlAttr(m[0], "Id");
+        const target = xmlAttr(m[0], "Target");
+        if (id && target) rels.set(id, resolveTarget(target));
+      }
+    }
+
+    // sheets in workbook order
+    const sheets = [];
+    const sre = /<sheet\b[^>]*\/?>/g;
+    let sm, fallback = 0;
+    while ((sm = sre.exec(wbXml)) !== null) {
+      const name = xmlAttr(sm[0], "name") || ("Sheet" + (sheets.length + 1));
+      const rid = xmlAttr(sm[0], "r:id") || xmlAttr(sm[0], "id");
+      fallback++;
+      let target = rid ? rels.get(rid) : null;
+      if (!target) target = "xl/worksheets/sheet" + fallback + ".xml";
+      const wsXml = await xmlOf(target);
+      sheets.push({ name, rows: wsXml === null ? [] : parseWorksheet(wsXml, shared) });
+    }
+    return { sheets };
+  }
+
+  // ------------------------------------------------------------------
+  // excelSerialToISO
+  // ------------------------------------------------------------------
+
+  const DAY_MS = 86400000;
+
+  /** Excel 1900-system serial -> "YYYY-MM-DD". Serial 1 = 1900-01-01.
+   *  Preserves the Lotus leap-year bug: serial 60 pretends 1900-02-29
+   *  existed — it did not, so 60 returns null (as do serials < 1 and
+   *  non-finite input). Fractions (time of day) are truncated. */
+  function excelSerialToISO(n) {
+    const s = Math.floor(Number(n));
+    if (!Number.isFinite(s) || s < 1 || s === 60) return null;
+    // For serials >= 61 the effective epoch is 1899-12-30 (the phantom
+    // Feb 29 already counted); for 1..59 it is 1899-12-31.
+    const days = s <= 59 ? s + 1 : s;
+    const d = new Date(Date.UTC(1899, 11, 30) + days * DAY_MS);
+    return d.toISOString().slice(0, 10);
+  }
+
+  // ------------------------------------------------------------------
+  // 6. sniffAndParse
+  // ------------------------------------------------------------------
+
+  function extOf(filename) {
+    const m = /\.([A-Za-z0-9]+)$/.exec(String(filename || ""));
+    return m ? m[1].toLowerCase() : "";
+  }
+
+  function stripExt(filename) {
+    const base = String(filename || "").replace(/^.*[\\/]/, "");
+    return base.replace(/\.[A-Za-z0-9]+$/, "") || base || "Sheet1";
+  }
+
+  /** sniffAndParse(filename, data) -> Promise<{kind, ...}>
+   *  data: string | ArrayBuffer | Uint8Array. Dispatches on extension AND
+   *  magic bytes: PK\x03\x04 -> xlsx, leading "{"/"[" (or .json) -> json,
+   *  otherwise csv.
+   *    xlsx -> {kind:"xlsx", sheets}
+   *    csv  -> {kind:"csv",  sheets:[{name, rows}], delimiter}
+   *    json -> {kind:"json", data} (JSON.parse verbatim) */
+  async function sniffAndParse(filename, data) {
+    const ext = extOf(filename);
+    let text = null, bytes = null;
+    if (typeof data === "string") {
+      text = data;
+    } else {
+      bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
+      const isPK = bytes.length >= 4 && bytes[0] === 0x50 && bytes[1] === 0x4B &&
+        bytes[2] === 0x03 && bytes[3] === 0x04;
+      if (isPK || ext === "xlsx" || ext === "xlsm") {
+        if (!isPK) {
+          throw new Error(filename + ": has an Excel extension but is not a " +
+            "ZIP container (legacy .xls and encrypted workbooks are not supported)");
+        }
+        const parsed = await parseXLSX(bytes);
+        return { kind: "xlsx", sheets: parsed.sheets };
+      }
+      text = utf8Decode(bytes);
+    }
+    if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+    const head = text.replace(/^\s+/, "");
+    if (ext === "json" || head.startsWith("{") || head.startsWith("[")) {
+      try {
+        return { kind: "json", data: JSON.parse(text) };
+      } catch (e) {
+        if (ext === "json") {
+          throw new Error(filename + ": invalid JSON — " + e.message);
+        }
+        // fall through: treat as CSV
+      }
+    }
+    const { rows, delimiter } = parseCSV(text);
+    return { kind: "csv", sheets: [{ name: stripExt(filename), rows }], delimiter };
+  }
+
+  // ------------------------------------------------------------------
+
+  return {
+    TB_ALIASES, SCHEDULE_ALIASES, SECTION_HEADERS,
+    normHeader,
+    parseCSV, sniffDelimiter,
+    cleanAmount,
+    detectHeader, rowsToObjects,
+    parseXLSX, excelSerialToISO,
+    sniffAndParse,
+  };
+});
 </script>
 <script>/* Shared parity harness: runs a goldens.json scenario spec through the JS
  * engines and compares the serialized output against the Python-generated
@@ -8515,6 +11322,9 @@ if (typeof window !== "undefined") window.CAP263A = CAP263A;
       case "sca":
         return E.computeSCA(inp.pools || [], inp.assets || [], inp.sscm_ratio,
           { book_capitalized_indirect: inp.book_capitalized_indirect || {} });
+      case "tangible":
+        return E.computeTangible263a(inp.items || [], E.makeProfile(inp.profile || {}),
+          inp.opts || {});
       case "taxtb": {
         const out = E.computeTaxBasisTB(inp.tb_lines || [], inp.btds || []);
         return { tax_lines: out.tax_lines.map(l => ({ acct_num: l.acct_num,
@@ -8665,6 +11475,11 @@ if (typeof window !== "undefined") window.CAP263A = CAP263A;
       individual_amt_exposure: false, overlapping: "" } },
     s1060: { transaction_id: "", aggregate_consideration: "",
       class_fmv: { I: "", II: "", III: "", IV: "", V: "", VI: "" } },
+    tangible: { items: [], opts: { de_minimis_election: false,
+      small_taxpayer_building_election: false,
+      capitalize_repairs_following_books: false,
+      total_building_repairs_maintenance_improvements: "" } },
+    interview_answers: {},
   };
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
@@ -8961,6 +11776,412 @@ if (typeof window !== "undefined") window.CAP263A = CAP263A;
     refreshDerived();
   });
 
+  /* ---- Import Files ---- */
+  const I = window.CAP263A_INGEST;
+
+  /** Generic header/column detector parameterized by a field->aliases map
+   *  (mirrors ingest.js's own detectHeader, which is hardcoded to the TB
+   *  fields) — lets every schedule in the app use the SAME alias-scoring
+   *  algorithm, not just the trial balance. */
+  function genericDetectHeader(rows, aliasMap) {
+    const lookup = new Map();
+    for (const field of Object.keys(aliasMap)) {
+      for (const a of aliasMap[field]) {
+        const n = I.normHeader(a);
+        if (!lookup.has(n)) lookup.set(n, field);
+      }
+    }
+    let best = { headerIndex: 0, mapping: {} }, bestScore = 0;
+    const limit = Math.min(rows.length, 10);
+    for (let r = 0; r < limit; r++) {
+      const row = rows[r] || [];
+      const mapping = {}, taken = new Set();
+      let score = 0;
+      for (let c = 0; c < row.length; c++) {
+        const field = lookup.get(I.normHeader(row[c]));
+        if (field && !taken.has(field)) { mapping[c] = field; taken.add(field); score++; }
+      }
+      if (score > bestScore) { best = { headerIndex: r, mapping }; bestScore = score; }
+    }
+    return best;
+  }
+
+  function genericRowsToObjects(rows, headerIndex, mapping) {
+    const out = [];
+    for (let r = headerIndex + 1; r < rows.length; r++) {
+      const row = rows[r] || [];
+      const nonEmpty = row.filter(c => c !== null && c !== undefined && String(c).trim() !== "").length;
+      if (nonEmpty === 0) continue;
+      const obj = {};
+      for (const [ci, field] of Object.entries(mapping)) {
+        const raw = row[Number(ci)];
+        obj[field] = raw === null || raw === undefined ? "" : String(raw).trim();
+      }
+      if (Object.values(obj).every(v => v === "")) continue;
+      out.push(obj);
+    }
+    return out;
+  }
+
+  function toBoolStr(v, dflt) {
+    if (v === undefined || v === "") return dflt;
+    const s = String(v).trim().toLowerCase();
+    return ["true", "1", "yes", "y", "x"].includes(s);
+  }
+
+  /* Import destinations: every schedule the app models. Each entry's
+   * `aliases` reuses the Python-derived alias tables from ingest.js where
+   * one exists (btd/re/transaction_costs/intangibles/startup/
+   * qualified_expenditures/debt/cip — ported verbatim from reader.py/
+   * readers.py); the rest (lifo, sca pools/assets, tangible items) are new
+   * schedules this UI introduces, given a matching alias table here. */
+  const TANGIBLE_ALIASES = {
+    item_id: ["item id", "id"], description: ["description"],
+    amount: ["amount", "cost"],
+    invoice_or_item_cost: ["invoice cost", "invoice or item cost", "per-item cost"],
+    unit_of_property: ["unit of property", "uop"],
+    is_building: ["is building", "building"],
+    building_unadjusted_basis: ["building unadjusted basis", "building basis"],
+    is_material_or_supply: ["materials and supplies", "materials & supplies", "m&s"],
+    betterment: ["betterment"], adaptation: ["adaptation"],
+    restoration: ["restoration"],
+  };
+  const LIFO_ALIASES = {
+    year: ["year", "layer year"],
+    layer_471: ["layer 471", "layer §471", "471 costs"],
+    layer_additional_263a: ["layer additional 263a", "additional §263a"],
+  };
+  const SCA_POOL_ALIASES = {
+    pool_id: ["pool id", "id"], description: ["description"],
+    amount: ["amount"], driver: ["driver"],
+    is_mixed_service: ["is mixed service", "mixed service"],
+  };
+  const SCA_ASSET_ALIASES = {
+    asset_id: ["asset id", "id"], book_cost: ["book cost", "cost"],
+    sscm_eligible: ["sscm eligible", "eligible"],
+  };
+
+  const IMPORT_TARGETS = [
+    { key: "tb", label: "Trial Balance", aliases: I.TB_ALIASES,
+      get: () => state.tb_lines,
+      map: o => ({ acct_num: o.acct_num || "", acct_desc: o.acct_desc || "",
+        cc_num: o.cc_num || "", cc_desc: o.cc_desc || "", amount: o.amount || "0",
+        tier1: "Excluded", cap_vs_deduct: "", is_labor: false }) },
+    { key: "btd", label: "Book-Tax Differences", aliases: I.SCHEDULE_ALIASES.btd,
+      get: () => state.btds,
+      map: o => ({ btd_id: o.btd_id || "", acct_num: o.acct_num || "",
+        cc_num: o.cc_num || "", description: o.description || "",
+        adjustment: o.adjustment || "0" }) },
+    { key: "re", label: "§174 R&E Expenditures", aliases: I.SCHEDULE_ALIASES.re,
+      get: () => state.s174.expenditures,
+      map: o => ({ re_id: o.re_id || "", description: o.description || "",
+        amount: o.amount || "0", domestic: toBoolStr(o.domestic, true),
+        tax_year: o.tax_year || "", book_capitalized_amount: o.book_capitalized_amount || "0" }) },
+    { key: "transaction_costs", label: "§1.263(a)-5 Transaction Costs",
+      aliases: I.SCHEDULE_ALIASES.transaction_costs,
+      get: () => state.intang.transaction_costs,
+      map: o => ({ item_id: o.item_id || "", transaction_id: o.transaction_id || "",
+        description: o.description || "", amount: o.amount || "0",
+        covered_transaction: toBoolStr(o.covered_transaction, false),
+        inherently_facilitative: toBoolStr(o.inherently_facilitative, false),
+        success_based: toBoolStr(o.success_based, false),
+        transaction_abandoned: toBoolStr(o.transaction_abandoned, false),
+        incurred_date: o.incurred_date || "", bright_line_date: o.bright_line_date || "" }) },
+    { key: "intangibles", label: "§1.263(a)-4 Intangibles",
+      aliases: I.SCHEDULE_ALIASES.intangibles,
+      get: () => state.intang.intangibles,
+      map: o => ({ item_id: o.item_id || "", description: o.description || "",
+        amount: o.amount || "0",
+        acquired_with_business: toBoolStr(o.acquired_with_business, false),
+        benefit_start: o.benefit_start || "", benefit_end: o.benefit_end || "",
+        payment_year: o.payment_year || "",
+        facilitative_costs: o.facilitative_costs || "0",
+        prior_capitalized_basis: o.prior_capitalized_basis || "0" }) },
+    { key: "startup", label: "§195/§248/§709 Start-up Pools",
+      aliases: I.SCHEDULE_ALIASES.startup,
+      get: () => state.intang.startup_pools,
+      map: o => ({ pool_id: o.pool_id || "", kind: o.kind || "startup",
+        total: o.total || "0", business_commencement: o.business_commencement || "" }) },
+    { key: "qualified_expenditures", label: "§59(e) Elections",
+      aliases: I.SCHEDULE_ALIASES.qualified_expenditures,
+      get: () => state.s59e.elections,
+      map: o => ({ item_id: o.item_id || "", category: o.category || "idc",
+        amount: o.amount || "0", elected: toBoolStr(o.elected, true),
+        election_year: o.election_year || "" }) },
+    { key: "debt", label: "§263A(f) Debt Schedule", aliases: I.SCHEDULE_ALIASES.debt,
+      get: () => state.interest.debts,
+      map: o => {
+        const screenKeys = ["related_party_below_afr", "non_interest_bearing",
+          "personal_or_qualified_residence", "tax_exempt_org_nonbusiness",
+          "disallowed_163_8T", "reserve_or_deferred_tax",
+          "tax_liability_453a_460b", "sale_leaseback_purchase_money"];
+        let screen = "";
+        for (const k of screenKeys) if (toBoolStr(o[k], false)) { screen = k; break; }
+        return { debt_id: o.debt_id || "", principal: o.principal || "0",
+          interest_incurred: o.interest_incurred || "0",
+          traced_to: o.traced_to || "", screen, outstanding_by_date: "" };
+      } },
+    { key: "cip", label: "§263A(f) Designated-Property Units", aliases: I.SCHEDULE_ALIASES.cip,
+      get: () => state.interest.projects,
+      map: o => ({ project_id: o.project_id || "",
+        book_capitalized_interest: o.book_capitalized_interest || "0",
+        is_common_feature: toBoolStr(o.is_common_feature, false) }) },
+    { key: "lifo", label: "LIFO Layers", aliases: LIFO_ALIASES,
+      get: () => state.lifo.layers,
+      map: o => ({ year: o.year || "", layer_471: o.layer_471 || "0",
+        layer_additional_263a: o.layer_additional_263a || "0" }) },
+    { key: "sca_pools", label: "SCA Cost Pools", aliases: SCA_POOL_ALIASES,
+      get: () => state.sca.pools,
+      map: o => ({ pool_id: o.pool_id || "", description: o.description || "",
+        amount: o.amount || "0", driver: o.driver || "",
+        is_mixed_service: toBoolStr(o.is_mixed_service, false), targets: "" }) },
+    { key: "sca_assets", label: "SCA Assets", aliases: SCA_ASSET_ALIASES,
+      get: () => state.sca.assets,
+      map: o => ({ asset_id: o.asset_id || "", book_cost: o.book_cost || "0",
+        sscm_eligible: toBoolStr(o.sscm_eligible, false) }) },
+    { key: "tangible", label: "§263(a) Tangible-Property Items", aliases: TANGIBLE_ALIASES,
+      get: () => state.tangible.items,
+      map: o => ({ item_id: o.item_id || "", description: o.description || "",
+        amount: o.amount || "0",
+        invoice_or_item_cost: o.invoice_or_item_cost || "",
+        unit_of_property: o.unit_of_property || "",
+        is_building: toBoolStr(o.is_building, false),
+        building_unadjusted_basis: o.building_unadjusted_basis || "0",
+        is_material_or_supply: toBoolStr(o.is_material_or_supply, false),
+        betterment: "", adaptation: "", restoration: "" }) },
+  ];
+
+  panel("import", "Import Files", function (root) {
+    root.appendChild(el("h2", {}, "Import Files — CSV / XLSX / JSON, any schedule"));
+    root.appendChild(el("p", { class: "note" },
+      "Fully offline: XLSX is parsed with a native ZIP/OOXML reader, CSV with " +
+      "delimiter sniffing (comma/tab/semicolon/pipe), both reusing the SAME " +
+      "column-alias tables as the Python reader (financial_tools/cap263a/" +
+      "reader.py, readers.py) — so a real ERP export TB or schedule export " +
+      "maps onto the right fields automatically. Preview the detected mapping " +
+      "before appending; nothing imports silently. Not every schedule has a " +
+      "dedicated tab yet — Fixed Assets uploads parse but currently have no " +
+      "destination in this app (they seed the desktop tool's Asset Basis " +
+      "Schedule / SCA targets, not modeled standalone)."));
+
+    const destSel = el("select", {},
+      IMPORT_TARGETS.map(t => el("option", { value: t.key }, t.label)));
+    root.appendChild(el("label", { class: "f", style: "max-width:360px" },
+      "Import into", destSel));
+    const fileInput = el("input", { type: "file", multiple: "multiple",
+      accept: ".csv,.tsv,.txt,.xlsx,.xlsm,.json" });
+    root.appendChild(el("div", { style: "margin:8px 0" }, fileInput));
+    const out = el("div", { class: "results" });
+    root.appendChild(out);
+
+    fileInput.addEventListener("change", async () => {
+      clear(out);
+      const target = IMPORT_TARGETS.find(t => t.key === destSel.value);
+      for (const file of Array.from(fileInput.files)) {
+        const box = el("div", {}, el("h3", {}, file.name));
+        out.appendChild(box);
+        try {
+          const buf = await file.arrayBuffer();
+          const ext = (file.name.split(".").pop() || "").toLowerCase();
+          const isTextFmt = ["csv", "tsv", "txt", "json"].includes(ext);
+          const data = isTextFmt ? new TextDecoder("utf-8").decode(buf) : buf;
+          const parsed = await I.sniffAndParse(file.name, data);
+          if (parsed.kind === "json") {
+            box.appendChild(el("p", { class: "note" },
+              "Parsed as a JSON engagement file. Full-engagement JSON import " +
+              "(the multi-schedule format the Python CLI accepts) isn't wired " +
+              "into this UI yet — showing the raw structure for reference."));
+            box.appendChild(el("details", { class: "raw" },
+              el("summary", {}, "Parsed JSON"),
+              el("pre", {}, JSON.stringify(parsed.data, null, 2).slice(0, 20000))));
+            continue;
+          }
+          for (const sheet of parsed.sheets) {
+            const sheetBox = el("div", {},
+              el("h4", { style: "margin:8px 0 2px" },
+                parsed.sheets.length > 1 ? "Sheet: " + sheet.name : "Preview"));
+            box.appendChild(sheetBox);
+            const { headerIndex, mapping } = genericDetectHeader(sheet.rows, target.aliases);
+            const fieldNames = Object.keys(target.aliases);
+            const mappedCount = Object.keys(mapping).length;
+            sheetBox.appendChild(el("p", { class: "note" },
+              "Detected header row " + (headerIndex + 1) + "; matched " +
+              mappedCount + " of " + fieldNames.length + " target fields (" +
+              fieldNames.join(", ") + ")."));
+            const objs = genericRowsToObjects(sheet.rows, headerIndex, mapping);
+            const prev = el("table", { class: "io" });
+            const headerRow = sheet.rows[headerIndex] || [];
+            prev.appendChild(el("tr", {}, headerRow.map((h, ci) =>
+              el("th", {}, String(h == null ? "" : h) +
+                (mapping[ci] ? " → " + mapping[ci] : "")))));
+            for (const row of sheet.rows.slice(headerIndex + 1, headerIndex + 6)) {
+              prev.appendChild(el("tr", {}, headerRow.map((_, ci) =>
+                el("td", {}, String(row[ci] == null ? "" : row[ci])))));
+            }
+            sheetBox.appendChild(el("div", { class: "tblwrap" }, prev));
+            sheetBox.appendChild(el("button", { class: "act", onclick: () => {
+              const arr = target.get();
+              for (const o of objs) arr.push(target.map(o));
+              save();
+              alert("Imported " + objs.length + " row(s) into " + target.label +
+                ". Open that tab to review/edit.");
+            } }, "Import " + objs.length + " row(s) into " + target.label));
+          }
+        } catch (err) {
+          box.appendChild(el("div", { class: "warn err" }, String(err)));
+        }
+      }
+    });
+  });
+
+  /* ---- Interview ---- */
+  const INTERVIEW_SPEC = JSON.parse(
+    document.getElementById("interview-spec-data").textContent);
+
+  function evalCond(c, answers) {
+    if (c.any) return c.any.some(sub => evalCond(sub, answers));
+    if (c.all) return c.all.every(sub => evalCond(sub, answers));
+    if (c.derived) return derivedValue(c.derived, answers) === c.equals;
+    const v = answers[c.question];
+    if ("in" in c) return c.in.includes(v);
+    return v === c.equals;
+  }
+  function derivedValue(name, answers) {
+    const receipts = answers["Q0.4"];
+    const taxYear = answers["Q0.2"] || 2026;
+    const threshold = E.THRESHOLDS[taxYear] ? Number(E.THRESHOLDS[taxYear]) : 32000000;
+    const under = receipts !== undefined && receipts !== "" && Number(receipts) <= threshold;
+    if (name === "under_448c_threshold") return under;
+    if (name === "small_business_exempt") return under && !answers["Q0.3"];
+    if (name === "srm_available")
+      return answers["Q1.2"] === "de_minimis" && !!answers["Q1.3"];
+    return undefined;
+  }
+  function questionVisible(q, answers) {
+    if (!q.show_if) return true;
+    return q.show_if.every(c => evalCond(c, answers));
+  }
+
+  panel("interview", "Interview", function (root) {
+    root.appendChild(el("h2", {}, "Guided Interview — every fact the calculations need"));
+    root.appendChild(el("p", { class: "note" },
+      "Mirrors the desktop tool's Phase E interview graph (" +
+      INTERVIEW_SPEC.gates.reduce((n, g) => n + g.questions.length, 0) +
+      " questions across " + INTERVIEW_SPEC.gates.length + " gates), plus a " +
+      "new tangible-property gate. Questions appear only when relevant to " +
+      "your prior answers. \"Apply to Profile\" copies mapped answers onto " +
+      "the Entity Profile; \"Check completeness\" re-runs the same missing-" +
+      "input checks the engines would otherwise only surface as a warning " +
+      "AFTER computing."));
+
+    const body = el("div", {});
+    root.appendChild(body);
+
+    function fieldFor(q) {
+      const answers = state.interview_answers;
+      const val = answers[q.id];
+      let input;
+      if (q.type === "bool") {
+        input = el("select", { onchange: e => {
+          answers[q.id] = e.target.value === "" ? undefined
+            : e.target.value === "true"; save(); render(); } },
+          [["", "— unanswered —"], ["true", "Yes"], ["false", "No"]].map(([v, l]) => {
+            const o = el("option", { value: v }, l);
+            const cur = val === undefined ? "" : String(val);
+            if (cur === v) o.selected = true;
+            return o;
+          }));
+      } else if (q.type === "choice") {
+        input = el("select", { onchange: e => {
+          answers[q.id] = e.target.value || undefined; save(); render(); } },
+          [["", "— unanswered —"]].concat(q.choices.map(c => [c.value, c.label]))
+            .map(([v, l]) => {
+              const o = el("option", { value: v }, l);
+              if ((val || "") === v) o.selected = true;
+              return o;
+            }));
+      } else {
+        input = el("input", { type: "text", value: val == null ? "" : val,
+          oninput: e => { answers[q.id] = e.target.value; save(); },
+          onchange: render });
+      }
+      return input;
+    }
+
+    function render() {
+      clear(body);
+      for (const g of INTERVIEW_SPEC.gates) {
+        const visible = g.questions.filter(q => questionVisible(q, state.interview_answers));
+        if (!visible.length) continue;
+        const fs = el("fieldset", {}, el("legend", {}, g.title || g.id));
+        for (const q of visible) {
+          const row = el("div", { style: "margin-bottom:10px" },
+            el("label", { class: "f" }, q.id + ". " + q.text, fieldFor(q)),
+            q.help ? el("p", { class: "note", style: "margin:2px 0 0" }, q.help) : null);
+          fs.appendChild(row);
+        }
+        body.appendChild(fs);
+      }
+      const actions = el("div", {});
+      actions.appendChild(el("button", { class: "act", onclick: applyToProfile },
+        "Apply answers to Profile"));
+      actions.appendChild(el("button", { class: "act", onclick: () => {
+        clear(checkOut);
+        checkOut.appendChild(runCompletenessCheck());
+      } }, "Check completeness"));
+      body.appendChild(actions);
+      body.appendChild(checkOut);
+    }
+
+    function applyToProfile() {
+      let applied = 0;
+      for (const g of INTERVIEW_SPEC.gates) {
+        for (const q of g.questions) {
+          const val = state.interview_answers[q.id];
+          if (val === undefined || val === "") continue;
+          const mt = q.maps_to || {};
+          if (mt.profile_field) { state.profile[mt.profile_field] = val; applied++; }
+        }
+      }
+      save();
+      alert("Applied " + applied + " answer(s) to the Entity Profile.");
+    }
+
+    function runCompletenessCheck() {
+      const box = el("div", {});
+      box.appendChild(el("h3", {}, "Completeness"));
+      let profile;
+      try { profile = currentProfile(); }
+      catch (err) {
+        box.appendChild(el("div", { class: "warn err" }, String(err)));
+        return box;
+      }
+      const fires = [];
+      for (const c of INTERVIEW_SPEC.completeness || []) {
+        const w = c.when || {};
+        let matches = true;
+        if ("profile_field" in w) matches = String(profile[w.profile_field]) === String(w.equals);
+        if (!matches) continue;
+        const missing = (c.then_required || []).filter(f => {
+          const v = profile[f];
+          return v === null || v === undefined || v === "" ||
+            (v instanceof D && v.isZero());
+        });
+        if (missing.length) fires.push(c.question || ("Missing: " + missing.join(", ")));
+      }
+      if (!fires.length) {
+        box.appendChild(el("p", { class: "note ok" },
+          "No missing-input gaps detected for the current profile."));
+      } else {
+        for (const f of fires) box.appendChild(el("div", { class: "warn" }, "⚠ " + f));
+      }
+      return box;
+    }
+
+    const checkOut = el("div", { class: "results" });
+    render();
+  });
+
   /* ---- Trial balance & UNICAP ---- */
   panel("tb", "Trial Balance & UNICAP", function (root) {
     root.appendChild(el("h2", {}, "Trial Balance → Waterfall → §263A UNICAP"));
@@ -9063,6 +12284,137 @@ if (typeof window !== "undefined") window.CAP263A = CAP263A;
       }
       save();
     }
+  });
+
+  /* ---- Tangible §263(a) ---- */
+  panel("tangible", "§263(a) Tangible Property", function (root) {
+    root.appendChild(el("h2", {}, "§263(a) Tangible Property — Capitalize vs. Deduct"));
+    root.appendChild(el("p", { class: "note" },
+      "Repair regulations decision order: negative-amount guard → de minimis " +
+      "safe harbor (§1.263(a)-1(f)) → materials & supplies (§1.162-3) → small " +
+      "taxpayer building safe harbor (§1.263(a)-3(h)) → betterment/adaptation/" +
+      "restoration (BAR) tests (§1.263(a)-3(j)/(l)/(k)) → routine maintenance " +
+      "safe harbor (§1.263(a)-3(i)) → repair (§162) or the §1.263(a)-3(n) " +
+      "capitalize-per-books election. Leave a BAR/safe-harbor cell blank when " +
+      "the fact is unknown — the engine capitalizes CONSERVATIVELY and asks " +
+      "an explicit question rather than guessing; it never silently deducts " +
+      "on a missing fact."));
+
+    const TRI = [["", "— unknown —"], ["true", "Yes"], ["false", "No"]];
+    root.appendChild(ioTable(state.tangible.items, [
+      { key: "item_id", label: "Id", width: "70px" },
+      { key: "description", label: "Description", width: "180px" },
+      { key: "amount", label: "Amount", type: "money", width: "100px" },
+      { key: "invoice_or_item_cost", label: "Invoice/item cost (de minimis)", type: "money", width: "110px" },
+      { key: "unit_of_property", label: "Unit of property", width: "100px" },
+      { key: "is_building", label: "Building", type: "check", width: "55px" },
+      { key: "building_unadjusted_basis", label: "Building unadj. basis", type: "money", width: "110px" },
+      { key: "is_material_or_supply", label: "M&S candidate", type: "check", width: "60px" },
+      { key: "ms_unit_cost_200_or_less", label: "M&S: unit cost ≤$200?", type: "select", options: TRI, width: "110px" },
+      { key: "ms_economic_life_12mo_or_less", label: "M&S: life ≤12mo?", type: "select", options: TRI, width: "100px" },
+      { key: "betterment", label: "Betterment?", type: "select", options: TRI, width: "100px" },
+      { key: "adaptation", label: "Adaptation?", type: "select", options: TRI, width: "100px" },
+      { key: "restoration", label: "Restoration?", type: "select", options: TRI, width: "100px" },
+      { key: "routine_maintenance_expected_more_than_once", label: "Routine maint. >1x?",
+        type: "select", options: TRI, width: "110px" },
+      { key: "book_capitalized", label: "Book capitalized", type: "check", width: "60px" },
+    ]));
+
+    const O = state.tangible.opts;
+    root.appendChild(el("div", { class: "grid", style: "max-width:1000px" },
+      el("label", { class: "chk" },
+        el("input", { type: "checkbox", checked: !!O.de_minimis_election,
+          onchange: e => { O.de_minimis_election = e.target.checked; save(); } }),
+        "§1.263(a)-1(f) de minimis safe harbor election (annual, irrevocable)"),
+      el("label", { class: "chk" },
+        el("input", { type: "checkbox", checked: !!O.small_taxpayer_building_election,
+          onchange: e => { O.small_taxpayer_building_election = e.target.checked; save(); } }),
+        "§1.263(a)-3(h) small taxpayer building safe harbor election"),
+      el("label", { class: "chk" },
+        el("input", { type: "checkbox", checked: !!O.capitalize_repairs_following_books,
+          onchange: e => { O.capitalize_repairs_following_books = e.target.checked; save(); } }),
+        "§1.263(a)-3(n) capitalize repairs per books election"),
+      el("label", { class: "f" },
+        "Per-building TRUE aggregate override (unit_of_property=total, one per line — overrides the schedule-only fallback)",
+        el("textarea", { rows: 2,
+          value: O.total_building_repairs_maintenance_improvements || "",
+          oninput: e => { O.total_building_repairs_maintenance_improvements = e.target.value; save(); } }))));
+
+    const out = el("div", { class: "results" });
+    root.appendChild(el("button", { class: "act", onclick: () => {
+      clear(out);
+      try {
+        const profile = currentProfile();
+        const items = state.tangible.items.map(it => ({
+          item_id: it.item_id || "", description: it.description || "",
+          amount: orZero(it.amount),
+          invoice_or_item_cost: it.invoice_or_item_cost === "" || it.invoice_or_item_cost == null
+            ? null : it.invoice_or_item_cost,
+          unit_of_property: it.unit_of_property || "",
+          is_building: !!it.is_building,
+          building_unadjusted_basis: orZero(it.building_unadjusted_basis),
+          is_material_or_supply: !!it.is_material_or_supply,
+          ms_unit_cost_200_or_less: it.ms_unit_cost_200_or_less === "" || it.ms_unit_cost_200_or_less == null
+            ? null : it.ms_unit_cost_200_or_less === "true" || it.ms_unit_cost_200_or_less === true,
+          ms_economic_life_12mo_or_less: it.ms_economic_life_12mo_or_less === "" || it.ms_economic_life_12mo_or_less == null
+            ? null : it.ms_economic_life_12mo_or_less === "true" || it.ms_economic_life_12mo_or_less === true,
+          routine_maintenance_expected_more_than_once:
+            it.routine_maintenance_expected_more_than_once === "" || it.routine_maintenance_expected_more_than_once == null
+              ? null : it.routine_maintenance_expected_more_than_once === "true" || it.routine_maintenance_expected_more_than_once === true,
+          betterment: it.betterment === "" || it.betterment == null
+            ? null : it.betterment === "true" || it.betterment === true,
+          adaptation: it.adaptation === "" || it.adaptation == null
+            ? null : it.adaptation === "true" || it.adaptation === true,
+          restoration: it.restoration === "" || it.restoration == null
+            ? null : it.restoration === "true" || it.restoration === true,
+          book_capitalized: !!it.book_capitalized,
+        }));
+        const tbrmi = parseKV(O.total_building_repairs_maintenance_improvements);
+        const r = E.computeTangible263a(items, profile, {
+          de_minimis_election: !!O.de_minimis_election,
+          small_taxpayer_building_election: !!O.small_taxpayer_building_election,
+          capitalize_repairs_following_books: !!O.capitalize_repairs_following_books,
+          total_building_repairs_maintenance_improvements:
+            Object.keys(tbrmi).length ? tbrmi : null });
+
+        out.appendChild(kvTable([
+          ["Deductible total", r.deductible_total, { hl: true }],
+          ["Capitalized total (mandatory improvements + pending)", r.capitalized_total, { hl: true }],
+          ["Elective capitalized total ((n) election)", r.elective_capitalized_total],
+        ]));
+
+        if (r.open_questions.length) {
+          out.appendChild(el("h3", {}, "Open questions — answer these to finalize the treatment"));
+          for (const q of r.open_questions) {
+            out.appendChild(el("div", { class: "warn" },
+              "❓ " + q.question, el("div", { class: "note", style: "margin-top:4px" }, q.why)));
+          }
+        }
+
+        out.appendChild(el("h3", {}, "Items"));
+        const t = el("table", { class: "io" });
+        t.appendChild(el("tr", {}, el("th", {}, "Item"), el("th", {}, "Amount"),
+          el("th", {}, "Treatment"), el("th", {}, "Authority"),
+          el("th", {}, "Deductible"), el("th", {}, "Capitalized"), el("th", {}, "Flags")));
+        for (const row of r.items) {
+          t.appendChild(el("tr", {},
+            el("td", {}, (row.item_id || "") + " " + (row.description || "")),
+            el("td", { class: "num" }, "$" + E.fmt(row.amount, 2)),
+            el("td", {}, row.treatment),
+            el("td", {}, row.authority),
+            el("td", { class: "num" }, "$" + E.fmt(row.deductible, 2)),
+            el("td", { class: "num" }, "$" + E.fmt(row.capitalized, 2)),
+            el("td", {}, (row.flags || []).join(", "))));
+        }
+        out.appendChild(el("div", { class: "tblwrap" }, t));
+        out.appendChild(el("h3", {}, "Warnings"));
+        out.appendChild(warnList(r.warnings));
+        out.appendChild(rawDetails(r));
+      } catch (err) {
+        out.appendChild(el("div", { class: "warn err" }, String(err)));
+      }
+    } }, "Compute"));
+    root.appendChild(out);
   });
 
   /* ---- Tax-basis TB ---- */
@@ -9844,6 +13196,51 @@ if (typeof window !== "undefined") window.CAP263A = CAP263A;
     } catch (err) {
       document.body.appendChild(el("div", { id: "smoke-status",
         "data-status": "FAIL ui-smoke " + err }));
+    }
+
+    /* import-pipeline smoke: run a real CSV through I.sniffAndParse +
+     * genericDetectHeader/genericRowsToObjects for the "re" (§174) target,
+     * exercising the exact code path the Import Files tab's file handler
+     * uses, without needing to simulate a <input type=file> change event. */
+    (async () => {
+      try {
+        const csv = "RE Id,Description,Amount,Domestic,Year Incurred\n" +
+          "F1,Foreign lab,900000,No,2026\nD1,US bench,150000,Yes,2026\n";
+        const parsed = await I.sniffAndParse("re.csv", csv);
+        const target = IMPORT_TARGETS.find(t => t.key === "re");
+        const { headerIndex, mapping } = genericDetectHeader(parsed.sheets[0].rows, target.aliases);
+        const objs = genericRowsToObjects(parsed.sheets[0].rows, headerIndex, mapping);
+        const mapped = objs.map(target.map);
+        const ok = parsed.kind === "csv" && objs.length === 2 &&
+          mapped[0].re_id === "F1" && mapped[0].amount === "900000" &&
+          mapped[1].re_id === "D1";
+        document.body.appendChild(el("div", { id: "import-smoke-status",
+          "data-status": ok ? "PASS import-smoke"
+            : "FAIL import-smoke " + JSON.stringify(mapped) }));
+      } catch (err) {
+        document.body.appendChild(el("div", { id: "import-smoke-status",
+          "data-status": "FAIL import-smoke " + err }));
+      }
+    })();
+
+    /* tangible engine smoke: a conservative-capitalize case (missing BAR
+     * facts) must produce an open question and NOT silently deduct. */
+    try {
+      state.tangible.items.length = 0;
+      state.tangible.items.push({ item_id: "P1", description: "Roof work",
+        amount: "4000", betterment: "", adaptation: "false", restoration: "" });
+      show("tangible");
+      const tbtn = Array.from(sections.tangible.sec.querySelectorAll("button.act"))
+        .find(b => b.textContent === "Compute");
+      tbtn.click();
+      const ttxt = sections.tangible.sec.textContent;
+      const tok = ttxt.indexOf("open_question_capitalize_pending") !== -1 &&
+        ttxt.indexOf("Open questions") !== -1;
+      document.body.appendChild(el("div", { id: "tangible-smoke-status",
+        "data-status": tok ? "PASS tangible-smoke" : "FAIL tangible-smoke" }));
+    } catch (err) {
+      document.body.appendChild(el("div", { id: "tangible-smoke-status",
+        "data-status": "FAIL tangible-smoke " + err }));
     }
   }
 

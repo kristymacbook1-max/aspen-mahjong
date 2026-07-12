@@ -83,6 +83,9 @@
       case "sca":
         return E.computeSCA(inp.pools || [], inp.assets || [], inp.sscm_ratio,
           { book_capitalized_indirect: inp.book_capitalized_indirect || {} });
+      case "tangible":
+        return E.computeTangible263a(inp.items || [], E.makeProfile(inp.profile || {}),
+          inp.opts || {});
       case "taxtb": {
         const out = E.computeTaxBasisTB(inp.tb_lines || [], inp.btds || []);
         return { tax_lines: out.tax_lines.map(l => ({ acct_num: l.acct_num,

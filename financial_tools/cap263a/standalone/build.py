@@ -29,7 +29,9 @@ def main():
     html = _read("template.html")
     replacements = {
         "<!--GOLDENS_JSON-->": _js_safe(_read("goldens.json")),
+        "<!--INTERVIEW_SPEC_JSON-->": _js_safe(_read("interview_spec.json")),
         "<!--ENGINES_JS-->": _js_safe(_read("engines.js")),
+        "<!--INGEST_JS-->": _js_safe(_read("ingest.js")),
         "<!--SELFTEST_JS-->": _js_safe(_read("selftest.js")),
         "<!--APP_JS-->": _js_safe(_read("app.js")),
     }

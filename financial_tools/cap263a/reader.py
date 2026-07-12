@@ -134,8 +134,33 @@ def _map_columns(ws, header_row):
     return cols
 
 
+def _workbook_from_csv(path):
+    """Load a .csv/.tsv TB into an in-memory workbook so the SAME header
+    detection / alias mapping / amount parsing runs on it — one ingestion
+    path, not a parallel CSV reader that drifts (the single-source principle
+    the module docstring states for xlsx)."""
+    import csv as _csv
+    from openpyxl import Workbook
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "CSV"
+    with open(path, newline="", encoding="utf-8-sig") as f:
+        sample = f.read(65536)
+        f.seek(0)
+        try:
+            dialect = _csv.Sniffer().sniff(sample, delimiters=",;\t|")
+        except _csv.Error:
+            dialect = _csv.excel     # sniffing needs >1 column; default comma
+        for row in _csv.reader(f, dialect):
+            ws.append([c if c != "" else None for c in row])
+    return wb
+
+
 def read_trial_balance(path, sheet=None):
-    wb = load_workbook(path, data_only=True)
+    if str(path).lower().endswith((".csv", ".tsv", ".txt")):
+        wb = _workbook_from_csv(path)
+    else:
+        wb = load_workbook(path, data_only=True)
     ws = wb[sheet] if sheet else _pick_sheet(wb)
     header_row = _detect_header(ws)
     cols = _map_columns(ws, header_row)

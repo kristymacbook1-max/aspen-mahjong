@@ -69,3 +69,12 @@ def test_js_engines_match_python_goldens():
         capture_output=True, text=True, cwd=REPO_ROOT)
     assert proc.returncode == 0, (
         "JS/Python parity failure:\n" + proc.stdout[-4000:] + proc.stderr[-2000:])
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not installed")
+def test_js_ingest_module():
+    proc = subprocess.run(
+        ["node", os.path.join(STANDALONE, "test_ingest.js")],
+        capture_output=True, text=True, cwd=REPO_ROOT)
+    assert proc.returncode == 0, (
+        "ingest.js test failure:\n" + proc.stdout[-4000:] + proc.stderr[-2000:])

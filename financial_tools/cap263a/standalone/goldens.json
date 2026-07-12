@@ -6010,5 +6010,720 @@
     "TAX-BASIS TB TIE-CHECK FAILED: -999 — a BTD was dropped or double-applied. Do not proceed."
    ]
   }
+ },
+ {
+  "name": "tangible_de_minimis_afs_ceiling",
+  "engine": "tangible",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "5000000",
+    "has_afs": true
+   },
+   "items": [
+    {
+     "item_id": "D1",
+     "description": "D1",
+     "amount": "5000",
+     "invoice_or_item_cost": "5000"
+    },
+    {
+     "item_id": "D2",
+     "description": "D2",
+     "amount": "5000",
+     "invoice_or_item_cost": "5000.01",
+     "betterment": false,
+     "adaptation": false,
+     "restoration": false,
+     "routine_maintenance_expected_more_than_once": false
+    }
+   ],
+   "opts": {
+    "de_minimis_election": true
+   }
+  },
+  "expected": {
+   "items": [
+    {
+     "item_id": "D1",
+     "description": "D1",
+     "amount": "5000",
+     "treatment": "de_minimis_deduct",
+     "authority": "Reg. §1.263(a)-1(f); Notice 2015-82",
+     "flags": [],
+     "deductible": "5000",
+     "capitalized": "0"
+    },
+    {
+     "item_id": "D2",
+     "description": "D2",
+     "amount": "5000",
+     "treatment": "repair_deduct",
+     "authority": "§162; Reg. §1.263(a)-3(d)",
+     "flags": [],
+     "deductible": "5000",
+     "capitalized": "0"
+    }
+   ],
+   "open_questions": [],
+   "deductible_total": "10000",
+   "capitalized_total": "0",
+   "elective_capitalized_total": "0",
+   "warnings": [
+    "DE-MINIMIS-POLICY-CONDITION: the §1.263(a)-1(f) de minimis safe harbor is elected and the taxpayer has an AFS — a WRITTEN accounting policy expensing amounts under the ceiling, in place as of the START of the taxable year, is a condition of the election ((f)(1)(i)(B)). Confirm it exists; the election is annual, irrevocable, and all-or-nothing for qualifying items."
+   ]
+  }
+ },
+ {
+  "name": "tangible_de_minimis_no_afs_2500",
+  "engine": "tangible",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "5000000",
+    "has_afs": false
+   },
+   "items": [
+    {
+     "item_id": "D1",
+     "description": "D1",
+     "amount": "2500",
+     "invoice_or_item_cost": "2500"
+    },
+    {
+     "item_id": "D2",
+     "description": "D2",
+     "amount": "2500",
+     "invoice_or_item_cost": "2500.01",
+     "betterment": false,
+     "adaptation": false,
+     "restoration": false,
+     "routine_maintenance_expected_more_than_once": false
+    }
+   ],
+   "opts": {
+    "de_minimis_election": true
+   }
+  },
+  "expected": {
+   "items": [
+    {
+     "item_id": "D1",
+     "description": "D1",
+     "amount": "2500",
+     "treatment": "de_minimis_deduct",
+     "authority": "Reg. §1.263(a)-1(f); Notice 2015-82",
+     "flags": [],
+     "deductible": "2500",
+     "capitalized": "0"
+    },
+    {
+     "item_id": "D2",
+     "description": "D2",
+     "amount": "2500",
+     "treatment": "repair_deduct",
+     "authority": "§162; Reg. §1.263(a)-3(d)",
+     "flags": [],
+     "deductible": "2500",
+     "capitalized": "0"
+    }
+   ],
+   "open_questions": [],
+   "deductible_total": "5000",
+   "capitalized_total": "0",
+   "elective_capitalized_total": "0",
+   "warnings": []
+  }
+ },
+ {
+  "name": "tangible_de_minimis_cost_unknown_open_question",
+  "engine": "tangible",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "5000000"
+   },
+   "items": [
+    {
+     "item_id": "U1",
+     "description": "Shop equipment",
+     "amount": "3000"
+    }
+   ],
+   "opts": {
+    "de_minimis_election": true
+   }
+  },
+  "expected": {
+   "items": [
+    {
+     "item_id": "U1",
+     "description": "Shop equipment",
+     "amount": "3000",
+     "treatment": "open_question_capitalize_pending",
+     "authority": "Reg. §1.263(a)-3(d)/(j)/(k)/(l) — improvement facts pending; capitalized conservatively",
+     "flags": [
+      "DE-MINIMIS-COST-UNKNOWN",
+      "BAR-FACTS-INCOMPLETE"
+     ],
+     "deductible": "0",
+     "capitalized": "3000"
+    }
+   ],
+   "open_questions": [
+    {
+     "item_id": "U1",
+     "question": "Item U1 'Shop equipment': what is the per-invoice (or per-item as substantiated on the invoice) cost (Reg. §1.263(a)-1(f))? Supply invoice_or_item_cost to test it against the $5,000 de minimis ceiling.",
+     "why": "The de minimis election is on but the schedule does not carry the per-invoice/per-item cost — the item continued down the decision tree conservatively."
+    },
+    {
+     "item_id": "U1",
+     "question": "Item U1 'Shop equipment': the following improvement facts are not established: betterment, adaptation, restoration. Answer each True/False: betterment (§1.263(a)-3(j)) — does the work ameliorate a pre-existing material condition or defect, or materially add to or increase the capacity, productivity, efficiency, strength, or quality of the unit of property? adaptation (§1.263(a)-3(l)) — does the work adapt the unit of property to a new or different use? restoration (§1.263(a)-3(k)) — does the work replace a major component or substantial structural part, restore after a basis-adjusted loss, or return the property to ordinary efficient operating condition after deterioration to a state of disrepair where it was no longer functional?",
+     "why": "Any single True prong requires capitalization as an improvement (§1.263(a)-3(d)(2)); all-False opens the repair / routine-maintenance path. The amount is capitalized CONSERVATIVELY pending the answer — never silently deducted on missing facts."
+    }
+   ],
+   "deductible_total": "0",
+   "capitalized_total": "3000",
+   "elective_capitalized_total": "0",
+   "warnings": [
+    "DE-MINIMIS-POLICY-CONDITION: the §1.263(a)-1(f) de minimis safe harbor is elected and the taxpayer has an AFS — a WRITTEN accounting policy expensing amounts under the ceiling, in place as of the START of the taxable year, is a condition of the election ((f)(1)(i)(B)). Confirm it exists; the election is annual, irrevocable, and all-or-nothing for qualifying items."
+   ]
+  }
+ },
+ {
+  "name": "tangible_materials_supplies_both_prongs",
+  "engine": "tangible",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "5000000"
+   },
+   "items": [
+    {
+     "item_id": "M1",
+     "description": "M1",
+     "amount": "150",
+     "is_material_or_supply": true,
+     "ms_unit_cost_200_or_less": true
+    },
+    {
+     "item_id": "M2",
+     "description": "M2",
+     "amount": "500",
+     "is_material_or_supply": true,
+     "ms_economic_life_12mo_or_less": true
+    },
+    {
+     "item_id": "M3",
+     "description": "M3",
+     "amount": "300",
+     "is_material_or_supply": true,
+     "betterment": false,
+     "adaptation": false,
+     "restoration": false,
+     "routine_maintenance_expected_more_than_once": false
+    }
+   ],
+   "opts": {}
+  },
+  "expected": {
+   "items": [
+    {
+     "item_id": "M1",
+     "description": "M1",
+     "amount": "150",
+     "treatment": "materials_supplies_deduct",
+     "authority": "§1.162-3(c)(1)(iv) unit cost ≤ $200",
+     "flags": [
+      "MS-TIMING-NOT-DETERMINED"
+     ],
+     "deductible": "150",
+     "capitalized": "0"
+    },
+    {
+     "item_id": "M2",
+     "description": "M2",
+     "amount": "500",
+     "treatment": "materials_supplies_deduct",
+     "authority": "§1.162-3(c)(1)(iii) economic life ≤ 12 months",
+     "flags": [
+      "MS-TIMING-NOT-DETERMINED"
+     ],
+     "deductible": "500",
+     "capitalized": "0"
+    },
+    {
+     "item_id": "M3",
+     "description": "M3",
+     "amount": "300",
+     "treatment": "repair_deduct",
+     "authority": "§162; Reg. §1.263(a)-3(d)",
+     "flags": [],
+     "deductible": "300",
+     "capitalized": "0"
+    }
+   ],
+   "open_questions": [
+    {
+     "item_id": "M3",
+     "question": "Item M3 'M3': is the unit acquisition/production cost $200 or less (§1.162-3(c)(1)(iv)), or is the economic useful life 12 months or less (§1.162-3(c)(1)(iii))? Answer ms_unit_cost_200_or_less and ms_economic_life_12mo_or_less True/False.",
+     "why": "The item is marked as a materials & supplies candidate but neither §1.162-3 prong is established — it continued down the decision tree."
+    }
+   ],
+   "deductible_total": "950",
+   "capitalized_total": "0",
+   "elective_capitalized_total": "0",
+   "warnings": [
+    "MS-TIMING-NOT-DETERMINED: materials & supplies were deducted under §1.162-3, but the incidental (deduct when paid/incurred, (a)(2)) vs non-incidental (deduct when used or consumed, (a)(1)) TIMING distinction is out of scope for this engine — confirm the deduction year per item."
+   ]
+  }
+ },
+ {
+  "name": "tangible_stsh_at_and_over_ceiling",
+  "engine": "tangible",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "5000000"
+   },
+   "items": [
+    {
+     "item_id": "B1",
+     "description": "B1",
+     "amount": "8000",
+     "is_building": true,
+     "unit_of_property": "BLDG1",
+     "building_unadjusted_basis": "400000"
+    },
+    {
+     "item_id": "B2",
+     "description": "B2",
+     "amount": "8000.01",
+     "is_building": true,
+     "unit_of_property": "BLDG2",
+     "building_unadjusted_basis": "400000",
+     "betterment": false,
+     "adaptation": false,
+     "restoration": false,
+     "routine_maintenance_expected_more_than_once": false
+    }
+   ],
+   "opts": {
+    "small_taxpayer_building_election": true
+   }
+  },
+  "expected": {
+   "items": [
+    {
+     "item_id": "B1",
+     "description": "B1",
+     "amount": "8000",
+     "treatment": "small_taxpayer_sh_deduct",
+     "authority": "Reg. §1.263(a)-3(h) small taxpayer building safe harbor",
+     "flags": [],
+     "deductible": "8000",
+     "capitalized": "0"
+    },
+    {
+     "item_id": "B2",
+     "description": "B2",
+     "amount": "8000.01",
+     "treatment": "repair_deduct",
+     "authority": "§162; Reg. §1.263(a)-3(d)",
+     "flags": [
+      "STSH-CEILING-EXCEEDED"
+     ],
+     "deductible": "8000.01",
+     "capitalized": "0"
+    }
+   ],
+   "open_questions": [],
+   "deductible_total": "16000.01",
+   "capitalized_total": "0",
+   "elective_capitalized_total": "0",
+   "warnings": [
+    "STSH-AGGREGATE-FROM-SCHEDULE-ONLY: the §1.263(a)-3(h) per-building aggregate was summed from the items ON THIS SCHEDULE only — the test requires ALL amounts paid during the year for repairs, maintenance, and improvements on the building, including amounts outside this schedule. Supply total_building_repairs_maintenance_improvements to test the true aggregate."
+   ]
+  }
+ },
+ {
+  "name": "tangible_stsh_ineligible_receipts",
+  "engine": "tangible",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "15000000"
+   },
+   "items": [
+    {
+     "item_id": "B1",
+     "description": "B1",
+     "amount": "1000",
+     "is_building": true,
+     "unit_of_property": "BLDG1",
+     "building_unadjusted_basis": "400000",
+     "betterment": false,
+     "adaptation": false,
+     "restoration": false,
+     "routine_maintenance_expected_more_than_once": false
+    }
+   ],
+   "opts": {
+    "small_taxpayer_building_election": true
+   }
+  },
+  "expected": {
+   "items": [
+    {
+     "item_id": "B1",
+     "description": "B1",
+     "amount": "1000",
+     "treatment": "repair_deduct",
+     "authority": "§162; Reg. §1.263(a)-3(d)",
+     "flags": [
+      "STSH-NOT-ELIGIBLE"
+     ],
+     "deductible": "1000",
+     "capitalized": "0"
+    }
+   ],
+   "open_questions": [],
+   "deductible_total": "1000",
+   "capitalized_total": "0",
+   "elective_capitalized_total": "0",
+   "warnings": [
+    "STSH-INELIGIBLE-RECEIPTS: the §1.263(a)-3(h) small-taxpayer building safe harbor is elected but average annual gross receipts ($15,000,000) exceed the $10,000,000 ceiling — the safe harbor is unavailable; no item was deducted under it."
+   ]
+  }
+ },
+ {
+  "name": "tangible_stsh_explicit_aggregate",
+  "engine": "tangible",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "5000000"
+   },
+   "items": [
+    {
+     "item_id": "B1",
+     "description": "B1",
+     "amount": "5000",
+     "is_building": true,
+     "unit_of_property": "BLDG1",
+     "building_unadjusted_basis": "1000000"
+    }
+   ],
+   "opts": {
+    "small_taxpayer_building_election": true,
+    "total_building_repairs_maintenance_improvements": {
+     "BLDG1": "9999"
+    }
+   }
+  },
+  "expected": {
+   "items": [
+    {
+     "item_id": "B1",
+     "description": "B1",
+     "amount": "5000",
+     "treatment": "small_taxpayer_sh_deduct",
+     "authority": "Reg. §1.263(a)-3(h) small taxpayer building safe harbor",
+     "flags": [],
+     "deductible": "5000",
+     "capitalized": "0"
+    }
+   ],
+   "open_questions": [],
+   "deductible_total": "5000",
+   "capitalized_total": "0",
+   "elective_capitalized_total": "0",
+   "warnings": []
+  }
+ },
+ {
+  "name": "tangible_bar_each_prong_capitalizes",
+  "engine": "tangible",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "5000000"
+   },
+   "items": [
+    {
+     "item_id": "I1",
+     "description": "I1",
+     "amount": "10000",
+     "betterment": true,
+     "adaptation": false,
+     "restoration": false
+    },
+    {
+     "item_id": "I2",
+     "description": "I2",
+     "amount": "20000",
+     "betterment": false,
+     "adaptation": true,
+     "restoration": false
+    },
+    {
+     "item_id": "I3",
+     "description": "I3",
+     "amount": "30000",
+     "betterment": false,
+     "adaptation": false,
+     "restoration": true
+    }
+   ],
+   "opts": {}
+  },
+  "expected": {
+   "items": [
+    {
+     "item_id": "I1",
+     "description": "I1",
+     "amount": "10000",
+     "treatment": "improvement_capitalize",
+     "authority": "Reg. §1.263(a)-3(j) betterment",
+     "flags": [],
+     "deductible": "0",
+     "capitalized": "10000"
+    },
+    {
+     "item_id": "I2",
+     "description": "I2",
+     "amount": "20000",
+     "treatment": "improvement_capitalize",
+     "authority": "Reg. §1.263(a)-3(l) adaptation to a new/different use",
+     "flags": [],
+     "deductible": "0",
+     "capitalized": "20000"
+    },
+    {
+     "item_id": "I3",
+     "description": "I3",
+     "amount": "30000",
+     "treatment": "improvement_capitalize",
+     "authority": "Reg. §1.263(a)-3(k) restoration",
+     "flags": [],
+     "deductible": "0",
+     "capitalized": "30000"
+    }
+   ],
+   "open_questions": [],
+   "deductible_total": "0",
+   "capitalized_total": "60000",
+   "elective_capitalized_total": "0",
+   "warnings": []
+  }
+ },
+ {
+  "name": "tangible_bar_missing_facts_conservative",
+  "engine": "tangible",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "5000000"
+   },
+   "items": [
+    {
+     "item_id": "P1",
+     "description": "Roof membrane replacement",
+     "amount": "4000",
+     "betterment": null,
+     "adaptation": false,
+     "restoration": null
+    }
+   ],
+   "opts": {}
+  },
+  "expected": {
+   "items": [
+    {
+     "item_id": "P1",
+     "description": "Roof membrane replacement",
+     "amount": "4000",
+     "treatment": "open_question_capitalize_pending",
+     "authority": "Reg. §1.263(a)-3(d)/(j)/(k)/(l) — improvement facts pending; capitalized conservatively",
+     "flags": [
+      "BAR-FACTS-INCOMPLETE"
+     ],
+     "deductible": "0",
+     "capitalized": "4000"
+    }
+   ],
+   "open_questions": [
+    {
+     "item_id": "P1",
+     "question": "Item P1 'Roof membrane replacement': the following improvement facts are not established: betterment, restoration. Answer each True/False: betterment (§1.263(a)-3(j)) — does the work ameliorate a pre-existing material condition or defect, or materially add to or increase the capacity, productivity, efficiency, strength, or quality of the unit of property? restoration (§1.263(a)-3(k)) — does the work replace a major component or substantial structural part, restore after a basis-adjusted loss, or return the property to ordinary efficient operating condition after deterioration to a state of disrepair where it was no longer functional?",
+     "why": "Any single True prong requires capitalization as an improvement (§1.263(a)-3(d)(2)); all-False opens the repair / routine-maintenance path. The amount is capitalized CONSERVATIVELY pending the answer — never silently deducted on missing facts."
+    }
+   ],
+   "deductible_total": "0",
+   "capitalized_total": "4000",
+   "elective_capitalized_total": "0",
+   "warnings": []
+  }
+ },
+ {
+  "name": "tangible_routine_maintenance",
+  "engine": "tangible",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "5000000"
+   },
+   "items": [
+    {
+     "item_id": "R1",
+     "description": "R1",
+     "amount": "1500",
+     "betterment": false,
+     "adaptation": false,
+     "restoration": false,
+     "routine_maintenance_expected_more_than_once": true
+    },
+    {
+     "item_id": "R2",
+     "description": "R2",
+     "amount": "1600",
+     "betterment": false,
+     "adaptation": false,
+     "restoration": false,
+     "routine_maintenance_expected_more_than_once": null
+    }
+   ],
+   "opts": {}
+  },
+  "expected": {
+   "items": [
+    {
+     "item_id": "R1",
+     "description": "R1",
+     "amount": "1500",
+     "treatment": "routine_maintenance_deduct",
+     "authority": "Reg. §1.263(a)-3(i) routine maintenance safe harbor",
+     "flags": [],
+     "deductible": "1500",
+     "capitalized": "0"
+    },
+    {
+     "item_id": "R2",
+     "description": "R2",
+     "amount": "1600",
+     "treatment": "repair_deduct",
+     "authority": "§162; Reg. §1.263(a)-3(d)",
+     "flags": [],
+     "deductible": "1600",
+     "capitalized": "0"
+    }
+   ],
+   "open_questions": [
+    {
+     "item_id": "R2",
+     "question": "Item R2 'R2': at the time the unit of property was placed in service, was this maintenance expected to be performed more than once over the property's class life (for a building: more than once in 10 years) (§1.263(a)-3(i))? Answer routine_maintenance_expected_more_than_once True/False.",
+     "why": "All BAR prongs are False, so the amount is deductible either way — the answer only settles whether the routine maintenance safe harbor or the general repair rule is the cited authority."
+    }
+   ],
+   "deductible_total": "3100",
+   "capitalized_total": "0",
+   "elective_capitalized_total": "0",
+   "warnings": []
+  }
+ },
+ {
+  "name": "tangible_repair_and_n_election",
+  "engine": "tangible",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "5000000"
+   },
+   "items": [
+    {
+     "item_id": "N1",
+     "description": "N1",
+     "amount": "700",
+     "betterment": false,
+     "adaptation": false,
+     "restoration": false,
+     "routine_maintenance_expected_more_than_once": false,
+     "book_capitalized": true
+    },
+    {
+     "item_id": "N2",
+     "description": "N2",
+     "amount": "800",
+     "betterment": false,
+     "adaptation": false,
+     "restoration": false,
+     "routine_maintenance_expected_more_than_once": false,
+     "book_capitalized": false
+    }
+   ],
+   "opts": {
+    "capitalize_repairs_following_books": true
+   }
+  },
+  "expected": {
+   "items": [
+    {
+     "item_id": "N1",
+     "description": "N1",
+     "amount": "700",
+     "treatment": "elective_capitalize_books",
+     "authority": "Reg. §1.263(a)-3(n) election to capitalize repairs capitalized on books",
+     "flags": [],
+     "deductible": "0",
+     "capitalized": "700"
+    },
+    {
+     "item_id": "N2",
+     "description": "N2",
+     "amount": "800",
+     "treatment": "repair_deduct",
+     "authority": "§162; Reg. §1.263(a)-3(d)",
+     "flags": [],
+     "deductible": "800",
+     "capitalized": "0"
+    }
+   ],
+   "open_questions": [],
+   "deductible_total": "800",
+   "capitalized_total": "0",
+   "elective_capitalized_total": "700",
+   "warnings": [
+    "N-ELECTION-CONSISTENCY: the §1.263(a)-3(n) election is on, but some repair items are capitalized on books and others are not — the election applies to ALL amounts paid for repair and maintenance capitalized on the books and records for the year. Verify the book treatment of every repair line is consistent with the election."
+   ]
+  }
+ },
+ {
+  "name": "tangible_negative_amount",
+  "engine": "tangible",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "5000000"
+   },
+   "items": [
+    {
+     "item_id": "X1",
+     "description": "X1",
+     "amount": "-500"
+    }
+   ],
+   "opts": {}
+  },
+  "expected": {
+   "items": [
+    {
+     "item_id": "X1",
+     "description": "X1",
+     "amount": "-500",
+     "treatment": "sme_review",
+     "authority": "",
+     "flags": [
+      "NEGATIVE-AMOUNT"
+     ],
+     "deductible": "0",
+     "capitalized": "0"
+    }
+   ],
+   "open_questions": [],
+   "deductible_total": "0",
+   "capitalized_total": "0",
+   "elective_capitalized_total": "0",
+   "warnings": [
+    "NEGATIVE-AMOUNT [tangible X1]: $-500.00 — nothing computed; route credits/refunds through the schedule, not a negative expenditure."
+   ]
+  }
  }
 ]

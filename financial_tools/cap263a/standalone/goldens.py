@@ -31,6 +31,8 @@ from financial_tools.cap263a.engines.purchase_price_allocation import \
 from financial_tools.cap263a.engines.qualified_expenditures import compute_59e
 from financial_tools.cap263a.engines.re_capitalization import compute_174
 from financial_tools.cap263a.engines.sca import compute_sca
+from financial_tools.cap263a.engines.tangible_263a import (
+    TangibleExpenditure, compute_tangible_263a)
 from financial_tools.cap263a.engines.tax_basis_tb import compute_tax_basis_tb
 from financial_tools.cap263a.model import (AmortizableItem, BookTaxDifference,
                                            CIPProject, CIPSnapshot,
@@ -303,11 +305,43 @@ def run_taxtb(inp):
             "cc_rollup": out["cc_rollup"], "warnings": out["warnings"]}
 
 
+def run_tangible(inp):
+    profile = EntityProfile(**inp.get("profile", {}))
+    items = [TangibleExpenditure(
+        item_id=i.get("item_id", ""), description=i.get("description", ""),
+        amount=_d(i.get("amount")),
+        invoice_or_item_cost=(None if i.get("invoice_or_item_cost") is None
+                              else _d(i.get("invoice_or_item_cost"))),
+        unit_of_property=i.get("unit_of_property", ""),
+        is_building=bool(i.get("is_building")),
+        building_unadjusted_basis=_d(i.get("building_unadjusted_basis")),
+        is_material_or_supply=bool(i.get("is_material_or_supply")),
+        ms_unit_cost_200_or_less=i.get("ms_unit_cost_200_or_less"),
+        ms_economic_life_12mo_or_less=i.get("ms_economic_life_12mo_or_less"),
+        routine_maintenance_expected_more_than_once=i.get(
+            "routine_maintenance_expected_more_than_once"),
+        betterment=i.get("betterment"), adaptation=i.get("adaptation"),
+        restoration=i.get("restoration"),
+        book_capitalized=bool(i.get("book_capitalized")))
+        for i in inp.get("items", [])]
+    opts = inp.get("opts", {})
+    tbrmi = opts.get("total_building_repairs_maintenance_improvements")
+    return compute_tangible_263a(
+        items, profile,
+        de_minimis_election=bool(opts.get("de_minimis_election")),
+        small_taxpayer_building_election=bool(
+            opts.get("small_taxpayer_building_election")),
+        capitalize_repairs_following_books=bool(
+            opts.get("capitalize_repairs_following_books")),
+        total_building_repairs_maintenance_improvements=(
+            {k: _d(v) for k, v in tbrmi.items()} if tbrmi else None))
+
+
 RUNNERS = {"unicap": run_unicap, "lifo_decrement": run_lifo_decrement,
            "interest": run_interest, "s174": run_174,
            "intangibles": run_intangibles, "demolition": run_demolition,
            "s59e": run_59e, "s1060": run_1060, "sca": run_sca,
-           "taxtb": run_taxtb}
+           "taxtb": run_taxtb, "tangible": run_tangible}
 
 
 # --------------------------------------------------------------------------
@@ -920,6 +954,108 @@ SCENARIOS = [
               "description": "dup-key target", "adjustment": "250"},
              {"btd_id": "B4", "acct_num": "9999", "description": "orphan reserve",
               "adjustment": "4321"}]}},
+]
+
+
+def T(item_id, amount, **kw):
+    d = dict(item_id=item_id, description=item_id, amount=amount)
+    d.update(kw)
+    return d
+
+
+SCENARIOS += [
+    {"name": "tangible_de_minimis_afs_ceiling", "engine": "tangible",
+     "input": {"profile": {"avg_gross_receipts": "5000000", "has_afs": True},
+               "items": [T("D1", "5000", invoice_or_item_cost="5000"),
+                        T("D2", "5000", invoice_or_item_cost="5000.01",
+                          betterment=False, adaptation=False, restoration=False,
+                          routine_maintenance_expected_more_than_once=False)],
+               "opts": {"de_minimis_election": True}}},
+    {"name": "tangible_de_minimis_no_afs_2500", "engine": "tangible",
+     "input": {"profile": {"avg_gross_receipts": "5000000", "has_afs": False},
+               "items": [T("D1", "2500", invoice_or_item_cost="2500"),
+                        T("D2", "2500", invoice_or_item_cost="2500.01",
+                          betterment=False, adaptation=False, restoration=False,
+                          routine_maintenance_expected_more_than_once=False)],
+               "opts": {"de_minimis_election": True}}},
+    {"name": "tangible_de_minimis_cost_unknown_open_question", "engine": "tangible",
+     "input": {"profile": {"avg_gross_receipts": "5000000"},
+               "items": [T("U1", "3000", description="Shop equipment")],
+               "opts": {"de_minimis_election": True}}},
+    {"name": "tangible_materials_supplies_both_prongs", "engine": "tangible",
+     "input": {"profile": {"avg_gross_receipts": "5000000"},
+               "items": [T("M1", "150", is_material_or_supply=True,
+                          ms_unit_cost_200_or_less=True),
+                        T("M2", "500", is_material_or_supply=True,
+                          ms_economic_life_12mo_or_less=True),
+                        T("M3", "300", is_material_or_supply=True,
+                          betterment=False, adaptation=False, restoration=False,
+                          routine_maintenance_expected_more_than_once=False)],
+               "opts": {}}},
+    {"name": "tangible_stsh_at_and_over_ceiling", "engine": "tangible",
+     "input": {"profile": {"avg_gross_receipts": "5000000"},
+               "items": [T("B1", "8000", is_building=True,
+                          unit_of_property="BLDG1",
+                          building_unadjusted_basis="400000"),
+                        T("B2", "8000.01", is_building=True,
+                          unit_of_property="BLDG2",
+                          building_unadjusted_basis="400000",
+                          betterment=False, adaptation=False, restoration=False,
+                          routine_maintenance_expected_more_than_once=False)],
+               "opts": {"small_taxpayer_building_election": True}}},
+    {"name": "tangible_stsh_ineligible_receipts", "engine": "tangible",
+     "input": {"profile": {"avg_gross_receipts": "15000000"},
+               "items": [T("B1", "1000", is_building=True,
+                          unit_of_property="BLDG1",
+                          building_unadjusted_basis="400000",
+                          betterment=False, adaptation=False, restoration=False,
+                          routine_maintenance_expected_more_than_once=False)],
+               "opts": {"small_taxpayer_building_election": True}}},
+    {"name": "tangible_stsh_explicit_aggregate", "engine": "tangible",
+     "input": {"profile": {"avg_gross_receipts": "5000000"},
+               "items": [T("B1", "5000", is_building=True,
+                          unit_of_property="BLDG1",
+                          building_unadjusted_basis="1000000")],
+               "opts": {"small_taxpayer_building_election": True,
+                        "total_building_repairs_maintenance_improvements":
+                            {"BLDG1": "9999"}}}},
+    {"name": "tangible_bar_each_prong_capitalizes", "engine": "tangible",
+     "input": {"profile": {"avg_gross_receipts": "5000000"},
+               "items": [T("I1", "10000", betterment=True, adaptation=False,
+                          restoration=False),
+                        T("I2", "20000", betterment=False, adaptation=True,
+                          restoration=False),
+                        T("I3", "30000", betterment=False, adaptation=False,
+                          restoration=True)],
+               "opts": {}}},
+    {"name": "tangible_bar_missing_facts_conservative", "engine": "tangible",
+     "input": {"profile": {"avg_gross_receipts": "5000000"},
+               "items": [T("P1", "4000", description="Roof membrane replacement",
+                          betterment=None, adaptation=False, restoration=None)],
+               "opts": {}}},
+    {"name": "tangible_routine_maintenance", "engine": "tangible",
+     "input": {"profile": {"avg_gross_receipts": "5000000"},
+               "items": [T("R1", "1500", betterment=False, adaptation=False,
+                          restoration=False,
+                          routine_maintenance_expected_more_than_once=True),
+                        T("R2", "1600", betterment=False, adaptation=False,
+                          restoration=False,
+                          routine_maintenance_expected_more_than_once=None)],
+               "opts": {}}},
+    {"name": "tangible_repair_and_n_election", "engine": "tangible",
+     "input": {"profile": {"avg_gross_receipts": "5000000"},
+               "items": [T("N1", "700", betterment=False, adaptation=False,
+                          restoration=False,
+                          routine_maintenance_expected_more_than_once=False,
+                          book_capitalized=True),
+                        T("N2", "800", betterment=False, adaptation=False,
+                          restoration=False,
+                          routine_maintenance_expected_more_than_once=False,
+                          book_capitalized=False)],
+               "opts": {"capitalize_repairs_following_books": True}}},
+    {"name": "tangible_negative_amount", "engine": "tangible",
+     "input": {"profile": {"avg_gross_receipts": "5000000"},
+               "items": [T("X1", "-500")], "opts": {}}},
 ]
 
 
