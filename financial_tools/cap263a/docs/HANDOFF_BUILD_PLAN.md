@@ -1,5 +1,9 @@
 # HANDOFF BUILD PLAN — cap263a capitalization tool (start here, no prior context needed)
 
+**Status: FINAL** — scope locked by the owner; current state re-verified
+2026-07-14 (402 Python tests pass; the only red test is the expected
+goldens-freshness gate described in Section 3).
+
 **Repo:** `kristymacbook1-max/aspen-mahjong` · **Branch:** `claude/263a-cost-capitalization-plan-swcokh` (open PR #2)
 **Working directory:** `financial_tools/cap263a/`
 **This document is the single authoritative plan.** It supersedes `BUILD_PLAN.md`
@@ -59,7 +63,7 @@ docs.
   only the displayed figure is quantized; §291(b)'s 30% side quantizes and the
   70% side is the arithmetic plug.
 
-## 3. CURRENT STATE (commit `fa797ca`, all pushed)
+## 3. CURRENT STATE (commit `f8efb3a`, all pushed; re-verified 2026-07-14)
 
 **Python: DONE for the entire Section-1 scope.** 402 tests; the ONLY red test is
 `test_standalone.py::test_goldens_json_is_current`, which is EXPECTED — it is the
@@ -160,3 +164,19 @@ written policy specifying a ceiling below $5,000.
 3. Regenerate goldens + rebuild the HTML in the SAME commit as any engine change
    (the freshness gates in `tests/test_standalone.py` enforce this).
 4. All arithmetic in `Decimal`/`D` — never floats.
+
+## 6. SYNTHETIC TEST DATA (what proves the plan works)
+
+All test data in this project is synthetic — hand-computed fact patterns, no
+client data anywhere:
+
+| File | Contents | Role |
+| --- | --- | --- |
+| `standalone/goldens.json` | 91 scenarios, each `{name, engine, input, expected}` — every number produced by the PYTHON engines (unicap 45, tangible 12, interest 9, §174 6, §1060 4, LIFO-decrement 3, intangibles 3, §59(e) 3, SCA 3, demolition 2, tax-basis TB 1) | The parity contract: the JS ports must reproduce every expected value exactly (Step 4 verify chain). Regenerated only by `standalone/goldens.py`. |
+| `validation/validation_set.json` | 250 labeled trial-balance lines `(account, description, cost center → expected code)` | Classification-accuracy gate for the taxonomy engine (`validation/validate.py`). |
+| `standalone/interview_spec.json` | The full interview question graph with derivations and routing | Drives both the desktop interview and the HTML wizard; `test_interview.py` pins it. |
+| `tests/test_*.py` docstrings | Hand-computed goldens for every engine decision branch (e.g. `test_long_term_contracts.py`, `test_farming_unicap.py`, `test_resource_expenditures.py`, `test_sec266.py`, `test_interest_designated.py`) | Source to mine when adding the Step-2 golden scenarios for the four unported engines. |
+
+When Steps 1-2 add the four new engines to the HTML, `goldens.json` GROWS
+(new scenarios for §460 / farming / IDC / §266 / designated-property interest)
+— it is regenerated from Python, never hand-edited.
