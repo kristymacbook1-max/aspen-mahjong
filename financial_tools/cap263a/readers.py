@@ -30,6 +30,7 @@ from .model import (BookTaxDifference, CIPProject, CIPSnapshot, DebtInstrument,
                     PurchasePriceAllocation, QualifiedExpenditureElection,
                     REExpenditure, StartupOrgCostPool, TBLine,
                     TransactionCostItem, ValidationReport)
+from .engines.tangible_263a import TangibleExpenditure
 from .reader import _to_decimal, read_trial_balance
 
 # --------------------------------------------------------------------------
@@ -56,6 +57,37 @@ def _to_bool(v) -> bool:
     if s in _FALSE:
         return False
     return bool(s)
+
+
+def _to_tri_bool(v) -> Optional[bool]:
+    """TRI-STATE bool for the repair-regs facts (BAR prongs, M&S prongs,
+    routine maintenance): a BLANK cell means "fact not established" (None),
+    NEVER False — the generic _to_bool collapses blank to False, which would
+    silently assert "not a betterment" for a question nobody answered (the
+    tangible engine's whole conservative posture rests on the None state).
+    Unrecognized strings also stay None (not established) rather than
+    guessing a truth value."""
+    if isinstance(v, bool):
+        return v
+    if v is None:
+        return None
+    s = str(v).strip().lower()
+    if s == "":
+        return None
+    if s in _TRUE:
+        return True
+    if s in _FALSE:
+        return False
+    return None
+
+
+def _to_opt_decimal(v) -> Optional[Decimal]:
+    """Optional money: blank -> None (unknown), never 0 — a blank
+    invoice_or_item_cost coerced to $0 would silently PASS the de minimis
+    ceiling test for an item whose cost was never supplied."""
+    if v is None or (isinstance(v, str) and not v.strip()):
+        return None
+    return _to_decimal(v)
 
 
 def _to_date(v) -> Optional[date]:
@@ -201,6 +233,39 @@ _SPECS = {
         elected=(["elected", "59e election", "elect"], _to_bool),
         election_year=(["election year", "year"], _to_int),
     )),
+    "tangible": (TangibleExpenditure, _spec(
+        item_id=(["item id", "expenditure id", "id"], str),
+        description=(["description", "item description",
+                      "expenditure description"], str),
+        amount=(["amount", "cost", "expenditure"], _to_decimal),
+        # blank = unknown, NOT $0 — a $0 default would pass de minimis
+        invoice_or_item_cost=(["invoice or item cost", "invoice cost",
+                               "per item cost", "per-item cost",
+                               "item cost"], _to_opt_decimal),
+        unit_of_property=(["unit of property", "uop", "property unit"], str),
+        is_building=(["is building", "building"], _to_bool),
+        building_unadjusted_basis=(["building unadjusted basis",
+                                    "building basis",
+                                    "unadjusted basis"], _to_decimal),
+        is_material_or_supply=(["is material or supply",
+                                "materials and supplies",
+                                "material or supply", "m&s"], _to_bool),
+        # repair-regs FACTS are tri-state: blank -> None (not established)
+        ms_unit_cost_200_or_less=(["ms unit cost 200 or less",
+                                   "unit cost 200 or less",
+                                   "unit cost <= 200"], _to_tri_bool),
+        ms_economic_life_12mo_or_less=(["ms economic life 12mo or less",
+                                        "economic life 12 months or less",
+                                        "life 12 months or less"], _to_tri_bool),
+        routine_maintenance_expected_more_than_once=(
+            ["routine maintenance expected more than once",
+             "routine maintenance", "routine"], _to_tri_bool),
+        betterment=(["betterment"], _to_tri_bool),
+        adaptation=(["adaptation", "new or different use"], _to_tri_bool),
+        restoration=(["restoration"], _to_tri_bool),
+        book_capitalized=(["book capitalized", "capitalized on books",
+                           "capitalized per books"], _to_bool),
+    )),
 }
 
 # Sheet-title hints per schedule. Matching is WORD-BOUNDED (red-team: the
@@ -212,6 +277,10 @@ _SHEET_HINTS = {
     "intangibles": ["intangible", "intangibles", "263(a)-4"],
     "transaction_costs": ["transaction cost", "transaction costs",
                           "deal cost", "deal costs", "263(a)-5"],
+    # word-bounded matching keeps "tangible" from firing inside
+    # "Intangible Assets" (words are tokenized, not substring-matched)
+    "tangible": ["tangible", "repairs", "repair", "263a tangible",
+                 "263(a) tangible", "repair regs"],
     "qualified_expenditures": ["59(e)", "qualified expenditure",
                                "qualified expenditures", "59e"],
     "ppa": ["purchase price", "8594", "ppa", "1060"],
@@ -437,7 +506,8 @@ def read_engagement(path=None, *, tb_sheet=None, **schedule_paths) -> Engagement
                        "transaction_costs": "transaction_costs",
                        "intangibles": "intangibles",
                        "startup": "startup_pools",
-                       "qualified_expenditures": "qualified_expenditures"}[kind]
+                       "qualified_expenditures": "qualified_expenditures",
+                       "tangible": "tangible_items"}[kind]
                 ).extend(parsed)
 
     def ingest_file(kind, p):
@@ -516,6 +586,7 @@ def read_engagement(path=None, *, tb_sheet=None, **schedule_paths) -> Engagement
                               ("intangibles", "intangibles"),
                               ("startup", "startup"),
                               ("qualified_expenditures", "qualified_expenditures"),
+                              ("tangible", "tangible"),
                               ("ppa", "ppa")):
                 rows = doc.get(key)
                 if not rows:

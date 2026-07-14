@@ -24,8 +24,25 @@ Eligible-debt screens are §1.263A-9(a)(4), implemented on
 DebtInstrument.is_eligible_debt (the model owns the rule; this engine only
 reports WHICH screen excluded each ineligible instrument).
 
+Designated-property classification (§1.263A-8(b)) is a pre-pass gate: real
+property is ALWAYS designated; tangible personal property is designated only
+if class life >= 20 years, estimated production period > 2 years, or period
+> 1 year AND total estimated cost > $1,000,000. A unit that affirmatively
+fails every prong is EXCLUDED from the computation entirely (its traced debt
+is simply not §263A(f) interest — it never joins the WAIR pool); a unit whose
+facts are missing is included CONSERVATIVELY with a warning (the house
+tri-state posture). Period prongs compare on days (>730 / >365).
+
+APE adjustments (§1.263A-11): a CUSTOMER's APE at each measurement date
+includes cumulative contract payments made on or before that date
+(§1.263A-11(c)); the CONTRACTOR-side APE reduction is NOT implemented
+(needs the customer linkage) and warns. A mid-production purchase
+(§1.263A-11(f)) adds the acquisition cost to APE from the purchase date —
+the schedule carries no purchase date, so the price is added at EVERY
+measurement date (earliest-inclusion, the conservative proxy).
+
 Unit-of-property / common-feature mechanics (§1.263A-10) are OUT of this
-engine's scope — every project handed in is treated as one active designated-
+engine's scope — every included project is treated as one active designated-
 property unit; is_common_feature is flag-only (warning, no allocation).
 
 Basis reconciliation (Runtime Pipeline Step 3b, item (3)): where the books
@@ -46,6 +63,12 @@ from .basis_reconciliation import reconcile
 
 _CENT = Decimal("0.01")
 _ZERO = Decimal("0")
+
+# §1.263A-8(b)(1)(ii) designated tangible-personal-property prongs
+_DESIGNATED_CLASS_LIFE = Decimal("20")            # years
+_DESIGNATED_COST_THRESHOLD = Decimal("1000000")   # prong (iii) cost floor
+_TWO_YEARS_DAYS = 730                             # "> 2 years", compared on days
+_ONE_YEAR_DAYS = 365                              # "> 1 year", compared on days
 
 
 def _dec(v) -> Decimal:
@@ -88,6 +111,53 @@ def _exclusion_screen(debt: DebtInstrument) -> str:
     return "§1.263A-9(a)(4) — excluded (unspecified screen)"
 
 
+def _classify_designated(project: CIPProject):
+    """§1.263A-8(b) designated-property classification for one unit.
+
+    Returns (status, basis, detail):
+      status  "designated" | "not_designated" | "unknown"
+      basis   the per-unit designated_basis output value ("" when excluded)
+      detail  human text — every failed prong (not_designated) or the
+              missing facts (unknown)
+
+    Real property is always designated. Tangible personal property is
+    designated only if (i) class life >= 20 years, (ii) estimated production
+    period > 2 years, or (iii) estimated production period > 1 year AND
+    total estimated cost > $1,000,000. Period prongs compare on days
+    (>730 / >365 — exact Decimal year-fractions are unnecessary here)."""
+    if project.is_real_property:
+        return "designated", "real_property", ""
+    days = None
+    if project.production_start is not None \
+            and project.production_complete is not None:
+        days = (project.production_complete - project.production_start).days
+    if project.class_life is not None \
+            and project.class_life >= _DESIGNATED_CLASS_LIFE:
+        return "designated", "class_life_20", ""
+    if days is not None and days > _TWO_YEARS_DAYS:
+        return "designated", "period_over_2yr", ""
+    if days is not None and days > _ONE_YEAR_DAYS \
+            and project.total_estimated_cost > _DESIGNATED_COST_THRESHOLD:
+        return "designated", "period_1yr_cost_1m", ""
+    missing = []
+    if project.class_life is None:
+        missing.append("class_life")
+    if days is None:
+        missing.append("production_start/production_complete "
+                       "(estimated production period)")
+    if missing:
+        return "unknown", "assumed_conservative", ", ".join(missing)
+    # every prong evaluable, every prong affirmatively failed
+    failed = [f"class life {project.class_life} < 20 years",
+              f"estimated production period {days} days <= 730 (2 years)"]
+    if days <= _ONE_YEAR_DAYS:
+        failed.append(f"production period {days} days <= 365 (1 year)")
+    else:
+        failed.append(f"total estimated cost "
+                      f"${project.total_estimated_cost:,.0f} <= $1,000,000")
+    return "not_designated", "", "; ".join(failed)
+
+
 def _normalize_date_key(k: str) -> str:
     """'2026-3-31' / '03/31/2026' style keys normalize to ISO so a format
     mismatch can't silently fall back to principal (red-team finding)."""
@@ -126,10 +196,25 @@ def compute_263af(cip_projects: List[CIPProject],
                   guaranteed_payments: Decimal = Decimal("0")) -> dict:
     """§263A(f) avoided-cost computation for one computation period.
 
-    Every project in `cip_projects` is treated as an active designated-
-    property unit (designated-property classification and unit-of-property
-    determination happen upstream). Returns per-unit worksheets plus the
-    taxpayer-level WAIR, proration, and per-source consumption results.
+    A §1.263A-8(b) designated-property pre-pass gates every unit first:
+    real property always enters; tangible personal property enters only on
+    the class-life-20 / period->2yr / period->1yr-and-cost->$1M prongs; a
+    unit failing every prong is EXCLUDED entirely (its traced debt is not
+    §263A(f) interest and never joins the WAIR pool); missing facts include
+    the unit CONSERVATIVELY with a warning. Each included unit reports its
+    designated_basis: "real_property" | "class_life_20" | "period_over_2yr"
+    | "period_1yr_cost_1m" | "assumed_conservative".
+
+    §1.263A-11 APE adjustments: a customer's APE includes cumulative
+    contract payments on/before each measurement date (§1.263A-11(c)); the
+    contractor-side reduction is not implemented (warned, computed
+    unchanged). A mid_production_purchase_price (§1.263A-11(f)) is added to
+    APE at EVERY measurement date because the schedule carries no purchase
+    date — earliest-inclusion is the conservative proxy (never understates).
+
+    Unit-of-property determination happens upstream. Returns per-unit
+    worksheets plus the taxpayer-level WAIR, proration, and per-source
+    consumption results.
     """
     below_afr_interest = _dec(below_afr_interest)
     guaranteed_payments = _dec(guaranteed_payments)
@@ -137,6 +222,37 @@ def compute_263af(cip_projects: List[CIPProject],
         afr_highest = _dec(afr_highest)
 
     warnings: List[str] = []
+
+    # ---- §1.263A-8(b) designated-property classification gate ------------
+    # Classified NOT designated -> the unit leaves the computation entirely:
+    # no APE, no traced pool, and its traced debt's interest is simply not
+    # §263A(f) interest (it does NOT fall into the WAIR pool). Missing facts
+    # -> conservative include (the house tri-state posture).
+    active_projects: List[CIPProject] = []
+    designated_basis: Dict[str, str] = {}
+    excluded_ids = set()
+    for project in cip_projects:
+        status, basis, detail = _classify_designated(project)
+        if status == "not_designated":
+            excluded_ids.add(project.project_id)
+            warnings.append(
+                f"NOT-DESIGNATED-EXCLUDED [{project.project_id}]: tangible "
+                f"personal property fails every §1.263A-8(b)(1)(ii) prong — "
+                f"{detail}. Unit excluded from the §263A(f) computation; "
+                f"interest on its traced debt stays ordinary deductible "
+                f"interest (it is not §263A(f) interest and does NOT join "
+                f"the WAIR pool).")
+            continue
+        if status == "unknown":
+            warnings.append(
+                f"DESIGNATED-STATUS-UNKNOWN [{project.project_id}]: tangible "
+                f"personal property with missing §1.263A-8(b) classification "
+                f"facts ({detail}) — included CONSERVATIVELY as designated "
+                f"property; supply the missing facts to confirm the unit "
+                f"belongs in this computation.")
+        designated_basis[project.project_id] = basis
+        active_projects.append(project)
+    cip_projects = active_projects
 
     # ---- eligible-debt screens (§1.263A-9(a)(4)) -------------------------
     # Ineligible debt is excluded from BOTH tracing and the WAIR pool; the
@@ -173,6 +289,11 @@ def compute_263af(cip_projects: List[CIPProject],
     nontraced: List[DebtInstrument] = []
     for debt in eligible:
         if debt.traced_to:
+            if debt.traced_to in excluded_ids:
+                # traced to a NOT-designated unit: the interest is ordinary
+                # deductible interest — neither traced nor WAIR pool (the
+                # NOT-DESIGNATED-EXCLUDED warning above covers the unit)
+                continue
             if debt.traced_to not in project_ids:
                 warnings.append(
                     f"TRACED-TO-UNKNOWN-UNIT [{debt.debt_id or debt.description}]: "
@@ -277,6 +398,39 @@ def compute_263af(cip_projects: List[CIPProject],
         # never prorated, never capped.
         traced_interest = sum((d.interest_incurred for d in unit_debts), _ZERO)
 
+        # ---- §1.263A-11(c)/(f) APE adjustments ---------------------------
+        # Customer contract payments join APE cumulatively by date; the
+        # contractor-side APE reduction is NOT implemented (needs the
+        # customer linkage) — warn, compute unchanged.
+        payments: Dict[str, Decimal] = {}
+        if project.contract_role == "customer" \
+                and project.contract_payments_by_date:
+            payments = {_normalize_date_key(k): v
+                        for k, v in project.contract_payments_by_date.items()}
+            warnings.append(
+                f"CONTRACT-PAYMENTS-ADDED [{pid}]: §1.263A-11(c) — the "
+                f"customer's APE at each measurement date includes "
+                f"cumulative contract payments made on/before that date; "
+                f"${sum(payments.values(), _ZERO):,.2f} of scheduled "
+                f"payments were folded into this unit's APE snapshots.")
+        elif project.contract_role == "contractor":
+            warnings.append(
+                f"CONTRACTOR-APE-NOT-REDUCED [{pid}]: §1.263A-11(c) reduces "
+                f"a CONTRACTOR's APE by the amounts the customer is treated "
+                f"as producing — NOT implemented (requires the customer-side "
+                f"linkage); APE computed UNREDUCED (a conservative "
+                f"overstatement of this unit's excess expenditures).")
+        mid_purchase = project.mid_production_purchase_price
+        if mid_purchase > 0:
+            warnings.append(
+                f"MID-PRODUCTION-PURCHASE-DATE-MISSING [{pid}]: "
+                f"§1.263A-11(f) includes the ${mid_purchase:,.2f} "
+                f"acquisition cost in APE from the PURCHASE DATE, but the "
+                f"schedule carries no purchase date — the price was added "
+                f"at EVERY measurement date (earliest-inclusion, the "
+                f"conservative proxy). Supply the purchase date for the "
+                f"exact computation.")
+
         snaps = sorted((s for s in project.snapshots
                         if s.measurement_date is not None),
                        key=lambda s: s.measurement_date)
@@ -296,14 +450,21 @@ def compute_263af(cip_projects: List[CIPProject],
                     f"${s.cumulative_ape:,.2f} — accumulated production "
                     f"expenditures cannot be negative; the per-date excess "
                     f"floors at 0, but fix the CIP schedule.")
-            ape[iso] = s.cumulative_ape
+            # effective APE_d = schedule APE + cumulative §1.263A-11(c)
+            # customer contract payments on/before d + the §1.263A-11(f)
+            # mid-production purchase price (date unknown -> every date).
+            effective_ape = s.cumulative_ape + mid_purchase
+            if payments:
+                effective_ape += sum((amt for k, amt in payments.items()
+                                      if k <= iso), _ZERO)
+            ape[iso] = effective_ape
             # traced_debt_d is a point-in-time tracing snapshot, NOT
             # min(APE_d, principal) — see §1.263A-9(c)(5)(i)(B)'s
             # Property D/E example.
             traced_d = sum((_outstanding_at(d, s.measurement_date, balance_misses)
                             for d in unit_debts), _ZERO)
             traced_by_date[iso] = traced_d
-            excess_by_date[iso] = max(_ZERO, s.cumulative_ape - traced_d)
+            excess_by_date[iso] = max(_ZERO, effective_ape - traced_d)
 
         if excess_by_date:
             # §1.263A-9(f)(2)(iii) measurement-date convention: dates in the
@@ -333,6 +494,7 @@ def compute_263af(cip_projects: List[CIPProject],
 
         raw_excess[pid] = average_excess * wair
         per_unit[pid] = {
+            "designated_basis": designated_basis[pid],
             "measurement_dates": sorted(ape.keys()),
             "ape_snapshots": ape,
             "traced_debt_by_date": traced_by_date,

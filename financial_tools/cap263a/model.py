@@ -436,4 +436,8 @@ class EngagementData:
     startup_pools: List[StartupOrgCostPool] = field(default_factory=list)
     qualified_expenditures: List[QualifiedExpenditureElection] = field(default_factory=list)
     purchase_price_allocations: List[PurchasePriceAllocation] = field(default_factory=list)
+    # Holds engines.tangible_263a.TangibleExpenditure rows (§263(a) repair-regs
+    # schedule). Deliberately untyped here: the dataclass lives with its engine
+    # and model.py stays import-free of engine modules.
+    tangible_items: List = field(default_factory=list)  # List[TangibleExpenditure]
     validation: ValidationReport = field(default_factory=ValidationReport)
