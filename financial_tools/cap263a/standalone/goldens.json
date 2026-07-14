@@ -1,0 +1,6939 @@
+[
+ {
+  "name": "spm_basic",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000",
+    "method": "SPM",
+    "ending_inventory_471": "200000"
+   },
+   "rows": [
+    {
+     "amount": "1000000",
+     "tier1": "§471 Cost",
+     "is_labor": true,
+     "acct_desc": "Direct labor"
+    },
+    {
+     "amount": "500000",
+     "tier1": "§471 Cost",
+     "acct_desc": "Direct materials"
+    },
+    {
+     "amount": "300000",
+     "tier1": "Additional §263A",
+     "is_labor": true,
+     "acct_desc": "Purchasing salaries"
+    },
+    {
+     "amount": "400000",
+     "tier1": "Mixed Service",
+     "is_labor": true,
+     "acct_desc": "HR - plant"
+    },
+    {
+     "amount": "200000",
+     "tier1": "Excluded",
+     "acct_desc": "Advertising"
+    },
+    {
+     "amount": "600000",
+     "tier1": "Excluded",
+     "is_labor": true,
+     "acct_desc": "Sales commissions"
+    }
+   ]
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "1500000",
+    "§263A Additional": "300000",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "400000",
+    "Deductible": "800000",
+    "Non-Operating": "0"
+   },
+   "is_total": "3000000",
+   "capitalized_total": "1800000",
+   "mixed_total": "400000",
+   "deductible_total": "800000",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "SPM",
+    "warnings": [],
+    "mixed_alloc_ratio": "0.684211",
+    "production_labor": "1300000",
+    "total_labor": "1900000",
+    "mixed_capitalized": "273684.40",
+    "mixed_deductible": "126315.60",
+    "sec471_pool": "1500000",
+    "additional_263a_pool": "573684.40",
+    "absorption_ratio": "0.38",
+    "ending_inventory_471": "200000",
+    "additional_capitalized_to_inventory": "76000.00",
+    "adjusted_deductible_post": "926315.60"
+   }
+  }
+ },
+ {
+  "name": "spm_exempt_small_business",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "1000000"
+   },
+   "rows": [
+    {
+     "amount": "1000000",
+     "tier1": "§471 Cost",
+     "is_labor": true,
+     "acct_desc": "Direct labor"
+    },
+    {
+     "amount": "500000",
+     "tier1": "§471 Cost",
+     "acct_desc": "Direct materials"
+    },
+    {
+     "amount": "300000",
+     "tier1": "Additional §263A",
+     "is_labor": true,
+     "acct_desc": "Purchasing salaries"
+    },
+    {
+     "amount": "400000",
+     "tier1": "Mixed Service",
+     "is_labor": true,
+     "acct_desc": "HR - plant"
+    },
+    {
+     "amount": "200000",
+     "tier1": "Excluded",
+     "acct_desc": "Advertising"
+    },
+    {
+     "amount": "600000",
+     "tier1": "Excluded",
+     "is_labor": true,
+     "acct_desc": "Sales commissions"
+    }
+   ]
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "0",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "0",
+    "Deductible": "3000000",
+    "Non-Operating": "0"
+   },
+   "is_total": "3000000",
+   "capitalized_total": "0",
+   "mixed_total": "0",
+   "deductible_total": "3000000",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": true,
+    "note": "§263A(i)/§448(c) small-business exception — UNICAP off.",
+    "warnings": [],
+    "mixed_capitalized": "0",
+    "mixed_deductible": "0",
+    "absorption_ratio": "0",
+    "additional_capitalized_to_inventory": "0"
+   }
+  }
+ },
+ {
+  "name": "spm_exempt_tax_shelter_not_exempt",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "1000000",
+    "is_tax_shelter": true,
+    "ending_inventory_471": "100000"
+   },
+   "rows": [
+    {
+     "amount": "1000000",
+     "tier1": "§471 Cost",
+     "is_labor": true,
+     "acct_desc": "Direct labor"
+    },
+    {
+     "amount": "500000",
+     "tier1": "§471 Cost",
+     "acct_desc": "Direct materials"
+    },
+    {
+     "amount": "300000",
+     "tier1": "Additional §263A",
+     "is_labor": true,
+     "acct_desc": "Purchasing salaries"
+    },
+    {
+     "amount": "400000",
+     "tier1": "Mixed Service",
+     "is_labor": true,
+     "acct_desc": "HR - plant"
+    },
+    {
+     "amount": "200000",
+     "tier1": "Excluded",
+     "acct_desc": "Advertising"
+    },
+    {
+     "amount": "600000",
+     "tier1": "Excluded",
+     "is_labor": true,
+     "acct_desc": "Sales commissions"
+    }
+   ]
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "1500000",
+    "§263A Additional": "300000",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "400000",
+    "Deductible": "800000",
+    "Non-Operating": "0"
+   },
+   "is_total": "3000000",
+   "capitalized_total": "1800000",
+   "mixed_total": "400000",
+   "deductible_total": "800000",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "SPM",
+    "warnings": [],
+    "mixed_alloc_ratio": "0.684211",
+    "production_labor": "1300000",
+    "total_labor": "1900000",
+    "mixed_capitalized": "273684.40",
+    "mixed_deductible": "126315.60",
+    "sec471_pool": "1500000",
+    "additional_263a_pool": "573684.40",
+    "absorption_ratio": "0.38",
+    "ending_inventory_471": "100000",
+    "additional_capitalized_to_inventory": "38000.00",
+    "adjusted_deductible_post": "926315.60"
+   }
+  }
+ },
+ {
+  "name": "spm_200k_de_minimis",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000",
+    "producer_de_minimis_200k": true,
+    "ending_inventory_471": "500000"
+   },
+   "rows": [
+    {
+     "amount": "1000000",
+     "tier1": "§471 Cost",
+     "is_labor": true,
+     "acct_desc": "Direct labor"
+    },
+    {
+     "amount": "500000",
+     "tier1": "§471 Cost",
+     "acct_desc": "Direct materials"
+    },
+    {
+     "amount": "300000",
+     "tier1": "Additional §263A",
+     "is_labor": true,
+     "acct_desc": "Purchasing salaries"
+    },
+    {
+     "amount": "400000",
+     "tier1": "Mixed Service",
+     "is_labor": true,
+     "acct_desc": "HR - plant"
+    },
+    {
+     "amount": "200000",
+     "tier1": "Excluded",
+     "acct_desc": "Advertising"
+    },
+    {
+     "amount": "600000",
+     "tier1": "Excluded",
+     "is_labor": true,
+     "acct_desc": "Sales commissions"
+    }
+   ]
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "1500000",
+    "§263A Additional": "300000",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "400000",
+    "Deductible": "800000",
+    "Non-Operating": "0"
+   },
+   "is_total": "3000000",
+   "capitalized_total": "1800000",
+   "mixed_total": "400000",
+   "deductible_total": "800000",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "SPM",
+    "note": "§1.263A-2(b)(3)(iv) $200K producer de minimis — additional §263A costs deemed zero.",
+    "warnings": [],
+    "mixed_alloc_ratio": "0",
+    "production_labor": "0",
+    "total_labor": "0",
+    "mixed_capitalized": "0",
+    "mixed_deductible": "400000",
+    "sec471_pool": "1500000",
+    "additional_263a_pool": "0",
+    "absorption_ratio": "0",
+    "ending_inventory_471": "500000",
+    "additional_capitalized_to_inventory": "0",
+    "adjusted_deductible_post": "1200000"
+   }
+  }
+ },
+ {
+  "name": "spm_warnings_absorption_estimate_method",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000",
+    "method": "FACTS",
+    "tax_year": 2027,
+    "ending_inventory_471": "900000"
+   },
+   "rows": [
+    {
+     "amount": "100000",
+     "tier1": "§471 Cost",
+     "is_labor": true
+    },
+    {
+     "amount": "500000",
+     "tier1": "Additional §263A"
+    }
+   ]
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "100000",
+    "§263A Additional": "500000",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "0",
+    "Deductible": "0",
+    "Non-Operating": "0"
+   },
+   "is_total": "600000",
+   "capitalized_total": "600000",
+   "mixed_total": "0",
+   "deductible_total": "0",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "SPM",
+    "warnings": [
+     "METHOD: profile.method='FACTS' is not implemented — this computation is SPM. Do not sign an FACTS workpaper off these numbers (MSPM/SRM are Phase B of the build plan).",
+     "ABSORPTION RATIO = 5.00 (>100%): the additional §263A pool ($500,000) exceeds the entire §471 base ($100,000). Verify the §471 classifications — this is almost always a data error.",
+     "ENDING §471 INVENTORY ($900,000) EXCEEDS THE §471 COST POOL ($100,000): the amount capitalized to inventory scales off an input inconsistent with the trial balance — verify the ending-inventory figure.",
+     "§448(c) threshold for TY 2027 is not on file — the 2026 figure ($32,000,000) was used. The threshold is inflation-indexed; VERIFY before relying on the small-business exemption determination."
+    ],
+    "mixed_alloc_ratio": "1.000000",
+    "production_labor": "100000",
+    "total_labor": "100000",
+    "mixed_capitalized": "0.00",
+    "mixed_deductible": "0.00",
+    "sec471_pool": "100000",
+    "additional_263a_pool": "500000.00",
+    "absorption_ratio": "5.00",
+    "ending_inventory_471": "900000",
+    "additional_capitalized_to_inventory": "4500000.00",
+    "adjusted_deductible_post": "0.00"
+   }
+  }
+ },
+ {
+  "name": "spm_negative_pool_large_producer",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "60000000",
+    "ending_inventory_471": "100000"
+   },
+   "rows": [
+    {
+     "amount": "1000000",
+     "tier1": "§471 Cost",
+     "is_labor": true
+    },
+    {
+     "amount": "-500000",
+     "tier1": "Additional §263A"
+    }
+   ]
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "1000000",
+    "§263A Additional": "-500000",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "0",
+    "Deductible": "0",
+    "Non-Operating": "0"
+   },
+   "is_total": "500000",
+   "capitalized_total": "500000",
+   "mixed_total": "0",
+   "deductible_total": "0",
+   "tie_check": "0",
+   "bucket_warnings": [
+    "NEGATIVE '§263A Additional' BUCKET ($-500,000): capitalization cannot be negative — contra/reversal lines classified here need review."
+   ],
+   "unicap": {
+    "exempt": false,
+    "method": "SPM",
+    "warnings": [
+     "NEGATIVE ADDITIONAL §263A POOL: the absorption ratio and the amount capitalized to ending inventory are negative. Verify the negative adjustments driving this are permissible in the pool.",
+     "Reg §1.263A-1(d)(3)(ii)(B)(1) (verified vs primary source; T.D. number unconfirmed): a producer with >$50M average gross receipts may NOT include negative adjustments in additional §263A costs under the SPM — use the MSPM."
+    ],
+    "mixed_alloc_ratio": "1.000000",
+    "production_labor": "1000000",
+    "total_labor": "1000000",
+    "mixed_capitalized": "0.00",
+    "mixed_deductible": "0.00",
+    "sec471_pool": "1000000",
+    "additional_263a_pool": "-500000.00",
+    "absorption_ratio": "-0.50",
+    "ending_inventory_471": "100000",
+    "additional_capitalized_to_inventory": "-50000.00",
+    "adjusted_deductible_post": "0.00"
+   }
+  }
+ },
+ {
+  "name": "spm_btd_forced_deductible",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000"
+   },
+   "rows": [
+    {
+     "amount": "1000000",
+     "tier1": "§471 Cost",
+     "is_labor": true
+    },
+    {
+     "amount": "250000",
+     "tier1": "§471 Cost",
+     "acct_desc": "[BTD] deferred rent"
+    }
+   ]
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "1000000",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "0",
+    "Deductible": "250000",
+    "Non-Operating": "0"
+   },
+   "is_total": "1250000",
+   "capitalized_total": "1000000",
+   "mixed_total": "0",
+   "deductible_total": "250000",
+   "tie_check": "0",
+   "bucket_warnings": [
+    "UNMATCHED-BTD-HELD-DEDUCTIBLE: '[BTD] deferred rent' ($250,000) would have classified into 'Inventory §471' on keywords alone — held in Deductible pending the account mapping fix; do not leave unmatched BTDs in a filing workpaper."
+   ],
+   "unicap": {
+    "exempt": false,
+    "method": "SPM",
+    "warnings": [],
+    "mixed_alloc_ratio": "1.000000",
+    "production_labor": "1000000",
+    "total_labor": "1000000",
+    "mixed_capitalized": "0.00",
+    "mixed_deductible": "0.00",
+    "sec471_pool": "1000000",
+    "additional_263a_pool": "0.00",
+    "absorption_ratio": "0.00",
+    "ending_inventory_471": "0",
+    "additional_capitalized_to_inventory": "0.00",
+    "adjusted_deductible_post": "250000.00"
+   }
+  }
+ },
+ {
+  "name": "negative_266_bucket",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000"
+   },
+   "rows": [
+    {
+     "amount": "100000",
+     "tier1": "§471 Cost"
+    },
+    {
+     "amount": "-500000",
+     "tier1": "§266 Carrying Charges"
+    }
+   ]
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "100000",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "-500000",
+    "Mixed (allocable)": "0",
+    "Deductible": "0",
+    "Non-Operating": "0"
+   },
+   "is_total": "-400000",
+   "capitalized_total": "-400000",
+   "mixed_total": "0",
+   "deductible_total": "0",
+   "tie_check": "0",
+   "bucket_warnings": [
+    "NEGATIVE '§266 Carrying' BUCKET ($-500,000): capitalization cannot be negative — contra/reversal lines classified here need review.",
+    "TOTAL CAPITALIZED IS NEGATIVE ($-400,000) — the workbook would show a negative addition to basis. Review the contributing lines."
+   ],
+   "unicap": {
+    "exempt": false,
+    "method": "SPM",
+    "warnings": [],
+    "mixed_alloc_ratio": "0.000000",
+    "production_labor": "0",
+    "total_labor": "0",
+    "mixed_capitalized": "0.00",
+    "mixed_deductible": "0.00",
+    "sec471_pool": "100000",
+    "additional_263a_pool": "0.00",
+    "absorption_ratio": "0.00",
+    "ending_inventory_471": "0",
+    "additional_capitalized_to_inventory": "0.00",
+    "adjusted_deductible_post": "0.00"
+   }
+  }
+ },
+ {
+  "name": "tangible_cap_vs_deduct_branches",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000"
+   },
+   "rows": [
+    {
+     "amount": "100",
+     "tier1": "§263(a) Tangible",
+     "cap_vs_deduct": "capitalize"
+    },
+    {
+     "amount": "200",
+     "tier1": "§263(a) Tangible",
+     "cap_vs_deduct": "elective"
+    },
+    {
+     "amount": "400",
+     "tier1": "§263(a) Tangible"
+    },
+    {
+     "amount": "800",
+     "tier1": "§263(a) Transaction/Intangible"
+    },
+    {
+     "amount": "1600",
+     "tier1": "§263A(f) Interest"
+    },
+    {
+     "amount": "3200",
+     "tier1": "Non-Operating"
+    },
+    {
+     "amount": "6400",
+     "tier1": "Balance Sheet"
+    },
+    {
+     "amount": "12800",
+     "tier1": "Revenue"
+    }
+   ]
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "0",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "900",
+    "§263(a) Elective": "200",
+    "§263A(f) Interest": "1600",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "0",
+    "Deductible": "400",
+    "Non-Operating": "3200"
+   },
+   "is_total": "6300",
+   "capitalized_total": "2700",
+   "mixed_total": "0",
+   "deductible_total": "3600",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "SPM",
+    "warnings": [],
+    "mixed_alloc_ratio": "0.000000",
+    "production_labor": "0",
+    "total_labor": "0",
+    "mixed_capitalized": "0.00",
+    "mixed_deductible": "0.00",
+    "sec471_pool": "0",
+    "additional_263a_pool": "0.00",
+    "absorption_ratio": "0",
+    "ending_inventory_471": "0",
+    "additional_capitalized_to_inventory": "0.00",
+    "adjusted_deductible_post": "3600.00"
+   }
+  }
+ },
+ {
+  "name": "sscm_production_cost_ratio",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000",
+    "sscm_ratio_method": "production_cost",
+    "acquires_for_resale": false,
+    "ending_inventory_471": "100000"
+   },
+   "rows": [
+    {
+     "amount": "1000000",
+     "tier1": "§471 Cost",
+     "is_labor": true
+    },
+    {
+     "amount": "300000",
+     "tier1": "Additional §263A"
+    },
+    {
+     "amount": "200000",
+     "tier1": "Excluded"
+    },
+    {
+     "amount": "400000",
+     "tier1": "Mixed Service",
+     "is_labor": true
+    },
+    {
+     "amount": "100000",
+     "tier1": "Non-Operating",
+     "code": "NO-INCTAX"
+    }
+   ]
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "1000000",
+    "§263A Additional": "300000",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "400000",
+    "Deductible": "200000",
+    "Non-Operating": "100000"
+   },
+   "is_total": "2000000",
+   "capitalized_total": "1300000",
+   "mixed_total": "400000",
+   "deductible_total": "300000",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "SPM",
+    "warnings": [],
+    "mixed_alloc_ratio": "0.866667",
+    "production_labor": "1000000",
+    "total_labor": "1000000",
+    "mixed_capitalized": "346666.80",
+    "mixed_deductible": "53333.20",
+    "sec471_pool": "1000000",
+    "additional_263a_pool": "646666.80",
+    "absorption_ratio": "0.65",
+    "ending_inventory_471": "100000",
+    "additional_capitalized_to_inventory": "65000.00",
+    "adjusted_deductible_post": "353333.20"
+   }
+  }
+ },
+ {
+  "name": "sscm_production_cost_reseller_fallback",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000",
+    "sscm_ratio_method": "production_cost",
+    "produces": false,
+    "acquires_for_resale": true
+   },
+   "rows": [
+    {
+     "amount": "100000",
+     "tier1": "§471 Cost",
+     "is_labor": true
+    },
+    {
+     "amount": "50000",
+     "tier1": "Mixed Service",
+     "is_labor": true
+    }
+   ]
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "100000",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "50000",
+    "Deductible": "0",
+    "Non-Operating": "0"
+   },
+   "is_total": "150000",
+   "capitalized_total": "100000",
+   "mixed_total": "50000",
+   "deductible_total": "0",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "SPM",
+    "warnings": [
+     "SSCM-PRODUCTION-COST-RESELLER: the production-cost allocation ratio is a producer-only formula (§1.263A-1(h)(3)(ii)) — labor-based ratio used instead."
+    ],
+    "mixed_alloc_ratio": "1.000000",
+    "production_labor": "100000",
+    "total_labor": "100000",
+    "mixed_capitalized": "50000.00",
+    "mixed_deductible": "0.00",
+    "sec471_pool": "100000",
+    "additional_263a_pool": "50000.00",
+    "absorption_ratio": "0.50",
+    "ending_inventory_471": "0",
+    "additional_capitalized_to_inventory": "0.00",
+    "adjusted_deductible_post": "0.00"
+   }
+  }
+ },
+ {
+  "name": "sscm_override_out_of_range",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000",
+    "mixed_alloc_ratio": "1.5"
+   },
+   "rows": [
+    {
+     "amount": "100000",
+     "tier1": "§471 Cost",
+     "is_labor": true
+    },
+    {
+     "amount": "50000",
+     "tier1": "Mixed Service"
+    }
+   ]
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "100000",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "50000",
+    "Deductible": "0",
+    "Non-Operating": "0"
+   },
+   "is_total": "150000",
+   "capitalized_total": "100000",
+   "mixed_total": "50000",
+   "deductible_total": "0",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "SPM",
+    "warnings": [
+     "SSCM ALLOCATION RATIO OVERRIDE = 1.5 is outside [0,1] — a service-cost allocation ratio is a fraction; clamped to [0,1] for the computation. Check the input."
+    ],
+    "mixed_alloc_ratio": "1.000000",
+    "production_labor": "100000",
+    "total_labor": "100000",
+    "mixed_capitalized": "50000.00",
+    "mixed_deductible": "0.00",
+    "sec471_pool": "100000",
+    "additional_263a_pool": "50000.00",
+    "absorption_ratio": "0.50",
+    "ending_inventory_471": "0",
+    "additional_capitalized_to_inventory": "0.00",
+    "adjusted_deductible_post": "0.00"
+   }
+  }
+ },
+ {
+  "name": "msc_90_10_not_implemented",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000",
+    "msc_90_10_election": true
+   },
+   "rows": [
+    {
+     "amount": "100000",
+     "tier1": "§471 Cost",
+     "is_labor": true
+    },
+    {
+     "amount": "50000",
+     "tier1": "Mixed Service",
+     "is_labor": true
+    },
+    {
+     "amount": "50000",
+     "tier1": "Excluded",
+     "is_labor": true
+    }
+   ]
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "100000",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "50000",
+    "Deductible": "50000",
+    "Non-Operating": "0"
+   },
+   "is_total": "200000",
+   "capitalized_total": "100000",
+   "mixed_total": "50000",
+   "deductible_total": "50000",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "SPM",
+    "warnings": [
+     "MSC-90-10-NOT-IMPLEMENTED: the (g)(4)(ii) all-departments 90% election is set, but the department-level carve-out mechanics are not built — the SSCM ratio was applied UNIFORMLY across all mixed service costs. A department ≥90% capitalizable must be allocated 100% under the election (mandatory side); review before filing."
+    ],
+    "mixed_alloc_ratio": "0.666667",
+    "production_labor": "100000",
+    "total_labor": "150000",
+    "mixed_capitalized": "33333.35",
+    "mixed_deductible": "16666.65",
+    "sec471_pool": "100000",
+    "additional_263a_pool": "33333.35",
+    "absorption_ratio": "0.33",
+    "ending_inventory_471": "0",
+    "additional_capitalized_to_inventory": "0.00",
+    "adjusted_deductible_post": "66666.65"
+   }
+  }
+ },
+ {
+  "name": "mspm_example1_nonlifo",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000",
+    "method": "MSPM",
+    "pre_production_471": "2500000",
+    "production_471": "7500000",
+    "pre_production_additional_263A": "200000",
+    "production_additional_263A": "800000",
+    "pre_production_471_on_hand": "1000000",
+    "production_471_on_hand": "2000000",
+    "beginning_DM_not_yet_in_production": "400000",
+    "ending_DM_not_yet_in_production": "800000",
+    "DM_purchased_during_year": "1900000"
+   },
+   "rows": []
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "0",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "0",
+    "Deductible": "0",
+    "Non-Operating": "0"
+   },
+   "is_total": "0",
+   "capitalized_total": "0",
+   "mixed_total": "0",
+   "deductible_total": "0",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "MSPM",
+    "warnings": [],
+    "mixed_alloc_ratio": "0.000000",
+    "production_labor": "0",
+    "total_labor": "0",
+    "mixed_capitalized": "0.00",
+    "mixed_deductible": "0.00",
+    "mixed_split_method": "direct_material",
+    "mixed_split_proportion_pre": "0.19",
+    "mixed_pre_production_share": "0.00",
+    "mixed_production_share": "0.00",
+    "mspm_90pct_applied": false,
+    "pre_production_pool": "200000.00",
+    "production_pool": "800000.00",
+    "pre_production_471": "2500000",
+    "pre_production_ratio": "0.0800",
+    "pre_production_471_on_hand": "1000000",
+    "residual_pre_production_263A": "120000.00",
+    "direct_materials_adjustment": "1500000.00",
+    "production_471": "7500000",
+    "production_ratio": "0.1022",
+    "production_471_on_hand": "2000000",
+    "actual_pre_production_ratio": "0.0800",
+    "actual_production_ratio": "0.1022",
+    "har_applied": false,
+    "lifo_combined_ratio": null,
+    "additional_capitalized_to_inventory": "284400.00",
+    "adjusted_deductible_post": "0.00"
+   }
+  }
+ },
+ {
+  "name": "mspm_lifo_example3_combined_ratio",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000",
+    "method": "MSPM",
+    "pre_production_471": "2500000",
+    "production_471": "7500000",
+    "pre_production_additional_263A": "200000",
+    "production_additional_263A": "800000",
+    "pre_production_471_on_hand": "1000000",
+    "production_471_on_hand": "2000000",
+    "beginning_DM_not_yet_in_production": "400000",
+    "ending_DM_not_yet_in_production": "800000",
+    "DM_purchased_during_year": "1900000",
+    "inventory_method": "lifo_dollar_value",
+    "lifo_current_year_increment_471": "1500000"
+   },
+   "rows": []
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "0",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "0",
+    "Deductible": "0",
+    "Non-Operating": "0"
+   },
+   "is_total": "0",
+   "capitalized_total": "0",
+   "mixed_total": "0",
+   "deductible_total": "0",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "MSPM",
+    "warnings": [],
+    "mixed_alloc_ratio": "0.000000",
+    "production_labor": "0",
+    "total_labor": "0",
+    "mixed_capitalized": "0.00",
+    "mixed_deductible": "0.00",
+    "mixed_split_method": "direct_material",
+    "mixed_split_proportion_pre": "0.19",
+    "mixed_pre_production_share": "0.00",
+    "mixed_production_share": "0.00",
+    "mspm_90pct_applied": false,
+    "pre_production_pool": "200000.00",
+    "production_pool": "800000.00",
+    "pre_production_471": "2500000",
+    "pre_production_ratio": "0.0800",
+    "pre_production_471_on_hand": "1000000",
+    "residual_pre_production_263A": "120000.00",
+    "direct_materials_adjustment": "1500000.00",
+    "production_471": "7500000",
+    "production_ratio": "0.1022",
+    "production_471_on_hand": "2000000",
+    "actual_pre_production_ratio": "0.0800",
+    "actual_production_ratio": "0.1022",
+    "har_applied": false,
+    "lifo_combined_ratio": "0.0948",
+    "additional_capitalized_to_inventory": "142200.00",
+    "adjusted_deductible_post": "0.00"
+   }
+  }
+ },
+ {
+  "name": "mspm_lifo_increment_missing",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000",
+    "method": "MSPM",
+    "pre_production_471": "2500000",
+    "production_471": "7500000",
+    "pre_production_additional_263A": "200000",
+    "production_additional_263A": "800000",
+    "pre_production_471_on_hand": "1000000",
+    "production_471_on_hand": "2000000",
+    "beginning_DM_not_yet_in_production": "400000",
+    "ending_DM_not_yet_in_production": "800000",
+    "DM_purchased_during_year": "1900000",
+    "inventory_method": "lifo_dollar_value"
+   },
+   "rows": []
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "0",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "0",
+    "Deductible": "0",
+    "Non-Operating": "0"
+   },
+   "is_total": "0",
+   "capitalized_total": "0",
+   "mixed_total": "0",
+   "deductible_total": "0",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "MSPM",
+    "warnings": [
+     "MSPM-LIFO-INCREMENT-MISSING: inventory_method is LIFO but lifo_current_year_increment_471 was not supplied — the figure below is the NON-LIFO computation, not the combined-ratio × increment answer (§1.263A-2(c)(3)(iv)). Supply the increment."
+    ],
+    "mixed_alloc_ratio": "0.000000",
+    "production_labor": "0",
+    "total_labor": "0",
+    "mixed_capitalized": "0.00",
+    "mixed_deductible": "0.00",
+    "mixed_split_method": "direct_material",
+    "mixed_split_proportion_pre": "0.19",
+    "mixed_pre_production_share": "0.00",
+    "mixed_production_share": "0.00",
+    "mspm_90pct_applied": false,
+    "pre_production_pool": "200000.00",
+    "production_pool": "800000.00",
+    "pre_production_471": "2500000",
+    "pre_production_ratio": "0.0800",
+    "pre_production_471_on_hand": "1000000",
+    "residual_pre_production_263A": "120000.00",
+    "direct_materials_adjustment": "1500000.00",
+    "production_471": "7500000",
+    "production_ratio": "0.1022",
+    "production_471_on_hand": "2000000",
+    "actual_pre_production_ratio": "0.0800",
+    "actual_production_ratio": "0.1022",
+    "har_applied": false,
+    "lifo_combined_ratio": "0.0948",
+    "additional_capitalized_to_inventory": "284400.00",
+    "adjusted_deductible_post": "0.00"
+   }
+  }
+ },
+ {
+  "name": "mspm_lifo_decrement_flagged",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000",
+    "method": "MSPM",
+    "pre_production_471": "2500000",
+    "production_471": "7500000",
+    "pre_production_additional_263A": "200000",
+    "production_additional_263A": "800000",
+    "pre_production_471_on_hand": "1000000",
+    "production_471_on_hand": "2000000",
+    "beginning_DM_not_yet_in_production": "400000",
+    "ending_DM_not_yet_in_production": "800000",
+    "DM_purchased_during_year": "1900000",
+    "inventory_method": "lifo_dollar_value",
+    "lifo_current_year_increment_471": "-100000"
+   },
+   "rows": []
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "0",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "0",
+    "Deductible": "0",
+    "Non-Operating": "0"
+   },
+   "is_total": "0",
+   "capitalized_total": "0",
+   "mixed_total": "0",
+   "deductible_total": "0",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "MSPM",
+    "warnings": [
+     "LIFO-DECREMENT-NOT-IMPLEMENTED: a negative increment is a LIFO decrement year — the released-§263A computation (§1.263A-2(b)(3)(iii)(C)) needs per-layer data this engine does not carry; the NON-LIFO figure below is a placeholder, NOT the LIFO-correct answer."
+    ],
+    "mixed_alloc_ratio": "0.000000",
+    "production_labor": "0",
+    "total_labor": "0",
+    "mixed_capitalized": "0.00",
+    "mixed_deductible": "0.00",
+    "mixed_split_method": "direct_material",
+    "mixed_split_proportion_pre": "0.19",
+    "mixed_pre_production_share": "0.00",
+    "mixed_production_share": "0.00",
+    "mspm_90pct_applied": false,
+    "pre_production_pool": "200000.00",
+    "production_pool": "800000.00",
+    "pre_production_471": "2500000",
+    "pre_production_ratio": "0.0800",
+    "pre_production_471_on_hand": "1000000",
+    "residual_pre_production_263A": "120000.00",
+    "direct_materials_adjustment": "1500000.00",
+    "production_471": "7500000",
+    "production_ratio": "0.1022",
+    "production_471_on_hand": "2000000",
+    "actual_pre_production_ratio": "0.0800",
+    "actual_production_ratio": "0.1022",
+    "har_applied": false,
+    "lifo_combined_ratio": "0.0948",
+    "additional_capitalized_to_inventory": "284400.00",
+    "adjusted_deductible_post": "0.00"
+   }
+  }
+ },
+ {
+  "name": "mspm_har_frozen",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000",
+    "method": "MSPM",
+    "pre_production_471": "2500000",
+    "production_471": "7500000",
+    "pre_production_additional_263A": "200000",
+    "production_additional_263A": "800000",
+    "pre_production_471_on_hand": "1000000",
+    "production_471_on_hand": "2000000",
+    "beginning_DM_not_yet_in_production": "400000",
+    "ending_DM_not_yet_in_production": "800000",
+    "DM_purchased_during_year": "1900000",
+    "har_election": true,
+    "har_preprod_ratio": "0.09",
+    "har_production_ratio": "0.11",
+    "har_qualifying_year_index": 2
+   },
+   "rows": []
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "0",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "0",
+    "Deductible": "0",
+    "Non-Operating": "0"
+   },
+   "is_total": "0",
+   "capitalized_total": "0",
+   "mixed_total": "0",
+   "deductible_total": "0",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "MSPM",
+    "warnings": [],
+    "mixed_alloc_ratio": "0.000000",
+    "production_labor": "0",
+    "total_labor": "0",
+    "mixed_capitalized": "0.00",
+    "mixed_deductible": "0.00",
+    "mixed_split_method": "direct_material",
+    "mixed_split_proportion_pre": "0.19",
+    "mixed_pre_production_share": "0.00",
+    "mixed_production_share": "0.00",
+    "mspm_90pct_applied": false,
+    "pre_production_pool": "200000.00",
+    "production_pool": "800000.00",
+    "pre_production_471": "2500000",
+    "pre_production_ratio": "0.0900",
+    "pre_production_471_on_hand": "1000000",
+    "residual_pre_production_263A": "120000.00",
+    "direct_materials_adjustment": "1500000.00",
+    "production_471": "7500000",
+    "production_ratio": "0.1100",
+    "production_471_on_hand": "2000000",
+    "actual_pre_production_ratio": "0.0800",
+    "actual_production_ratio": "0.1022",
+    "har_applied": true,
+    "lifo_combined_ratio": null,
+    "additional_capitalized_to_inventory": "310000.00",
+    "adjusted_deductible_post": "0.00"
+   }
+  }
+ },
+ {
+  "name": "mspm_har_missing_ratios",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000",
+    "method": "MSPM",
+    "pre_production_471": "2500000",
+    "production_471": "7500000",
+    "pre_production_additional_263A": "200000",
+    "production_additional_263A": "800000",
+    "pre_production_471_on_hand": "1000000",
+    "production_471_on_hand": "2000000",
+    "beginning_DM_not_yet_in_production": "400000",
+    "ending_DM_not_yet_in_production": "800000",
+    "DM_purchased_during_year": "1900000",
+    "har_election": true
+   },
+   "rows": []
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "0",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "0",
+    "Deductible": "0",
+    "Non-Operating": "0"
+   },
+   "is_total": "0",
+   "capitalized_total": "0",
+   "mixed_total": "0",
+   "deductible_total": "0",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "MSPM",
+    "warnings": [
+     "HAR-RATIOS-MISSING: har_election set but the frozen pre-production/production historic ratios were not supplied — ACTUAL ratios used; supply har_preprod_ratio and har_production_ratio."
+    ],
+    "mixed_alloc_ratio": "0.000000",
+    "production_labor": "0",
+    "total_labor": "0",
+    "mixed_capitalized": "0.00",
+    "mixed_deductible": "0.00",
+    "mixed_split_method": "direct_material",
+    "mixed_split_proportion_pre": "0.19",
+    "mixed_pre_production_share": "0.00",
+    "mixed_production_share": "0.00",
+    "mspm_90pct_applied": false,
+    "pre_production_pool": "200000.00",
+    "production_pool": "800000.00",
+    "pre_production_471": "2500000",
+    "pre_production_ratio": "0.0800",
+    "pre_production_471_on_hand": "1000000",
+    "residual_pre_production_263A": "120000.00",
+    "direct_materials_adjustment": "1500000.00",
+    "production_471": "7500000",
+    "production_ratio": "0.1022",
+    "production_471_on_hand": "2000000",
+    "actual_pre_production_ratio": "0.0800",
+    "actual_production_ratio": "0.1022",
+    "har_applied": false,
+    "lifo_combined_ratio": null,
+    "additional_capitalized_to_inventory": "284400.00",
+    "adjusted_deductible_post": "0.00"
+   }
+  }
+ },
+ {
+  "name": "mspm_har_recomputation_pass",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000",
+    "method": "MSPM",
+    "pre_production_471": "2500000",
+    "production_471": "7500000",
+    "pre_production_additional_263A": "200000",
+    "production_additional_263A": "800000",
+    "pre_production_471_on_hand": "1000000",
+    "production_471_on_hand": "2000000",
+    "beginning_DM_not_yet_in_production": "400000",
+    "ending_DM_not_yet_in_production": "800000",
+    "DM_purchased_during_year": "1900000",
+    "har_election": true,
+    "har_qualifying_year_index": 6,
+    "har_preprod_ratio": "0.0790",
+    "har_production_ratio": "0.1050"
+   },
+   "rows": []
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "0",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "0",
+    "Deductible": "0",
+    "Non-Operating": "0"
+   },
+   "is_total": "0",
+   "capitalized_total": "0",
+   "mixed_total": "0",
+   "deductible_total": "0",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "MSPM",
+    "warnings": [
+     "HAR-RECOMPUTATION-PASSED: both historic ratios within ±0.5pp of actuals — HAR extends through the recomputation year and the five following taxable years (§1.263A-2(c)(4))."
+    ],
+    "mixed_alloc_ratio": "0.000000",
+    "production_labor": "0",
+    "total_labor": "0",
+    "mixed_capitalized": "0.00",
+    "mixed_deductible": "0.00",
+    "mixed_split_method": "direct_material",
+    "mixed_split_proportion_pre": "0.19",
+    "mixed_pre_production_share": "0.00",
+    "mixed_production_share": "0.00",
+    "mspm_90pct_applied": false,
+    "pre_production_pool": "200000.00",
+    "production_pool": "800000.00",
+    "pre_production_471": "2500000",
+    "pre_production_ratio": "0.0790",
+    "pre_production_471_on_hand": "1000000",
+    "residual_pre_production_263A": "120000.00",
+    "direct_materials_adjustment": "1500000.00",
+    "production_471": "7500000",
+    "production_ratio": "0.1050",
+    "production_471_on_hand": "2000000",
+    "actual_pre_production_ratio": "0.0800",
+    "actual_production_ratio": "0.1022",
+    "har_applied": true,
+    "lifo_combined_ratio": null,
+    "additional_capitalized_to_inventory": "289000.00",
+    "adjusted_deductible_post": "0.00"
+   }
+  }
+ },
+ {
+  "name": "mspm_har_recomputation_fail",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000",
+    "method": "MSPM",
+    "pre_production_471": "2500000",
+    "production_471": "7500000",
+    "pre_production_additional_263A": "200000",
+    "production_additional_263A": "800000",
+    "pre_production_471_on_hand": "1000000",
+    "production_471_on_hand": "2000000",
+    "beginning_DM_not_yet_in_production": "400000",
+    "ending_DM_not_yet_in_production": "800000",
+    "DM_purchased_during_year": "1900000",
+    "har_election": true,
+    "har_qualifying_year_index": 6,
+    "har_preprod_ratio": "0.0730",
+    "har_production_ratio": "0.1050"
+   },
+   "rows": []
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "0",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "0",
+    "Deductible": "0",
+    "Non-Operating": "0"
+   },
+   "is_total": "0",
+   "capitalized_total": "0",
+   "mixed_total": "0",
+   "deductible_total": "0",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "MSPM",
+    "warnings": [
+     "HAR-RECOMPUTATION-FAILED: a historic ratio fell outside ±0.5pp of the actual ratio (conjunctive test) — ACTUAL ratios applied this year; HAR must RESUME on the updated test period in the third taxable year following the recomputation year (§1.263A-2(c)(4))."
+    ],
+    "mixed_alloc_ratio": "0.000000",
+    "production_labor": "0",
+    "total_labor": "0",
+    "mixed_capitalized": "0.00",
+    "mixed_deductible": "0.00",
+    "mixed_split_method": "direct_material",
+    "mixed_split_proportion_pre": "0.19",
+    "mixed_pre_production_share": "0.00",
+    "mixed_production_share": "0.00",
+    "mspm_90pct_applied": false,
+    "pre_production_pool": "200000.00",
+    "production_pool": "800000.00",
+    "pre_production_471": "2500000",
+    "pre_production_ratio": "0.0800",
+    "pre_production_471_on_hand": "1000000",
+    "residual_pre_production_263A": "120000.00",
+    "direct_materials_adjustment": "1500000.00",
+    "production_471": "7500000",
+    "production_ratio": "0.1022",
+    "production_471_on_hand": "2000000",
+    "actual_pre_production_ratio": "0.0800",
+    "actual_production_ratio": "0.1022",
+    "har_applied": false,
+    "lifo_combined_ratio": null,
+    "additional_capitalized_to_inventory": "284400.00",
+    "adjusted_deductible_post": "0.00"
+   }
+  }
+ },
+ {
+  "name": "mspm_har_lifo_combined",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000",
+    "method": "MSPM",
+    "pre_production_471": "2500000",
+    "production_471": "7500000",
+    "pre_production_additional_263A": "200000",
+    "production_additional_263A": "800000",
+    "pre_production_471_on_hand": "1000000",
+    "production_471_on_hand": "2000000",
+    "beginning_DM_not_yet_in_production": "400000",
+    "ending_DM_not_yet_in_production": "800000",
+    "DM_purchased_during_year": "1900000",
+    "inventory_method": "lifo_dollar_value",
+    "lifo_current_year_increment_471": "1500000",
+    "har_election": true,
+    "har_combined_ratio": "0.0950"
+   },
+   "rows": []
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "0",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "0",
+    "Deductible": "0",
+    "Non-Operating": "0"
+   },
+   "is_total": "0",
+   "capitalized_total": "0",
+   "mixed_total": "0",
+   "deductible_total": "0",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "MSPM",
+    "warnings": [],
+    "mixed_alloc_ratio": "0.000000",
+    "production_labor": "0",
+    "total_labor": "0",
+    "mixed_capitalized": "0.00",
+    "mixed_deductible": "0.00",
+    "mixed_split_method": "direct_material",
+    "mixed_split_proportion_pre": "0.19",
+    "mixed_pre_production_share": "0.00",
+    "mixed_production_share": "0.00",
+    "mspm_90pct_applied": false,
+    "pre_production_pool": "200000.00",
+    "production_pool": "800000.00",
+    "pre_production_471": "2500000",
+    "pre_production_ratio": "0.0800",
+    "pre_production_471_on_hand": "1000000",
+    "residual_pre_production_263A": "120000.00",
+    "direct_materials_adjustment": "1500000.00",
+    "production_471": "7500000",
+    "production_ratio": "0.1022",
+    "production_471_on_hand": "2000000",
+    "actual_pre_production_ratio": "0.0800",
+    "actual_production_ratio": "0.1022",
+    "har_applied": true,
+    "lifo_combined_ratio": "0.0950",
+    "additional_capitalized_to_inventory": "142500.00",
+    "adjusted_deductible_post": "0.00"
+   }
+  }
+ },
+ {
+  "name": "mspm_200k_bars_har",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000",
+    "method": "MSPM",
+    "pre_production_471": "2500000",
+    "production_471": "7500000",
+    "pre_production_additional_263A": "200000",
+    "production_additional_263A": "800000",
+    "pre_production_471_on_hand": "1000000",
+    "production_471_on_hand": "2000000",
+    "beginning_DM_not_yet_in_production": "400000",
+    "ending_DM_not_yet_in_production": "800000",
+    "DM_purchased_during_year": "1900000",
+    "producer_de_minimis_200k": true,
+    "har_election": true
+   },
+   "rows": [
+    {
+     "amount": "50000",
+     "tier1": "Mixed Service",
+     "is_labor": true
+    },
+    {
+     "amount": "10000",
+     "tier1": "Excluded"
+    }
+   ]
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "0",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "50000",
+    "Deductible": "10000",
+    "Non-Operating": "0"
+   },
+   "is_total": "60000",
+   "capitalized_total": "0",
+   "mixed_total": "50000",
+   "deductible_total": "10000",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "MSPM",
+    "note": "§1.263A-2(c)(3)(v) $200K producer de minimis — additional §263A costs deemed zero.",
+    "warnings": [
+     "HAR-BARRED-200K: the HAR election is not available to a taxpayer deemed to have zero additional §263A costs under the $200K de minimis (§1.263A-2(c)(4) refinement (4)) — election ignored."
+    ],
+    "mixed_alloc_ratio": "0",
+    "production_labor": "0",
+    "total_labor": "0",
+    "mixed_capitalized": "0",
+    "mixed_deductible": "50000",
+    "pre_production_ratio": "0",
+    "production_ratio": "0",
+    "pre_production_pool": "0",
+    "production_pool": "0",
+    "residual_pre_production_263A": "0",
+    "direct_materials_adjustment": "0",
+    "pre_production_471": "2500000",
+    "production_471": "7500000",
+    "pre_production_471_on_hand": "1000000",
+    "production_471_on_hand": "2000000",
+    "additional_capitalized_to_inventory": "0",
+    "adjusted_deductible_post": "60000"
+   }
+  }
+ },
+ {
+  "name": "mspm_mixed_split_direct_material",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000",
+    "method": "MSPM",
+    "pre_production_471": "2500000",
+    "production_471": "7500000",
+    "pre_production_additional_263A": "200000",
+    "production_additional_263A": "800000",
+    "pre_production_471_on_hand": "1000000",
+    "production_471_on_hand": "2000000",
+    "beginning_DM_not_yet_in_production": "400000",
+    "ending_DM_not_yet_in_production": "800000",
+    "DM_purchased_during_year": "1900000"
+   },
+   "rows": [
+    {
+     "amount": "500000",
+     "tier1": "§471 Cost",
+     "is_labor": true
+    },
+    {
+     "amount": "100000",
+     "tier1": "Mixed Service",
+     "is_labor": true
+    }
+   ]
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "500000",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "100000",
+    "Deductible": "0",
+    "Non-Operating": "0"
+   },
+   "is_total": "600000",
+   "capitalized_total": "500000",
+   "mixed_total": "100000",
+   "deductible_total": "0",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "MSPM",
+    "warnings": [],
+    "mixed_alloc_ratio": "1.000000",
+    "production_labor": "500000",
+    "total_labor": "500000",
+    "mixed_capitalized": "100000.00",
+    "mixed_deductible": "0.00",
+    "mixed_split_method": "direct_material",
+    "mixed_split_proportion_pre": "0.19",
+    "mixed_pre_production_share": "19000.00",
+    "mixed_production_share": "81000.00",
+    "mspm_90pct_applied": false,
+    "pre_production_pool": "219000.00",
+    "production_pool": "881000.00",
+    "pre_production_471": "2500000",
+    "pre_production_ratio": "0.0876",
+    "pre_production_471_on_hand": "1000000",
+    "residual_pre_production_263A": "131400.00",
+    "direct_materials_adjustment": "1500000.00",
+    "production_471": "7500000",
+    "production_ratio": "0.1125",
+    "production_471_on_hand": "2000000",
+    "actual_pre_production_ratio": "0.0876",
+    "actual_production_ratio": "0.1125",
+    "har_applied": false,
+    "lifo_combined_ratio": null,
+    "additional_capitalized_to_inventory": "312600.00",
+    "adjusted_deductible_post": "0.00"
+   }
+  }
+ },
+ {
+  "name": "mspm_labor_split",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000",
+    "method": "MSPM",
+    "pre_production_471": "2500000",
+    "production_471": "7500000",
+    "pre_production_additional_263A": "200000",
+    "production_additional_263A": "800000",
+    "pre_production_471_on_hand": "1000000",
+    "production_471_on_hand": "2000000",
+    "beginning_DM_not_yet_in_production": "400000",
+    "ending_DM_not_yet_in_production": "800000",
+    "DM_purchased_during_year": "1900000",
+    "mspm_mixed_split_method": "labor",
+    "mspm_labor_split_proportion": "0.3"
+   },
+   "rows": [
+    {
+     "amount": "500000",
+     "tier1": "§471 Cost",
+     "is_labor": true
+    },
+    {
+     "amount": "100000",
+     "tier1": "Mixed Service",
+     "is_labor": true
+    }
+   ]
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "500000",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "100000",
+    "Deductible": "0",
+    "Non-Operating": "0"
+   },
+   "is_total": "600000",
+   "capitalized_total": "500000",
+   "mixed_total": "100000",
+   "deductible_total": "0",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "MSPM",
+    "warnings": [],
+    "mixed_alloc_ratio": "1.000000",
+    "production_labor": "500000",
+    "total_labor": "500000",
+    "mixed_capitalized": "100000.00",
+    "mixed_deductible": "0.00",
+    "mixed_split_method": "labor",
+    "mixed_split_proportion_pre": "0.3",
+    "mixed_pre_production_share": "30000.00",
+    "mixed_production_share": "70000.00",
+    "mspm_90pct_applied": false,
+    "pre_production_pool": "230000.00",
+    "production_pool": "870000.00",
+    "pre_production_471": "2500000",
+    "pre_production_ratio": "0.0920",
+    "pre_production_471_on_hand": "1000000",
+    "residual_pre_production_263A": "138000.00",
+    "direct_materials_adjustment": "1500000.00",
+    "production_471": "7500000",
+    "production_ratio": "0.1120",
+    "production_471_on_hand": "2000000",
+    "actual_pre_production_ratio": "0.0920",
+    "actual_production_ratio": "0.1120",
+    "har_applied": false,
+    "lifo_combined_ratio": null,
+    "additional_capitalized_to_inventory": "316000.00",
+    "adjusted_deductible_post": "0.00"
+   }
+  }
+ },
+ {
+  "name": "mspm_labor_split_missing_falls_back",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000",
+    "method": "MSPM",
+    "pre_production_471": "2500000",
+    "production_471": "7500000",
+    "pre_production_additional_263A": "200000",
+    "production_additional_263A": "800000",
+    "pre_production_471_on_hand": "1000000",
+    "production_471_on_hand": "2000000",
+    "beginning_DM_not_yet_in_production": "400000",
+    "ending_DM_not_yet_in_production": "800000",
+    "DM_purchased_during_year": "1900000",
+    "mspm_mixed_split_method": "labor"
+   },
+   "rows": [
+    {
+     "amount": "500000",
+     "tier1": "§471 Cost",
+     "is_labor": true
+    },
+    {
+     "amount": "100000",
+     "tier1": "Mixed Service",
+     "is_labor": true
+    }
+   ]
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "500000",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "100000",
+    "Deductible": "0",
+    "Non-Operating": "0"
+   },
+   "is_total": "600000",
+   "capitalized_total": "500000",
+   "mixed_total": "100000",
+   "deductible_total": "0",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "MSPM",
+    "warnings": [
+     "MSPM-SPLIT-INPUT-MISSING: mspm_mixed_split_method='labor' but no mspm_labor_split_proportion (pre-production labor / total labor, both excluding mixed-service labor, §1.263A-2(c)(3)(iii)(B)) was supplied — fell back to the direct-material proportion. Supply the labor proportion or change the split method."
+    ],
+    "mixed_alloc_ratio": "1.000000",
+    "production_labor": "500000",
+    "total_labor": "500000",
+    "mixed_capitalized": "100000.00",
+    "mixed_deductible": "0.00",
+    "mixed_split_method": "direct_material",
+    "mixed_split_proportion_pre": "0.19",
+    "mixed_pre_production_share": "19000.00",
+    "mixed_production_share": "81000.00",
+    "mspm_90pct_applied": false,
+    "pre_production_pool": "219000.00",
+    "production_pool": "881000.00",
+    "pre_production_471": "2500000",
+    "pre_production_ratio": "0.0876",
+    "pre_production_471_on_hand": "1000000",
+    "residual_pre_production_263A": "131400.00",
+    "direct_materials_adjustment": "1500000.00",
+    "production_471": "7500000",
+    "production_ratio": "0.1125",
+    "production_471_on_hand": "2000000",
+    "actual_pre_production_ratio": "0.0876",
+    "actual_production_ratio": "0.1125",
+    "har_applied": false,
+    "lifo_combined_ratio": null,
+    "additional_capitalized_to_inventory": "312600.00",
+    "adjusted_deductible_post": "0.00"
+   }
+  }
+ },
+ {
+  "name": "mspm_90pct_split_election",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000",
+    "method": "MSPM",
+    "pre_production_471": "2500000",
+    "production_471": "7500000",
+    "pre_production_additional_263A": "200000",
+    "production_additional_263A": "800000",
+    "pre_production_471_on_hand": "1000000",
+    "production_471_on_hand": "2000000",
+    "beginning_DM_not_yet_in_production": "400000",
+    "ending_DM_not_yet_in_production": "800000",
+    "DM_purchased_during_year": "1900000",
+    "mspm_90pct_split_election": true,
+    "mspm_mixed_split_method": "labor",
+    "mspm_labor_split_proportion": "0.95"
+   },
+   "rows": [
+    {
+     "amount": "500000",
+     "tier1": "§471 Cost",
+     "is_labor": true
+    },
+    {
+     "amount": "100000",
+     "tier1": "Mixed Service",
+     "is_labor": true
+    }
+   ]
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "500000",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "100000",
+    "Deductible": "0",
+    "Non-Operating": "0"
+   },
+   "is_total": "600000",
+   "capitalized_total": "500000",
+   "mixed_total": "100000",
+   "deductible_total": "0",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "MSPM",
+    "warnings": [],
+    "mixed_alloc_ratio": "1.000000",
+    "production_labor": "500000",
+    "total_labor": "500000",
+    "mixed_capitalized": "100000.00",
+    "mixed_deductible": "0.00",
+    "mixed_split_method": "labor",
+    "mixed_split_proportion_pre": "1",
+    "mixed_pre_production_share": "100000.00",
+    "mixed_production_share": "0.00",
+    "mspm_90pct_applied": true,
+    "pre_production_pool": "300000.00",
+    "production_pool": "800000.00",
+    "pre_production_471": "2500000",
+    "pre_production_ratio": "0.1200",
+    "pre_production_471_on_hand": "1000000",
+    "residual_pre_production_263A": "180000.00",
+    "direct_materials_adjustment": "1500000.00",
+    "production_471": "7500000",
+    "production_ratio": "0.1089",
+    "production_471_on_hand": "2000000",
+    "actual_pre_production_ratio": "0.1200",
+    "actual_production_ratio": "0.1089",
+    "har_applied": false,
+    "lifo_combined_ratio": null,
+    "additional_capitalized_to_inventory": "337800.00",
+    "adjusted_deductible_post": "0.00"
+   }
+  }
+ },
+ {
+  "name": "mspm_negative_dm_denominator",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000",
+    "method": "MSPM",
+    "pre_production_471": "2500000",
+    "production_471": "100000",
+    "pre_production_additional_263A": "200000",
+    "production_additional_263A": "800000",
+    "pre_production_471_on_hand": "1000000",
+    "production_471_on_hand": "2000000",
+    "beginning_DM_not_yet_in_production": "400000",
+    "ending_DM_not_yet_in_production": "3000000",
+    "DM_purchased_during_year": "1900000"
+   },
+   "rows": []
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "0",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "0",
+    "Deductible": "0",
+    "Non-Operating": "0"
+   },
+   "is_total": "0",
+   "capitalized_total": "0",
+   "mixed_total": "0",
+   "deductible_total": "0",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "MSPM",
+    "warnings": [
+     "MSPM-NEGATIVE-DENOMINATOR: production_471 + direct_materials_adjustment is negative ($-600,000.00) — ending DM-not-yet-in-production exceeds beginning + purchases, an impossible materials flow. Ratio set to 0; fix the DM inputs."
+    ],
+    "mixed_alloc_ratio": "0.000000",
+    "production_labor": "0",
+    "total_labor": "0",
+    "mixed_capitalized": "0.00",
+    "mixed_deductible": "0.00",
+    "mixed_split_method": "direct_material",
+    "mixed_split_proportion_pre": "0.7307692307692307692307692308",
+    "mixed_pre_production_share": "0.00",
+    "mixed_production_share": "0.00",
+    "mspm_90pct_applied": false,
+    "pre_production_pool": "200000.00",
+    "production_pool": "800000.00",
+    "pre_production_471": "2500000",
+    "pre_production_ratio": "0.0800",
+    "pre_production_471_on_hand": "1000000",
+    "residual_pre_production_263A": "120000.00",
+    "direct_materials_adjustment": "-700000.00",
+    "production_471": "100000",
+    "production_ratio": "0",
+    "production_471_on_hand": "2000000",
+    "actual_pre_production_ratio": "0.0800",
+    "actual_production_ratio": "0",
+    "har_applied": false,
+    "lifo_combined_ratio": null,
+    "additional_capitalized_to_inventory": "80000.00",
+    "adjusted_deductible_post": "0.00"
+   }
+  }
+ },
+ {
+  "name": "mspm_negative_on_hand_floored",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000",
+    "method": "MSPM",
+    "pre_production_471": "2500000",
+    "production_471": "7500000",
+    "pre_production_additional_263A": "200000",
+    "production_additional_263A": "800000",
+    "pre_production_471_on_hand": "-50000",
+    "production_471_on_hand": "2000000",
+    "beginning_DM_not_yet_in_production": "400000",
+    "ending_DM_not_yet_in_production": "800000",
+    "DM_purchased_during_year": "1900000"
+   },
+   "rows": []
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "0",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "0",
+    "Deductible": "0",
+    "Non-Operating": "0"
+   },
+   "is_total": "0",
+   "capitalized_total": "0",
+   "mixed_total": "0",
+   "deductible_total": "0",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "MSPM",
+    "warnings": [
+     "MSPM-NEGATIVE-ON-HAND-BALANCE: pre_production_471_on_hand ($-50,000.00) is negative — input inconsistent with §1.263A-2(c)(3)(ii)(C)/(E): on-hand figures must be current-year-incurred costs remaining on hand, not raw inventory balances. Floored at 0."
+    ],
+    "mixed_alloc_ratio": "0.000000",
+    "production_labor": "0",
+    "total_labor": "0",
+    "mixed_capitalized": "0.00",
+    "mixed_deductible": "0.00",
+    "mixed_split_method": "direct_material",
+    "mixed_split_proportion_pre": "0.19",
+    "mixed_pre_production_share": "0.00",
+    "mixed_production_share": "0.00",
+    "mspm_90pct_applied": false,
+    "pre_production_pool": "200000.00",
+    "production_pool": "800000.00",
+    "pre_production_471": "2500000",
+    "pre_production_ratio": "0.0800",
+    "pre_production_471_on_hand": "0",
+    "residual_pre_production_263A": "200000.00",
+    "direct_materials_adjustment": "1500000.00",
+    "production_471": "7500000",
+    "production_ratio": "0.1111",
+    "production_471_on_hand": "2000000",
+    "actual_pre_production_ratio": "0.0800",
+    "actual_production_ratio": "0.1111",
+    "har_applied": false,
+    "lifo_combined_ratio": null,
+    "additional_capitalized_to_inventory": "222200.00",
+    "adjusted_deductible_post": "0.00"
+   }
+  }
+ },
+ {
+  "name": "mspm_zero_denominators",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000",
+    "method": "MSPM",
+    "pre_production_additional_263A": "10000"
+   },
+   "rows": []
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "0",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "0",
+    "Deductible": "0",
+    "Non-Operating": "0"
+   },
+   "is_total": "0",
+   "capitalized_total": "0",
+   "mixed_total": "0",
+   "deductible_total": "0",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "MSPM",
+    "warnings": [
+     "MSPM-ZERO-DENOMINATOR: pre_production_471 is zero — the pre-production absorption ratio was set to 0. Verify the §471 direct-material/resale cost inputs.",
+     "MSPM-ZERO-DENOMINATOR: production_471 + direct_materials_adjustment is zero — the production absorption ratio was set to 0. Verify the production §471 and direct-material flow inputs."
+    ],
+    "mixed_alloc_ratio": "0.000000",
+    "production_labor": "0",
+    "total_labor": "0",
+    "mixed_capitalized": "0.00",
+    "mixed_deductible": "0.00",
+    "mixed_split_method": "direct_material",
+    "mixed_split_proportion_pre": "0",
+    "mixed_pre_production_share": "0.00",
+    "mixed_production_share": "0.00",
+    "mspm_90pct_applied": false,
+    "pre_production_pool": "10000.00",
+    "production_pool": "0.00",
+    "pre_production_471": "0",
+    "pre_production_ratio": "0",
+    "pre_production_471_on_hand": "0",
+    "residual_pre_production_263A": "10000.00",
+    "direct_materials_adjustment": "0.00",
+    "production_471": "0",
+    "production_ratio": "0",
+    "production_471_on_hand": "0",
+    "actual_pre_production_ratio": "0",
+    "actual_production_ratio": "0",
+    "har_applied": false,
+    "lifo_combined_ratio": null,
+    "additional_capitalized_to_inventory": "0.00",
+    "adjusted_deductible_post": "0.00"
+   }
+  }
+ },
+ {
+  "name": "srm_basic_reseller",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000",
+    "method": "SRM",
+    "produces": false,
+    "acquires_for_resale": true,
+    "purchasing_costs": "300000",
+    "current_year_471_costs": "2000000",
+    "storage_handling_costs": "150000",
+    "beginning_inventory_471": "500000",
+    "ending_inventory_471": "400000"
+   },
+   "rows": [
+    {
+     "amount": "300000",
+     "tier1": "Additional §263A",
+     "is_labor": true,
+     "acct_desc": "Purchasing salaries"
+    },
+    {
+     "amount": "200000",
+     "tier1": "Excluded"
+    }
+   ]
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "0",
+    "§263A Additional": "300000",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "0",
+    "Deductible": "200000",
+    "Non-Operating": "0"
+   },
+   "is_total": "500000",
+   "capitalized_total": "300000",
+   "mixed_total": "0",
+   "deductible_total": "200000",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "SRM",
+    "method_conflict": false,
+    "warnings": [],
+    "mixed_alloc_ratio": "1.000000",
+    "production_labor": "300000",
+    "total_labor": "300000",
+    "mixed_capitalized": "0",
+    "mixed_deductible": "0",
+    "purchasing_costs": "300000",
+    "current_year_471_costs": "2000000",
+    "purchasing_ratio": "0.150000",
+    "storage_handling_costs": "150000",
+    "storage_handling_denominator": "2500000",
+    "storage_handling_ratio": "0.060000",
+    "combined_ratio": "0.210000",
+    "srm_variation_a": false,
+    "srm_variation_b": false,
+    "ending_inventory_471": "400000",
+    "additional_capitalized_to_inventory": "84000.00",
+    "adjusted_deductible_post": "200000"
+   }
+  }
+ },
+ {
+  "name": "srm_variation_a",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000",
+    "method": "SRM",
+    "produces": false,
+    "acquires_for_resale": true,
+    "purchasing_costs": "300000",
+    "current_year_471_costs": "2000000",
+    "storage_handling_costs": "150000",
+    "beginning_inventory_471": "500000",
+    "ending_inventory_471": "400000",
+    "srm_variation_a": true
+   },
+   "rows": []
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "0",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "0",
+    "Deductible": "0",
+    "Non-Operating": "0"
+   },
+   "is_total": "0",
+   "capitalized_total": "0",
+   "mixed_total": "0",
+   "deductible_total": "0",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "SRM",
+    "method_conflict": false,
+    "warnings": [],
+    "mixed_alloc_ratio": "0.000000",
+    "production_labor": "0",
+    "total_labor": "0",
+    "mixed_capitalized": "0",
+    "mixed_deductible": "0",
+    "purchasing_costs": "300000",
+    "current_year_471_costs": "2000000",
+    "purchasing_ratio": "0.150000",
+    "storage_handling_costs": "150000",
+    "storage_handling_denominator": "2000000",
+    "storage_handling_ratio": "0.075000",
+    "combined_ratio": "0.225000",
+    "srm_variation_a": true,
+    "srm_variation_b": false,
+    "ending_inventory_471": "400000",
+    "additional_capitalized_to_inventory": "90000.00",
+    "adjusted_deductible_post": "0"
+   }
+  }
+ },
+ {
+  "name": "srm_variation_b",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000",
+    "method": "SRM",
+    "produces": false,
+    "acquires_for_resale": true,
+    "inventory_method": "lifo_dollar_value",
+    "purchasing_costs": "300000",
+    "current_year_471_costs": "2000000",
+    "storage_handling_costs": "150000",
+    "beginning_inventory_471": "500000",
+    "ending_inventory_471": "400000",
+    "srm_variation_b": true,
+    "ending_inventory_471_total_lifo": "1800000"
+   },
+   "rows": []
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "0",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "0",
+    "Deductible": "0",
+    "Non-Operating": "0"
+   },
+   "is_total": "0",
+   "capitalized_total": "0",
+   "mixed_total": "0",
+   "deductible_total": "0",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "SRM",
+    "method_conflict": false,
+    "warnings": [],
+    "mixed_alloc_ratio": "0.000000",
+    "production_labor": "0",
+    "total_labor": "0",
+    "mixed_capitalized": "0",
+    "mixed_deductible": "0",
+    "purchasing_costs": "300000",
+    "current_year_471_costs": "2000000",
+    "purchasing_ratio": "0.150000",
+    "storage_handling_costs": "150000",
+    "storage_handling_denominator": "2500000",
+    "storage_handling_ratio": "0.060000",
+    "combined_ratio": "0.210000",
+    "srm_variation_a": false,
+    "srm_variation_b": true,
+    "ending_inventory_471": "400000",
+    "additional_capitalized_to_inventory": "168000.00",
+    "adjusted_deductible_post": "0"
+   }
+  }
+ },
+ {
+  "name": "srm_variation_b_missing_input",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000",
+    "method": "SRM",
+    "produces": false,
+    "acquires_for_resale": true,
+    "purchasing_costs": "300000",
+    "current_year_471_costs": "2000000",
+    "storage_handling_costs": "150000",
+    "beginning_inventory_471": "500000",
+    "ending_inventory_471": "400000",
+    "srm_variation_b": true
+   },
+   "rows": []
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "0",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "0",
+    "Deductible": "0",
+    "Non-Operating": "0"
+   },
+   "is_total": "0",
+   "capitalized_total": "0",
+   "mixed_total": "0",
+   "deductible_total": "0",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "SRM",
+    "method_conflict": false,
+    "warnings": [
+     "SRM-VARIATION-B-INPUT-MISSING: srm_variation_b elected but ending_inventory_471_total_lifo (TOTAL ending-inventory §471 at LIFO carrying value — the S&H ratio's multiplicand under (d)(3)(iii)(B)) was not supplied; computed WITHOUT the variation."
+    ],
+    "mixed_alloc_ratio": "0.000000",
+    "production_labor": "0",
+    "total_labor": "0",
+    "mixed_capitalized": "0",
+    "mixed_deductible": "0",
+    "purchasing_costs": "300000",
+    "current_year_471_costs": "2000000",
+    "purchasing_ratio": "0.150000",
+    "storage_handling_costs": "150000",
+    "storage_handling_denominator": "2500000",
+    "storage_handling_ratio": "0.060000",
+    "combined_ratio": "0.210000",
+    "srm_variation_a": false,
+    "srm_variation_b": true,
+    "ending_inventory_471": "400000",
+    "additional_capitalized_to_inventory": "84000.00",
+    "adjusted_deductible_post": "0"
+   }
+  }
+ },
+ {
+  "name": "srm_variations_a_plus_b",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000",
+    "method": "SRM",
+    "produces": false,
+    "acquires_for_resale": true,
+    "purchasing_costs": "300000",
+    "current_year_471_costs": "2000000",
+    "storage_handling_costs": "150000",
+    "beginning_inventory_471": "500000",
+    "ending_inventory_471": "400000",
+    "srm_variation_a": true,
+    "srm_variation_b": true,
+    "ending_inventory_471_total_lifo": "1800000"
+   },
+   "rows": []
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "0",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "0",
+    "Deductible": "0",
+    "Non-Operating": "0"
+   },
+   "is_total": "0",
+   "capitalized_total": "0",
+   "mixed_total": "0",
+   "deductible_total": "0",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "SRM",
+    "method_conflict": false,
+    "warnings": [
+     "SRM-VARIATION-A-PLUS-B: both (d)(3)(iii) variations elected — A's current-year-only S&H denominator is being applied to B's all-layer total multiplicand, an internally inconsistent combination the regulation text presents as independent options without addressing. SME must confirm before filing."
+    ],
+    "mixed_alloc_ratio": "0.000000",
+    "production_labor": "0",
+    "total_labor": "0",
+    "mixed_capitalized": "0",
+    "mixed_deductible": "0",
+    "purchasing_costs": "300000",
+    "current_year_471_costs": "2000000",
+    "purchasing_ratio": "0.150000",
+    "storage_handling_costs": "150000",
+    "storage_handling_denominator": "2000000",
+    "storage_handling_ratio": "0.075000",
+    "combined_ratio": "0.225000",
+    "srm_variation_a": true,
+    "srm_variation_b": true,
+    "ending_inventory_471": "400000",
+    "additional_capitalized_to_inventory": "195000.00",
+    "adjusted_deductible_post": "0"
+   }
+  }
+ },
+ {
+  "name": "srm_method_conflict_producer",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000",
+    "method": "SRM",
+    "produces": true,
+    "production_activity_level": "more_than_de_minimis",
+    "purchasing_costs": "100000",
+    "current_year_471_costs": "1000000",
+    "ending_inventory_471": "200000"
+   },
+   "rows": []
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "0",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "0",
+    "Deductible": "0",
+    "Non-Operating": "0"
+   },
+   "is_total": "0",
+   "capitalized_total": "0",
+   "mixed_total": "0",
+   "deductible_total": "0",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "SRM",
+    "method_conflict": true,
+    "warnings": [
+     "SRM-METHOD-CONFLICT: §1.263A-3(a)(4)(i) bars the simplified resale method for a producer above the de minimis threshold (SPM/MSPM required) — these SRM figures are NOT a permissible filing position."
+    ],
+    "mixed_alloc_ratio": "0.000000",
+    "production_labor": "0",
+    "total_labor": "0",
+    "mixed_capitalized": "0",
+    "mixed_deductible": "0",
+    "purchasing_costs": "100000",
+    "current_year_471_costs": "1000000",
+    "purchasing_ratio": "0.100000",
+    "storage_handling_costs": "0",
+    "storage_handling_denominator": "1000000",
+    "storage_handling_ratio": "0.000000",
+    "combined_ratio": "0.100000",
+    "srm_variation_a": false,
+    "srm_variation_b": false,
+    "ending_inventory_471": "200000",
+    "additional_capitalized_to_inventory": "20000.00",
+    "adjusted_deductible_post": "0"
+   }
+  }
+ },
+ {
+  "name": "srm_de_minimis_not_incident",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000",
+    "method": "SRM",
+    "produces": true,
+    "production_activity_level": "de_minimis",
+    "production_incident_to_resale": false,
+    "current_year_471_costs": "1000000",
+    "ending_inventory_471": "200000"
+   },
+   "rows": []
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "0",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "0",
+    "Deductible": "0",
+    "Non-Operating": "0"
+   },
+   "is_total": "0",
+   "capitalized_total": "0",
+   "mixed_total": "0",
+   "deductible_total": "0",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "SRM",
+    "method_conflict": true,
+    "warnings": [
+     "SRM-METHOD-CONFLICT: §1.263A-3(a)(4)(ii) permits SRM for a de-minimis producer only when production is INCIDENT TO RESALE of §1221(1) property — production_incident_to_resale is False, so SRM is not available. These figures are NOT a permissible filing position."
+    ],
+    "mixed_alloc_ratio": "0.000000",
+    "production_labor": "0",
+    "total_labor": "0",
+    "mixed_capitalized": "0",
+    "mixed_deductible": "0",
+    "purchasing_costs": "0",
+    "current_year_471_costs": "1000000",
+    "purchasing_ratio": "0.000000",
+    "storage_handling_costs": "0",
+    "storage_handling_denominator": "1000000",
+    "storage_handling_ratio": "0.000000",
+    "combined_ratio": "0.000000",
+    "srm_variation_a": false,
+    "srm_variation_b": false,
+    "ending_inventory_471": "200000",
+    "additional_capitalized_to_inventory": "0.00",
+    "adjusted_deductible_post": "0"
+   }
+  }
+ },
+ {
+  "name": "srm_production_level_unknown_and_msc_contract",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000",
+    "method": "SRM",
+    "produces": true,
+    "current_year_471_costs": "1000000",
+    "ending_inventory_471": "200000"
+   },
+   "rows": [
+    {
+     "amount": "80000",
+     "tier1": "Mixed Service",
+     "is_labor": true
+    }
+   ]
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "0",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "80000",
+    "Deductible": "0",
+    "Non-Operating": "0"
+   },
+   "is_total": "80000",
+   "capitalized_total": "0",
+   "mixed_total": "80000",
+   "deductible_total": "0",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "SRM",
+    "method_conflict": false,
+    "warnings": [
+     "SRM-PRODUCTION-LEVEL-UNKNOWN: the taxpayer produces but production_activity_level was never established (Gate 1 Q1.2) — the §1.263A-3(a)(4) availability gate CANNOT be evaluated. Resolve the de minimis determination before relying on these SRM figures.",
+     "SRM-MSC-INPUT-CONTRACT: $80,000 of mixed-service costs are on the classified TB. Under the SRM their capitalizable share belongs INSIDE the purchasing/storage-handling pool inputs per the §1.263A-3(d)(3)(i)(F) one-step sub-split — confirm the pool figures already include it; the full TB mixed total is otherwise reported as currently deductible here (informational SSCM ratio: 0.000000)."
+    ],
+    "mixed_alloc_ratio": "0.000000",
+    "production_labor": "0",
+    "total_labor": "0",
+    "mixed_capitalized": "0",
+    "mixed_deductible": "80000",
+    "purchasing_costs": "0",
+    "current_year_471_costs": "1000000",
+    "purchasing_ratio": "0.000000",
+    "storage_handling_costs": "0",
+    "storage_handling_denominator": "1000000",
+    "storage_handling_ratio": "0.000000",
+    "combined_ratio": "0.000000",
+    "srm_variation_a": false,
+    "srm_variation_b": false,
+    "ending_inventory_471": "200000",
+    "additional_capitalized_to_inventory": "0.00",
+    "adjusted_deductible_post": "80000"
+   }
+  }
+ },
+ {
+  "name": "srm_private_label",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000",
+    "method": "SRM",
+    "produces": true,
+    "private_label_goods": true,
+    "current_year_471_costs": "1000000",
+    "purchasing_costs": "50000",
+    "ending_inventory_471": "200000"
+   },
+   "rows": []
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "0",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "0",
+    "Deductible": "0",
+    "Non-Operating": "0"
+   },
+   "is_total": "0",
+   "capitalized_total": "0",
+   "mixed_total": "0",
+   "deductible_total": "0",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "SRM",
+    "method_conflict": false,
+    "warnings": [
+     "PRIVATE-LABEL-CONDITIONS: SRM availability rests on the (a)(4)(iii) private-label carve-out — confirm its three conditions hold (production under contract with an UNRELATED person; incident to resale; property sold to customers). Neither this engine nor the interview verifies them."
+    ],
+    "mixed_alloc_ratio": "0.000000",
+    "production_labor": "0",
+    "total_labor": "0",
+    "mixed_capitalized": "0",
+    "mixed_deductible": "0",
+    "purchasing_costs": "50000",
+    "current_year_471_costs": "1000000",
+    "purchasing_ratio": "0.050000",
+    "storage_handling_costs": "0",
+    "storage_handling_denominator": "1000000",
+    "storage_handling_ratio": "0.000000",
+    "combined_ratio": "0.050000",
+    "srm_variation_a": false,
+    "srm_variation_b": false,
+    "ending_inventory_471": "200000",
+    "additional_capitalized_to_inventory": "10000.00",
+    "adjusted_deductible_post": "0"
+   }
+  }
+ },
+ {
+  "name": "srm_negative_pools_and_inventory",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000",
+    "method": "SRM",
+    "produces": false,
+    "acquires_for_resale": true,
+    "purchasing_costs": "-50000",
+    "current_year_471_costs": "1000000",
+    "storage_handling_costs": "-20000",
+    "ending_inventory_471": "-300"
+   },
+   "rows": []
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "0",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "0",
+    "Deductible": "0",
+    "Non-Operating": "0"
+   },
+   "is_total": "0",
+   "capitalized_total": "0",
+   "mixed_total": "0",
+   "deductible_total": "0",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "SRM",
+    "method_conflict": false,
+    "warnings": [
+     "SRM-NEGATIVE-POOL: purchasing_costs is negative ($-50,000.00). Negative adjustments are permitted under the SRM with no gross-receipts restriction (§1.263A-1(d)(3)(ii)(B)(3), unlike the SPM), but verify none derive from cash/trade discounts or §162(c)/(e)/(f)/(g)-type amounts (§1.263A-1(d)(3)(ii)(C)-(E)).",
+     "SRM-NEGATIVE-POOL: storage_handling_costs is negative ($-20,000.00). Negative adjustments are permitted under the SRM with no gross-receipts restriction (§1.263A-1(d)(3)(ii)(B)(3), unlike the SPM), but verify none derive from cash/trade discounts or §162(c)/(e)/(f)/(g)-type amounts (§1.263A-1(d)(3)(ii)(C)-(E)).",
+     "ABSORPTION RATIO (SRM purchasing) = -0.050000 (<0): a negative ratio means a negative pool or denominator — review the negative inputs.",
+     "ABSORPTION RATIO (SRM storage & handling) = -0.020000 (<0): a negative ratio means a negative pool or denominator — review the negative inputs.",
+     "SRM-NEGATIVE-ENDING-INVENTORY: ending_inventory_471 is negative ($-300.00) — a §471-costs-on-hand figure cannot be negative; the capitalized amount below is meaningless until the input is fixed."
+    ],
+    "mixed_alloc_ratio": "0.000000",
+    "production_labor": "0",
+    "total_labor": "0",
+    "mixed_capitalized": "0",
+    "mixed_deductible": "0",
+    "purchasing_costs": "-50000",
+    "current_year_471_costs": "1000000",
+    "purchasing_ratio": "-0.050000",
+    "storage_handling_costs": "-20000",
+    "storage_handling_denominator": "1000000",
+    "storage_handling_ratio": "-0.020000",
+    "combined_ratio": "-0.070000",
+    "srm_variation_a": false,
+    "srm_variation_b": false,
+    "ending_inventory_471": "-300",
+    "additional_capitalized_to_inventory": "21.00",
+    "adjusted_deductible_post": "0"
+   }
+  }
+ },
+ {
+  "name": "srm_zero_denominators",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "75000000",
+    "method": "SRM",
+    "produces": false,
+    "acquires_for_resale": true,
+    "purchasing_costs": "10000",
+    "storage_handling_costs": "5000",
+    "srm_variation_a": true
+   },
+   "rows": []
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "0",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "0",
+    "Deductible": "0",
+    "Non-Operating": "0"
+   },
+   "is_total": "0",
+   "capitalized_total": "0",
+   "mixed_total": "0",
+   "deductible_total": "0",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "SRM",
+    "method_conflict": false,
+    "warnings": [
+     "SRM-ZERO-DENOMINATOR: current_year_471_costs (the current year's purchases, §1.263A-3(d)(3)(i)(D)(2)/(E)) is zero — the purchasing ratio was set to 0. Verify the purchases input.",
+     "SRM-ZERO-DENOMINATOR: the storage & handling denominator (beginning_inventory_471 + current_year_471_costs, beginning inventory excluded per the (d)(3)(iii)(A) variation) is zero — the storage & handling ratio was set to 0. Verify the inventory and purchases inputs."
+    ],
+    "mixed_alloc_ratio": "0.000000",
+    "production_labor": "0",
+    "total_labor": "0",
+    "mixed_capitalized": "0",
+    "mixed_deductible": "0",
+    "purchasing_costs": "10000",
+    "current_year_471_costs": "0",
+    "purchasing_ratio": "0",
+    "storage_handling_costs": "5000",
+    "storage_handling_denominator": "0",
+    "storage_handling_ratio": "0",
+    "combined_ratio": "0",
+    "srm_variation_a": true,
+    "srm_variation_b": false,
+    "ending_inventory_471": "0",
+    "additional_capitalized_to_inventory": "0.00",
+    "adjusted_deductible_post": "0"
+   }
+  }
+ },
+ {
+  "name": "lifo_decrement_release",
+  "engine": "lifo_decrement",
+  "input": {
+   "layers": [
+    {
+     "year": 2024,
+     "layer_471": "100000",
+     "layer_additional_263a": "8000"
+    },
+    {
+     "year": 2025,
+     "layer_471": "200000",
+     "layer_additional_263a": "25000"
+    }
+   ],
+   "decrement": "250000"
+  },
+  "expected": {
+   "released_263a_to_cogs": "29000.00",
+   "layers": [
+    {
+     "year": 2025,
+     "layer_471": "200000",
+     "layer_additional_263a": "25000",
+     "liquidated_471": "200000",
+     "released_263a": "25000.00"
+    },
+    {
+     "year": 2024,
+     "layer_471": "100000",
+     "layer_additional_263a": "8000",
+     "liquidated_471": "50000",
+     "released_263a": "4000.00"
+    }
+   ],
+   "unabsorbed_decrement": "0.00",
+   "warnings": []
+  }
+ },
+ {
+  "name": "lifo_decrement_exceeds_layers",
+  "engine": "lifo_decrement",
+  "input": {
+   "layers": [
+    {
+     "year": 2024,
+     "layer_471": "100000",
+     "layer_additional_263a": "8000"
+    },
+    {
+     "year": 2025,
+     "layer_471": "200000",
+     "layer_additional_263a": "25000"
+    }
+   ],
+   "decrement": "400000"
+  },
+  "expected": {
+   "released_263a_to_cogs": "33000.00",
+   "layers": [
+    {
+     "year": 2025,
+     "layer_471": "200000",
+     "layer_additional_263a": "25000",
+     "liquidated_471": "200000",
+     "released_263a": "25000.00"
+    },
+    {
+     "year": 2024,
+     "layer_471": "100000",
+     "layer_additional_263a": "8000",
+     "liquidated_471": "100000",
+     "released_263a": "8000.00"
+    }
+   ],
+   "unabsorbed_decrement": "100000.00",
+   "warnings": [
+    "LIFO-DECREMENT-EXCEEDS-LAYERS: $100,000.00 of the decrement exceeds the supplied layers' total §471 costs — the layer schedule is incomplete; released §263A is understated until it is."
+   ]
+  }
+ },
+ {
+  "name": "lifo_decrement_invalid_layer",
+  "engine": "lifo_decrement",
+  "input": {
+   "layers": [
+    {
+     "year": 2024,
+     "layer_471": "0",
+     "layer_additional_263a": "8000"
+    },
+    {
+     "year": 2025,
+     "layer_471": "200000",
+     "layer_additional_263a": "25000"
+    }
+   ],
+   "decrement": "250000"
+  },
+  "expected": {
+   "released_263a_to_cogs": "25000.00",
+   "layers": [
+    {
+     "year": 2025,
+     "layer_471": "200000",
+     "layer_additional_263a": "25000",
+     "liquidated_471": "200000",
+     "released_263a": "25000.00"
+    }
+   ],
+   "unabsorbed_decrement": "50000.00",
+   "warnings": [
+    "LIFO-LAYER-INVALID: layer {'year': 2024, 'layer_471': Decimal('0'), 'layer_additional_263a': Decimal('8000')} has non-positive §471 costs — skipped; fix the layer schedule.",
+    "LIFO-DECREMENT-EXCEEDS-LAYERS: $50,000.00 of the decrement exceeds the supplied layers' total §471 costs — the layer schedule is incomplete; released §263A is understated until it is."
+   ]
+  }
+ },
+ {
+  "name": "interest_debt_screens",
+  "engine": "interest",
+  "input": {
+   "projects": [
+    {
+     "project_id": "U",
+     "snapshots": [
+      {
+       "measurement_date": "2026-03-31",
+       "cumulative_ape": "1000000"
+      }
+     ]
+    }
+   ],
+   "debts": [
+    {
+     "debt_id": "DTL",
+     "principal": "100",
+     "interest_incurred": "5",
+     "reserve_or_deferred_tax": true
+    },
+    {
+     "debt_id": "453A",
+     "principal": "100",
+     "interest_incurred": "5",
+     "tax_liability_453a_460b": true
+    },
+    {
+     "debt_id": "SLB",
+     "principal": "100",
+     "interest_incurred": "5",
+     "sale_leaseback_purchase_money": true
+    },
+    {
+     "debt_id": "RP",
+     "principal": "100",
+     "interest_incurred": "5",
+     "related_party_below_afr": true
+    },
+    {
+     "debt_id": "AP",
+     "principal": "100",
+     "interest_incurred": "0",
+     "non_interest_bearing": true
+    },
+    {
+     "debt_id": "OK",
+     "principal": "1000000",
+     "interest_incurred": "50000"
+    }
+   ],
+   "opts": {}
+  },
+  "expected": {
+   "per_unit": {
+    "U": {
+     "measurement_dates": [
+      "2026-03-31"
+     ],
+     "ape_snapshots": {
+      "2026-03-31": "1000000"
+     },
+     "traced_debt_by_date": {
+      "2026-03-31": "0"
+     },
+     "excess_by_date": {
+      "2026-03-31": "1000000"
+     },
+     "average_excess": "1000000",
+     "traced_interest": "0.00",
+     "excess_expenditure_amount": "50000.00",
+     "total_capitalized": "50000.00",
+     "book_capitalized_interest": "0",
+     "tax_delta_to_post": "50000.00"
+    }
+   },
+   "wair": "0.05",
+   "wair_source": "nontraced",
+   "total_traced": "0.00",
+   "total_excess": "50000.00",
+   "total_capitalized": "50000.00",
+   "prorated": false,
+   "consumption": {
+    "nontraced_consumed": "50000.00",
+    "below_afr_consumed": "0.00",
+    "guaranteed_payments_consumed": "0.00",
+    "nontraced_remaining_deductible": "0.00",
+    "below_afr_remaining_deductible": "0.00",
+    "guaranteed_payments_remaining_deductible": "0.00",
+    "unsourced_excess": "0.00"
+   },
+   "warnings": [
+    "INELIGIBLE-DEBT [DTL]: excluded from tracing and the WAIR pool — §1.263A-9(a)(4) — reserve/deferred-tax liability not treated as debt for federal income tax purposes.",
+    "INELIGIBLE-DEBT [453A]: excluded from tracing and the WAIR pool — §1.263A-9(a)(4) — income tax liability / §453A deferred tax / §460(b) look-back hypothetical liability.",
+    "INELIGIBLE-DEBT [SLB]: excluded from tracing and the WAIR pool — §1.263A-9(a)(4) — sale-leaseback purchase-money obligation.",
+    "INELIGIBLE-DEBT [RP]: excluded from tracing and the WAIR pool — §1.263A-9(a)(4)(iii) — related-person debt at a below-AFR rate at issuance.",
+    "INELIGIBLE-DEBT [AP]: excluded from tracing and the WAIR pool — §1.263A-9(a)(4) — non-interest-bearing debt (accounts payable etc.) that is not itself traced debt."
+   ]
+  }
+ },
+ {
+  "name": "interest_traced_and_excess_quarterly",
+  "engine": "interest",
+  "input": {
+   "projects": [
+    {
+     "project_id": "PLANT",
+     "book_capitalized_interest": "10000",
+     "snapshots": [
+      {
+       "measurement_date": "2026-03-31",
+       "cumulative_ape": "1000000"
+      },
+      {
+       "measurement_date": "2026-06-30",
+       "cumulative_ape": "1600000"
+      },
+      {
+       "measurement_date": "2026-09-30",
+       "cumulative_ape": "2200000"
+      },
+      {
+       "measurement_date": "2026-12-31",
+       "cumulative_ape": "3000000"
+      }
+     ]
+    }
+   ],
+   "debts": [
+    {
+     "debt_id": "TR1",
+     "principal": "800000",
+     "interest_incurred": "48000",
+     "traced_to": "PLANT",
+     "outstanding_by_date": {
+      "2026-03-31": "600000",
+      "06/30/2026": "800000",
+      "2026/09/30": "800000",
+      "12-31-2026": "800000"
+     }
+    },
+    {
+     "debt_id": "NT1",
+     "principal": "2800000",
+     "interest_incurred": "200000"
+    }
+   ],
+   "opts": {
+    "below_afr_interest": "0",
+    "guaranteed_payments": "0"
+   }
+  },
+  "expected": {
+   "per_unit": {
+    "PLANT": {
+     "measurement_dates": [
+      "2026-03-31",
+      "2026-06-30",
+      "2026-09-30",
+      "2026-12-31"
+     ],
+     "ape_snapshots": {
+      "2026-03-31": "1000000",
+      "2026-06-30": "1600000",
+      "2026-09-30": "2200000",
+      "2026-12-31": "3000000"
+     },
+     "traced_debt_by_date": {
+      "2026-03-31": "600000",
+      "2026-06-30": "800000",
+      "2026-09-30": "800000",
+      "2026-12-31": "800000"
+     },
+     "excess_by_date": {
+      "2026-03-31": "400000",
+      "2026-06-30": "800000",
+      "2026-09-30": "1400000",
+      "2026-12-31": "2200000"
+     },
+     "average_excess": "1200000",
+     "traced_interest": "48000.00",
+     "excess_expenditure_amount": "85714.29",
+     "total_capitalized": "133714.29",
+     "book_capitalized_interest": "10000",
+     "tax_delta_to_post": "123714.29"
+    }
+   },
+   "wair": "0.07142857142857142857142857143",
+   "wair_source": "nontraced",
+   "total_traced": "48000.00",
+   "total_excess": "85714.29",
+   "total_capitalized": "133714.29",
+   "prorated": false,
+   "consumption": {
+    "nontraced_consumed": "85714.29",
+    "below_afr_consumed": "0.00",
+    "guaranteed_payments_consumed": "0.00",
+    "nontraced_remaining_deductible": "114285.71",
+    "below_afr_remaining_deductible": "0.00",
+    "guaranteed_payments_remaining_deductible": "0.00",
+    "unsourced_excess": "0.00"
+   },
+   "warnings": [
+    "BASIS-RECONCILED [§263A(f) interest — PLANT]: $10,000.00 already on the books; posting only the $123,714.29 tax delta."
+   ]
+  }
+ },
+ {
+  "name": "interest_proration_and_consumption",
+  "engine": "interest",
+  "input": {
+   "projects": [
+    {
+     "project_id": "A",
+     "snapshots": [
+      {
+       "measurement_date": "2026-06-30",
+       "cumulative_ape": "4000000"
+      },
+      {
+       "measurement_date": "2026-12-31",
+       "cumulative_ape": "6000000"
+      }
+     ]
+    },
+    {
+     "project_id": "B",
+     "snapshots": [
+      {
+       "measurement_date": "2026-06-30",
+       "cumulative_ape": "2000000"
+      },
+      {
+       "measurement_date": "2026-12-31",
+       "cumulative_ape": "2000000"
+      }
+     ]
+    }
+   ],
+   "debts": [
+    {
+     "debt_id": "NT",
+     "principal": "1000000",
+     "interest_incurred": "120000"
+    }
+   ],
+   "opts": {
+    "below_afr_interest": "30000",
+    "guaranteed_payments": "20000"
+   }
+  },
+  "expected": {
+   "per_unit": {
+    "A": {
+     "measurement_dates": [
+      "2026-06-30",
+      "2026-12-31"
+     ],
+     "ape_snapshots": {
+      "2026-06-30": "4000000",
+      "2026-12-31": "6000000"
+     },
+     "traced_debt_by_date": {
+      "2026-06-30": "0",
+      "2026-12-31": "0"
+     },
+     "excess_by_date": {
+      "2026-06-30": "4000000",
+      "2026-12-31": "6000000"
+     },
+     "average_excess": "5000000",
+     "traced_interest": "0.00",
+     "excess_expenditure_amount": "121428.57",
+     "total_capitalized": "121428.57",
+     "book_capitalized_interest": "0",
+     "tax_delta_to_post": "121428.57"
+    },
+    "B": {
+     "measurement_dates": [
+      "2026-06-30",
+      "2026-12-31"
+     ],
+     "ape_snapshots": {
+      "2026-06-30": "2000000",
+      "2026-12-31": "2000000"
+     },
+     "traced_debt_by_date": {
+      "2026-06-30": "0",
+      "2026-12-31": "0"
+     },
+     "excess_by_date": {
+      "2026-06-30": "2000000",
+      "2026-12-31": "2000000"
+     },
+     "average_excess": "2000000",
+     "traced_interest": "0.00",
+     "excess_expenditure_amount": "48571.43",
+     "total_capitalized": "48571.43",
+     "book_capitalized_interest": "0",
+     "tax_delta_to_post": "48571.43"
+    }
+   },
+   "wair": "0.12",
+   "wair_source": "nontraced",
+   "total_traced": "0.00",
+   "total_excess": "170000.00",
+   "total_capitalized": "170000.00",
+   "prorated": true,
+   "consumption": {
+    "nontraced_consumed": "120000.00",
+    "below_afr_consumed": "30000.00",
+    "guaranteed_payments_consumed": "20000.00",
+    "nontraced_remaining_deductible": "0.00",
+    "below_afr_remaining_deductible": "0.00",
+    "guaranteed_payments_remaining_deductible": "0.00",
+    "unsourced_excess": "0.00"
+   },
+   "warnings": [
+    "PRORATED: aggregate excess expenditure amounts ($840,000.00) exceed total interest available for capitalization ($170,000.00) — each unit's excess amount scaled pro rata per §1.263A-9(c)(7); traced interest is never prorated."
+   ]
+  }
+ },
+ {
+  "name": "interest_afr_fallback",
+  "engine": "interest",
+  "input": {
+   "projects": [
+    {
+     "project_id": "U",
+     "snapshots": [
+      {
+       "measurement_date": "2026-12-31",
+       "cumulative_ape": "500000"
+      }
+     ]
+    }
+   ],
+   "debts": [
+    {
+     "debt_id": "TR",
+     "principal": "200000",
+     "interest_incurred": "12000",
+     "traced_to": "U"
+    }
+   ],
+   "opts": {
+    "afr_highest": "0.06"
+   }
+  },
+  "expected": {
+   "per_unit": {
+    "U": {
+     "measurement_dates": [
+      "2026-12-31"
+     ],
+     "ape_snapshots": {
+      "2026-12-31": "500000"
+     },
+     "traced_debt_by_date": {
+      "2026-12-31": "200000"
+     },
+     "excess_by_date": {
+      "2026-12-31": "300000"
+     },
+     "average_excess": "300000",
+     "traced_interest": "12000.00",
+     "excess_expenditure_amount": "0.00",
+     "total_capitalized": "12000.00",
+     "book_capitalized_interest": "0",
+     "tax_delta_to_post": "12000.00"
+    }
+   },
+   "wair": "0.06",
+   "wair_source": "afr_fallback",
+   "total_traced": "12000.00",
+   "total_excess": "0.00",
+   "total_capitalized": "12000.00",
+   "prorated": true,
+   "consumption": {
+    "nontraced_consumed": "0.00",
+    "below_afr_consumed": "0.00",
+    "guaranteed_payments_consumed": "0.00",
+    "nontraced_remaining_deductible": "0.00",
+    "below_afr_remaining_deductible": "0.00",
+    "guaranteed_payments_remaining_deductible": "0.00",
+    "unsourced_excess": "0.00"
+   },
+   "warnings": [
+    "WAIR-AFR-FALLBACK: no eligible nontraced debt outstanding during the computation period — WAIR set to the highest applicable Federal rate per §1.263A-9(c)(5)(iii)(D).",
+    "PRORATED: aggregate excess expenditure amounts ($18,000.00) exceed total interest available for capitalization ($0.00) — each unit's excess amount scaled pro rata per §1.263A-9(c)(7); traced interest is never prorated."
+   ]
+  }
+ },
+ {
+  "name": "interest_wair_unavailable",
+  "engine": "interest",
+  "input": {
+   "projects": [
+    {
+     "project_id": "U",
+     "snapshots": [
+      {
+       "measurement_date": "2026-12-31",
+       "cumulative_ape": "500000"
+      }
+     ]
+    }
+   ],
+   "debts": [],
+   "opts": {}
+  },
+  "expected": {
+   "per_unit": {
+    "U": {
+     "measurement_dates": [
+      "2026-12-31"
+     ],
+     "ape_snapshots": {
+      "2026-12-31": "500000"
+     },
+     "traced_debt_by_date": {
+      "2026-12-31": "0"
+     },
+     "excess_by_date": {
+      "2026-12-31": "500000"
+     },
+     "average_excess": "500000",
+     "traced_interest": "0.00",
+     "excess_expenditure_amount": "0.00",
+     "total_capitalized": "0.00",
+     "book_capitalized_interest": "0",
+     "tax_delta_to_post": "0"
+    }
+   },
+   "wair": "0",
+   "wair_source": "unavailable",
+   "total_traced": "0.00",
+   "total_excess": "0.00",
+   "total_capitalized": "0.00",
+   "prorated": false,
+   "consumption": {
+    "nontraced_consumed": "0.00",
+    "below_afr_consumed": "0.00",
+    "guaranteed_payments_consumed": "0.00",
+    "nontraced_remaining_deductible": "0.00",
+    "below_afr_remaining_deductible": "0.00",
+    "guaranteed_payments_remaining_deductible": "0.00",
+    "unsourced_excess": "0.00"
+   },
+   "warnings": [
+    "WAIR-UNAVAILABLE: no eligible nontraced debt outstanding AND no highest AFR supplied — §1.263A-9(c)(5)(iii)(D) fallback cannot run; excess expenditure amounts computed as ZERO. Supply afr_highest before relying on this computation."
+   ]
+  }
+ },
+ {
+  "name": "interest_wair_data_inconsistent",
+  "engine": "interest",
+  "input": {
+   "projects": [
+    {
+     "project_id": "U",
+     "snapshots": [
+      {
+       "measurement_date": "2026-06-30",
+       "cumulative_ape": "500000"
+      },
+      {
+       "measurement_date": "2026-12-31",
+       "cumulative_ape": "700000"
+      }
+     ]
+    }
+   ],
+   "debts": [
+    {
+     "debt_id": "NT",
+     "principal": "0",
+     "interest_incurred": "9000",
+     "outstanding_by_date": {
+      "2026-06-30": "0",
+      "2026-12-31": "0"
+     }
+    }
+   ],
+   "opts": {}
+  },
+  "expected": {
+   "per_unit": {
+    "U": {
+     "measurement_dates": [
+      "2026-06-30",
+      "2026-12-31"
+     ],
+     "ape_snapshots": {
+      "2026-06-30": "500000",
+      "2026-12-31": "700000"
+     },
+     "traced_debt_by_date": {
+      "2026-06-30": "0",
+      "2026-12-31": "0"
+     },
+     "excess_by_date": {
+      "2026-06-30": "500000",
+      "2026-12-31": "700000"
+     },
+     "average_excess": "600000",
+     "traced_interest": "0.00",
+     "excess_expenditure_amount": "0.00",
+     "total_capitalized": "0.00",
+     "book_capitalized_interest": "0",
+     "tax_delta_to_post": "0"
+    }
+   },
+   "wair": "0",
+   "wair_source": "unavailable",
+   "total_traced": "0.00",
+   "total_excess": "0.00",
+   "total_capitalized": "0.00",
+   "prorated": false,
+   "consumption": {
+    "nontraced_consumed": "0.00",
+    "below_afr_consumed": "0.00",
+    "guaranteed_payments_consumed": "0.00",
+    "nontraced_remaining_deductible": "9000.00",
+    "below_afr_remaining_deductible": "0.00",
+    "guaranteed_payments_remaining_deductible": "0.00",
+    "unsourced_excess": "0.00"
+   },
+   "warnings": [
+    "WAIR-DATA-INCONSISTENT: $9,000.00 nontraced interest incurred but zero nontraced principal outstanding on every measurement date — WAIR cannot be computed and the AFR fallback does not apply (debt existed). Excess amounts computed as ZERO; fix the debt schedule's dated balances."
+   ]
+  }
+ },
+ {
+  "name": "interest_mixed_grid_no_padding",
+  "engine": "interest",
+  "input": {
+   "projects": [
+    {
+     "project_id": "M",
+     "snapshots": [
+      {
+       "measurement_date": "2026-03-31",
+       "cumulative_ape": "100000"
+      },
+      {
+       "measurement_date": "2026-04-30",
+       "cumulative_ape": "200000"
+      }
+     ]
+    },
+    {
+     "project_id": "Q",
+     "snapshots": [
+      {
+       "measurement_date": "2026-06-30",
+       "cumulative_ape": "400000"
+      },
+      {
+       "measurement_date": "2026-12-31",
+       "cumulative_ape": "400000"
+      }
+     ]
+    }
+   ],
+   "debts": [
+    {
+     "debt_id": "NT",
+     "principal": "1000000",
+     "interest_incurred": "50000"
+    }
+   ],
+   "opts": {}
+  },
+  "expected": {
+   "per_unit": {
+    "M": {
+     "measurement_dates": [
+      "2026-03-31",
+      "2026-04-30"
+     ],
+     "ape_snapshots": {
+      "2026-03-31": "100000",
+      "2026-04-30": "200000"
+     },
+     "traced_debt_by_date": {
+      "2026-03-31": "0",
+      "2026-04-30": "0"
+     },
+     "excess_by_date": {
+      "2026-03-31": "100000",
+      "2026-04-30": "200000"
+     },
+     "average_excess": "150000",
+     "traced_interest": "0.00",
+     "excess_expenditure_amount": "7500.00",
+     "total_capitalized": "7500.00",
+     "book_capitalized_interest": "0",
+     "tax_delta_to_post": "7500.00"
+    },
+    "Q": {
+     "measurement_dates": [
+      "2026-06-30",
+      "2026-12-31"
+     ],
+     "ape_snapshots": {
+      "2026-06-30": "400000",
+      "2026-12-31": "400000"
+     },
+     "traced_debt_by_date": {
+      "2026-06-30": "0",
+      "2026-12-31": "0"
+     },
+     "excess_by_date": {
+      "2026-06-30": "400000",
+      "2026-12-31": "400000"
+     },
+     "average_excess": "400000",
+     "traced_interest": "0.00",
+     "excess_expenditure_amount": "20000.00",
+     "total_capitalized": "20000.00",
+     "book_capitalized_interest": "0",
+     "tax_delta_to_post": "20000.00"
+    }
+   },
+   "wair": "0.05",
+   "wair_source": "nontraced",
+   "total_traced": "0.00",
+   "total_excess": "27500.00",
+   "total_capitalized": "27500.00",
+   "prorated": false,
+   "consumption": {
+    "nontraced_consumed": "27500.00",
+    "below_afr_consumed": "0.00",
+    "guaranteed_payments_consumed": "0.00",
+    "nontraced_remaining_deductible": "22500.00",
+    "below_afr_remaining_deductible": "0.00",
+    "guaranteed_payments_remaining_deductible": "0.00",
+    "unsourced_excess": "0.00"
+   },
+   "warnings": [
+    "MIXED-MEASUREMENT-GRID: units carry snapshot dates on different conventions (their date sets do not nest) — §1.263A-9(f) uses ONE taxpayer-level measurement-date convention. Each unit was averaged over ITS OWN dates (no zero-padding); align the CIP snapshot schedules to one grid before relying on this computation."
+   ]
+  }
+ },
+ {
+  "name": "interest_partial_period_unit",
+  "engine": "interest",
+  "input": {
+   "projects": [
+    {
+     "project_id": "FULL",
+     "snapshots": [
+      {
+       "measurement_date": "2026-03-31",
+       "cumulative_ape": "400000"
+      },
+      {
+       "measurement_date": "2026-06-30",
+       "cumulative_ape": "400000"
+      },
+      {
+       "measurement_date": "2026-09-30",
+       "cumulative_ape": "400000"
+      },
+      {
+       "measurement_date": "2026-12-31",
+       "cumulative_ape": "400000"
+      }
+     ]
+    },
+    {
+     "project_id": "PART",
+     "snapshots": [
+      {
+       "measurement_date": "2026-09-30",
+       "cumulative_ape": "800000"
+      },
+      {
+       "measurement_date": "2026-12-31",
+       "cumulative_ape": "800000"
+      }
+     ]
+    }
+   ],
+   "debts": [
+    {
+     "debt_id": "NT",
+     "principal": "5000000",
+     "interest_incurred": "250000"
+    }
+   ],
+   "opts": {}
+  },
+  "expected": {
+   "per_unit": {
+    "FULL": {
+     "measurement_dates": [
+      "2026-03-31",
+      "2026-06-30",
+      "2026-09-30",
+      "2026-12-31"
+     ],
+     "ape_snapshots": {
+      "2026-03-31": "400000",
+      "2026-06-30": "400000",
+      "2026-09-30": "400000",
+      "2026-12-31": "400000"
+     },
+     "traced_debt_by_date": {
+      "2026-03-31": "0",
+      "2026-06-30": "0",
+      "2026-09-30": "0",
+      "2026-12-31": "0"
+     },
+     "excess_by_date": {
+      "2026-03-31": "400000",
+      "2026-06-30": "400000",
+      "2026-09-30": "400000",
+      "2026-12-31": "400000"
+     },
+     "average_excess": "400000",
+     "traced_interest": "0.00",
+     "excess_expenditure_amount": "20000.00",
+     "total_capitalized": "20000.00",
+     "book_capitalized_interest": "0",
+     "tax_delta_to_post": "20000.00"
+    },
+    "PART": {
+     "measurement_dates": [
+      "2026-09-30",
+      "2026-12-31"
+     ],
+     "ape_snapshots": {
+      "2026-09-30": "800000",
+      "2026-12-31": "800000"
+     },
+     "traced_debt_by_date": {
+      "2026-09-30": "0",
+      "2026-12-31": "0"
+     },
+     "excess_by_date": {
+      "2026-09-30": "800000",
+      "2026-12-31": "800000"
+     },
+     "average_excess": "400000",
+     "traced_interest": "0.00",
+     "excess_expenditure_amount": "20000.00",
+     "total_capitalized": "20000.00",
+     "book_capitalized_interest": "0",
+     "tax_delta_to_post": "20000.00"
+    }
+   },
+   "wair": "0.05",
+   "wair_source": "nontraced",
+   "total_traced": "0.00",
+   "total_excess": "40000.00",
+   "total_capitalized": "40000.00",
+   "prorated": false,
+   "consumption": {
+    "nontraced_consumed": "40000.00",
+    "below_afr_consumed": "0.00",
+    "guaranteed_payments_consumed": "0.00",
+    "nontraced_remaining_deductible": "210000.00",
+    "below_afr_remaining_deductible": "0.00",
+    "guaranteed_payments_remaining_deductible": "0.00",
+    "unsourced_excess": "0.00"
+   },
+   "warnings": [
+    "PARTIAL-PERIOD-UNIT [PART]: 2 APE snapshots over a 4-date computation period — missing dates treated as zero excess per the §1.263A-9(f)(2)(iii) snapshot convention. Confirm the unit's production period actually excludes those dates (a missing data row would UNDERSTATE capitalization)."
+   ]
+  }
+ },
+ {
+  "name": "interest_edge_warnings",
+  "engine": "interest",
+  "input": {
+   "projects": [
+    {
+     "project_id": "CF",
+     "is_common_feature": true,
+     "book_capitalized_interest": "99999",
+     "snapshots": [
+      {
+       "measurement_date": "2026-06-30",
+       "cumulative_ape": "-100"
+      },
+      {
+       "measurement_date": "2026-06-30",
+       "cumulative_ape": "50000"
+      },
+      {
+       "measurement_date": "2026-12-31",
+       "cumulative_ape": "60000"
+      }
+     ]
+    },
+    {
+     "project_id": "ND",
+     "snapshots": []
+    }
+   ],
+   "debts": [
+    {
+     "debt_id": "NEG",
+     "principal": "100000",
+     "interest_incurred": "-500"
+    },
+    {
+     "debt_id": "GHOST",
+     "principal": "100000",
+     "interest_incurred": "5000",
+     "traced_to": "NOWHERE"
+    },
+    {
+     "debt_id": "MISS",
+     "principal": "400000",
+     "interest_incurred": "20000",
+     "outstanding_by_date": {
+      "2026-06-30": "400000"
+     }
+    }
+   ],
+   "opts": {}
+  },
+  "expected": {
+   "per_unit": {
+    "CF": {
+     "measurement_dates": [
+      "2026-06-30",
+      "2026-12-31"
+     ],
+     "ape_snapshots": {
+      "2026-06-30": "50000",
+      "2026-12-31": "60000"
+     },
+     "traced_debt_by_date": {
+      "2026-06-30": "0",
+      "2026-12-31": "0"
+     },
+     "excess_by_date": {
+      "2026-06-30": "50000",
+      "2026-12-31": "60000"
+     },
+     "average_excess": "55000",
+     "traced_interest": "0.00",
+     "excess_expenditure_amount": "2200.00",
+     "total_capitalized": "2200.00",
+     "book_capitalized_interest": "99999",
+     "tax_delta_to_post": "0"
+    },
+    "ND": {
+     "measurement_dates": [],
+     "ape_snapshots": {},
+     "traced_debt_by_date": {},
+     "excess_by_date": {},
+     "average_excess": "0",
+     "traced_interest": "0.00",
+     "excess_expenditure_amount": "0.00",
+     "total_capitalized": "0.00",
+     "book_capitalized_interest": "0",
+     "tax_delta_to_post": "0"
+    }
+   },
+   "wair": "0.04",
+   "wair_source": "nontraced",
+   "total_traced": "0.00",
+   "total_excess": "2200.00",
+   "total_capitalized": "2200.00",
+   "prorated": false,
+   "consumption": {
+    "nontraced_consumed": "2200.00",
+    "below_afr_consumed": "0.00",
+    "guaranteed_payments_consumed": "0.00",
+    "nontraced_remaining_deductible": "17800.00",
+    "below_afr_remaining_deductible": "0.00",
+    "guaranteed_payments_remaining_deductible": "0.00",
+    "unsourced_excess": "0.00"
+   },
+   "warnings": [
+    "NEGATIVE-INTEREST-INCURRED [NEG]: $-500.00 floored to 0 — interest incurred cannot be negative; route rebates/adjustments through the schedule, not a negative figure.",
+    "TRACED-TO-UNKNOWN-UNIT [GHOST]: traced_to='NOWHERE' matches no unit given to this computation — interest neither traced nor in the WAIR pool; review the tracing schedule.",
+    "COMMON-FEATURE-OUT-OF-SCOPE [CF]: §1.263A-10(b) common-feature/unit-of-property mechanics are not implemented — treated as a standalone designated-property unit.",
+    "NEGATIVE-APE [CF] 2026-06-30: cumulative APE $-100.00 — accumulated production expenditures cannot be negative; the per-date excess floors at 0, but fix the CIP schedule.",
+    "DUPLICATE-MEASUREMENT-DATE [CF] 2026-06-30: two APE snapshots on the same date — the later row overwrote the earlier ($-100.00). Fix the CIP schedule.",
+    "NO-MEASUREMENT-DATES [ND]: unit has no dated APE snapshots — average excess expenditures computed as ZERO; only traced interest capitalized. Supply the CIP snapshot schedule.",
+    "DATED-BALANCE-MISSING: debts with dated balance schedules lack a balance on these measurement dates — principal was substituted, which can distort WAIR and traced-debt snapshots: MISS@2026-12-31. Complete the debt balance schedule.",
+    "BOOK-EXCEEDS-TAX-REQUIRED [§263A(f) interest — CF]: book already capitalizes $99,999.00 but the tax-required amount is only $2,200.00 — no negative posting made; review the book/tax convention difference ($97,799.00)."
+   ]
+  }
+ },
+ {
+  "name": "s174_mixed_portfolio",
+  "engine": "s174",
+  "input": {
+   "expenditures": [
+    {
+     "re_id": "F1",
+     "description": "Foreign lab",
+     "amount": "900000",
+     "domestic": false,
+     "tax_year": 2026,
+     "book_capitalized_amount": "200000"
+    },
+    {
+     "re_id": "D1",
+     "description": "US software",
+     "amount": "600000",
+     "domestic": true,
+     "book_capitalized_amount": "50000"
+    },
+    {
+     "re_id": "D2",
+     "description": "US bench",
+     "amount": "150000",
+     "domestic": true
+    }
+   ],
+   "opts": {
+    "current_tax_year": 2026
+   }
+  },
+  "expected": {
+   "items": [
+    {
+     "re_id": "F1",
+     "description": "Foreign lab",
+     "amount": "900000",
+     "domestic": false,
+     "treatment": "foreign_mandatory_capitalize",
+     "tax_required_capitalized": "900000",
+     "posted_basis": "700000",
+     "current_year_deduction": "0",
+     "flags": []
+    },
+    {
+     "re_id": "D1",
+     "description": "US software",
+     "amount": "600000",
+     "domestic": true,
+     "treatment": "domestic_default_expense",
+     "tax_required_capitalized": "0",
+     "posted_basis": "0",
+     "current_year_deduction": "600000",
+     "flags": []
+    },
+    {
+     "re_id": "D2",
+     "description": "US bench",
+     "amount": "150000",
+     "domestic": true,
+     "treatment": "domestic_default_expense",
+     "tax_required_capitalized": "0",
+     "posted_basis": "0",
+     "current_year_deduction": "150000",
+     "flags": []
+    }
+   ],
+   "amortizable_items": [
+    {
+     "item_id": "F1",
+     "description": "Foreign lab",
+     "category": "re_pool",
+     "basis": "700000",
+     "recovery_months": 180,
+     "convention": "mid-year",
+     "start_year": 2026,
+     "source": "Phase F compute_174",
+     "authority": "§174(a)(2): foreign research, 15-year straight-line, midpoint (mid-year) convention",
+     "flags": [],
+     "notes": "",
+     "first_year_amortization": "23333.33"
+    }
+   ],
+   "current_year_deduction": "750000",
+   "capitalized_total": "700000",
+   "catchup": {
+    "method": null,
+    "current_year_deduction": "0",
+    "following_year_deduction": "0"
+   },
+   "warnings": [
+    "BASIS-RECONCILED [§174 foreign R&E F1]: $200,000.00 already on the books; posting only the $700,000.00 tax delta.",
+    "BOOK-TAX-DIVERGENCE [D1]: books capitalize $50,000.00 of domestic R&E the §174A(a) default currently expenses — book/tax difference, review (no tax capitalization posted)."
+   ]
+  }
+ },
+ {
+  "name": "s174_domestic_election_floored_disposals",
+  "engine": "s174",
+  "input": {
+   "expenditures": [
+    {
+     "re_id": "F1",
+     "description": "Foreign lab",
+     "amount": "500000",
+     "domestic": false,
+     "tax_year": 2025
+    },
+    {
+     "re_id": "D1",
+     "description": "US software",
+     "amount": "300000",
+     "domestic": true
+    },
+    {
+     "re_id": "D2",
+     "description": "US expensed prior law",
+     "amount": "100000",
+     "domestic": true
+    }
+   ],
+   "opts": {
+    "domestic_capitalization_election": true,
+    "elected_period_months": 48,
+    "disposal_events": [
+     "F1",
+     "D1",
+     "ZZZ"
+    ]
+   }
+  },
+  "expected": {
+   "items": [
+    {
+     "re_id": "F1",
+     "description": "Foreign lab",
+     "amount": "500000",
+     "domestic": false,
+     "treatment": "foreign_mandatory_capitalize",
+     "tax_required_capitalized": "500000",
+     "posted_basis": "500000",
+     "current_year_deduction": "0",
+     "flags": [
+      "DISPOSAL-NO-LOSS-174D"
+     ]
+    },
+    {
+     "re_id": "D1",
+     "description": "US software",
+     "amount": "300000",
+     "domestic": true,
+     "treatment": "domestic_elected_capitalize",
+     "tax_required_capitalized": "300000",
+     "posted_basis": "300000",
+     "current_year_deduction": "0",
+     "flags": [
+      "DISPOSAL-NO-LOSS-174D",
+      "§174D-DOMESTIC-ELECTIVE-UNVERIFIED"
+     ]
+    },
+    {
+     "re_id": "D2",
+     "description": "US expensed prior law",
+     "amount": "100000",
+     "domestic": true,
+     "treatment": "domestic_elected_capitalize",
+     "tax_required_capitalized": "100000",
+     "posted_basis": "100000",
+     "current_year_deduction": "0",
+     "flags": []
+    }
+   ],
+   "amortizable_items": [
+    {
+     "item_id": "F1",
+     "description": "Foreign lab",
+     "category": "re_pool",
+     "basis": "500000",
+     "recovery_months": 180,
+     "convention": "mid-year",
+     "start_year": 2025,
+     "source": "Phase F compute_174",
+     "authority": "§174(a)(2): foreign research, 15-year straight-line, midpoint (mid-year) convention",
+     "flags": [
+      "DISPOSAL-NO-LOSS-174D"
+     ],
+     "notes": "",
+     "first_year_amortization": "16666.67"
+    },
+    {
+     "item_id": "D1",
+     "description": "US software",
+     "category": "re_pool",
+     "basis": "300000",
+     "recovery_months": 60,
+     "convention": "mid-year",
+     "start_year": 2026,
+     "source": "Phase F compute_174",
+     "authority": "§174A(c): elective domestic capitalization, 60-month straight-line",
+     "flags": [
+      "DISPOSAL-NO-LOSS-174D",
+      "§174D-DOMESTIC-ELECTIVE-UNVERIFIED"
+     ],
+     "notes": "§174A(c) amortization runs ratably from the month the taxpayer first realizes benefits; that month is not in the input schedule (DATA GAP) — mid-year convention applied as a documented proxy.",
+     "first_year_amortization": "30000.00"
+    },
+    {
+     "item_id": "D2",
+     "description": "US expensed prior law",
+     "category": "re_pool",
+     "basis": "100000",
+     "recovery_months": 60,
+     "convention": "mid-year",
+     "start_year": 2026,
+     "source": "Phase F compute_174",
+     "authority": "§174A(c): elective domestic capitalization, 60-month straight-line",
+     "flags": [],
+     "notes": "§174A(c) amortization runs ratably from the month the taxpayer first realizes benefits; that month is not in the input schedule (DATA GAP) — mid-year convention applied as a documented proxy.",
+     "first_year_amortization": "10000.00"
+    }
+   ],
+   "current_year_deduction": "0",
+   "capitalized_total": "900000",
+   "catchup": {
+    "method": null,
+    "current_year_deduction": "0",
+    "following_year_deduction": "0"
+   },
+   "warnings": [
+    "ELECTED-PERIOD-BELOW-60: §174A(c) requires a period of not less than 60 months; 48 requested — floored to 60.",
+    "§174A(c) domestic-capitalization election is a METHOD OF ACCOUNTING — consistency/3115 discipline applies.",
+    "§174(d) [F1]: disposal/retirement/abandonment of property with capitalized foreign R&E basis — NO loss deduction; amortization continues as if the disposition never occurred.",
+    "§174(d) [D1]: disposal touching ELECTED-capitalization domestic R&E basis — no loss taken and amortization continued (conservative reading); whether post-OBBBA §174(d) reaches §174A(c)-elected domestic basis is UNVERIFIED — §174D-DOMESTIC-ELECTIVE-UNVERIFIED, SME review.",
+    "DISPOSAL-UNKNOWN-RE-ID: 'ZZZ' matches no R&E expenditure in the schedule."
+   ]
+  }
+ },
+ {
+  "name": "s174_catchup_one_year",
+  "engine": "s174",
+  "input": {
+   "expenditures": [],
+   "opts": {
+    "catchup_method": "one_year",
+    "remaining_2022_2024_basis": "240000"
+   }
+  },
+  "expected": {
+   "items": [],
+   "amortizable_items": [],
+   "current_year_deduction": "240000",
+   "capitalized_total": "0",
+   "catchup": {
+    "method": "one_year",
+    "current_year_deduction": "240000",
+    "following_year_deduction": "0"
+   },
+   "warnings": []
+  }
+ },
+ {
+  "name": "s174_catchup_two_year_odd_cent",
+  "engine": "s174",
+  "input": {
+   "expenditures": [],
+   "opts": {
+    "catchup_method": "two_year",
+    "remaining_2022_2024_basis": "1000.01"
+   }
+  },
+  "expected": {
+   "items": [],
+   "amortizable_items": [],
+   "current_year_deduction": "500.00",
+   "capitalized_total": "0",
+   "catchup": {
+    "method": "two_year",
+    "current_year_deduction": "500.00",
+    "following_year_deduction": "500.01"
+   },
+   "warnings": [
+    "CATCHUP-SPLIT-UNVERIFIED: two-year catch-up assumed 50/50 across the two years — the exact ratable split needs a Rev. Proc. 2025-28 primary read before filing use."
+   ]
+  }
+ },
+ {
+  "name": "s174_retroactive_conflict",
+  "engine": "s174",
+  "input": {
+   "expenditures": [],
+   "opts": {
+    "catchup_method": "one_year",
+    "remaining_2022_2024_basis": "240000",
+    "small_business_retroactive": true
+   }
+  },
+  "expected": {
+   "items": [],
+   "amortizable_items": [],
+   "current_year_deduction": "0",
+   "capitalized_total": "0",
+   "catchup": {
+    "method": "one_year",
+    "current_year_deduction": "0",
+    "following_year_deduction": "0",
+    "conflicted_amount_not_deducted": "240000"
+   },
+   "warnings": [
+    "CATCHUP-RETROACTIVE-MUTUALLY-EXCLUSIVE: the §448(c) small-business retroactive election and a catch-up method were BOTH selected — mutually exclusive. NO catch-up deduction was booked; resolve which election applies before relying on this output.",
+    "SMALL-BUSINESS-RETROACTIVE-DEADLINE: the Rev. Proc. 2025-28 retroactive election requires AMENDED 2022-2024 returns by July 6, 2026 — a lapsing hard deadline; the amended-return computation itself is out of scope for this engine."
+   ]
+  }
+ },
+ {
+  "name": "s174_catchup_unknown_method",
+  "engine": "s174",
+  "input": {
+   "expenditures": [],
+   "opts": {
+    "catchup_method": "lump",
+    "remaining_2022_2024_basis": "1"
+   }
+  },
+  "expected": {
+   "items": [],
+   "amortizable_items": [],
+   "current_year_deduction": "0",
+   "capitalized_total": "0",
+   "catchup": {
+    "method": "lump",
+    "current_year_deduction": "0",
+    "following_year_deduction": "0"
+   },
+   "warnings": [
+    "CATCHUP-METHOD-UNKNOWN: 'lump' — no catch-up computed (expected one_year/two_year)."
+   ]
+  }
+ },
+ {
+  "name": "intangibles_transaction_costs",
+  "engine": "intangibles",
+  "input": {
+   "transaction_costs": [
+    {
+     "item_id": "T1",
+     "transaction_id": "DEAL1",
+     "description": "Success fee",
+     "amount": "1000.01",
+     "covered_transaction": true,
+     "success_based": true
+    },
+    {
+     "item_id": "T2",
+     "transaction_id": "DEAL1",
+     "description": "Fairness opinion",
+     "amount": "250000",
+     "covered_transaction": true,
+     "inherently_facilitative": true
+    },
+    {
+     "item_id": "T3",
+     "transaction_id": "DEAL1",
+     "description": "Market study",
+     "amount": "40000",
+     "covered_transaction": true,
+     "incurred_date": "2026-01-15",
+     "bright_line_date": "2026-03-01"
+    },
+    {
+     "item_id": "T4",
+     "transaction_id": "DEAL1",
+     "description": "Diligence",
+     "amount": "60000",
+     "covered_transaction": true,
+     "incurred_date": "2026-04-15",
+     "bright_line_date": "2026-03-01"
+    },
+    {
+     "item_id": "T5",
+     "transaction_id": "DEAL2",
+     "description": "Covered no dates",
+     "amount": "10000",
+     "covered_transaction": true
+    },
+    {
+     "item_id": "T6",
+     "transaction_id": "DEAL3",
+     "description": "Routine legal",
+     "amount": "5000"
+    },
+    {
+     "item_id": "T7",
+     "transaction_id": "DEAL4",
+     "description": "Abandoned banker fee",
+     "amount": "75000",
+     "covered_transaction": true,
+     "inherently_facilitative": true,
+     "transaction_abandoned": true
+    },
+    {
+     "item_id": "T8",
+     "transaction_id": "DEAL5",
+     "description": "Credit memo",
+     "amount": "-2500"
+    }
+   ],
+   "intangibles": [],
+   "startup_pools": [],
+   "opts": {
+    "success_fee_elections": [
+     "DEAL1"
+    ]
+   }
+  },
+  "expected": {
+   "transaction_items": [
+    {
+     "item_id": "T1",
+     "transaction_id": "DEAL1",
+     "description": "Success fee",
+     "amount": "1000.01",
+     "treatment": "success_fee_70_30",
+     "deductible": "700.01",
+     "capitalized": "300.00",
+     "flags": [
+      "REV-PROC-2011-29-IRREVOCABLE"
+     ]
+    },
+    {
+     "item_id": "T2",
+     "transaction_id": "DEAL1",
+     "description": "Fairness opinion",
+     "amount": "250000",
+     "treatment": "inherently_facilitative_capitalize",
+     "deductible": "0",
+     "capitalized": "250000",
+     "flags": []
+    },
+    {
+     "item_id": "T3",
+     "transaction_id": "DEAL1",
+     "description": "Market study",
+     "amount": "40000",
+     "treatment": "investigatory_pre_bright_line_deduct",
+     "deductible": "40000",
+     "capitalized": "0",
+     "flags": []
+    },
+    {
+     "item_id": "T4",
+     "transaction_id": "DEAL1",
+     "description": "Diligence",
+     "amount": "60000",
+     "treatment": "facilitative_capitalize",
+     "deductible": "0",
+     "capitalized": "60000",
+     "flags": []
+    },
+    {
+     "item_id": "T5",
+     "transaction_id": "DEAL2",
+     "description": "Covered no dates",
+     "amount": "10000",
+     "treatment": "facilitative_capitalize",
+     "deductible": "0",
+     "capitalized": "10000",
+     "flags": [
+      "BRIGHT-LINE-DATES-MISSING"
+     ]
+    },
+    {
+     "item_id": "T6",
+     "transaction_id": "DEAL3",
+     "description": "Routine legal",
+     "amount": "5000",
+     "treatment": "deductible_162",
+     "deductible": "5000",
+     "capitalized": "0",
+     "flags": []
+    },
+    {
+     "item_id": "T7",
+     "transaction_id": "DEAL4",
+     "description": "Abandoned banker fee",
+     "amount": "75000",
+     "treatment": "inherently_facilitative_capitalize+abandoned_loss",
+     "deductible": "75000",
+     "capitalized": "0",
+     "flags": [
+      "ABANDONED-TRANSACTION-LOSS-73-580"
+     ]
+    },
+    {
+     "item_id": "T8",
+     "transaction_id": "DEAL5",
+     "description": "Credit memo",
+     "amount": "-2500",
+     "treatment": "sme_review",
+     "deductible": "0",
+     "capitalized": "0",
+     "flags": [
+      "NEGATIVE-AMOUNT"
+     ]
+    }
+   ],
+   "intangible_items": [],
+   "startup_items": [],
+   "amortizable_items": [
+    {
+     "item_id": "T1",
+     "description": "Success fee",
+     "category": "intangible",
+     "basis": "300.00",
+     "recovery_months": null,
+     "convention": "none",
+     "start_year": 2026,
+     "source": "Phase G compute_263a4_5",
+     "authority": "§1.263(a)-5 facilitative transaction cost",
+     "flags": [],
+     "notes": "Attach to the facilitated asset's basis (seed for downstream routing — asset basis / §197 / §1.446-5).",
+     "first_year_amortization": "0"
+    },
+    {
+     "item_id": "T2",
+     "description": "Fairness opinion",
+     "category": "intangible",
+     "basis": "250000",
+     "recovery_months": null,
+     "convention": "none",
+     "start_year": 2026,
+     "source": "Phase G compute_263a4_5",
+     "authority": "§1.263(a)-5 facilitative transaction cost",
+     "flags": [],
+     "notes": "Attach to the facilitated asset's basis (seed for downstream routing — asset basis / §197 / §1.446-5).",
+     "first_year_amortization": "0"
+    },
+    {
+     "item_id": "T4",
+     "description": "Diligence",
+     "category": "intangible",
+     "basis": "60000",
+     "recovery_months": null,
+     "convention": "none",
+     "start_year": 2026,
+     "source": "Phase G compute_263a4_5",
+     "authority": "§1.263(a)-5 facilitative transaction cost",
+     "flags": [],
+     "notes": "Attach to the facilitated asset's basis (seed for downstream routing — asset basis / §197 / §1.446-5).",
+     "first_year_amortization": "0"
+    },
+    {
+     "item_id": "T5",
+     "description": "Covered no dates",
+     "category": "intangible",
+     "basis": "10000",
+     "recovery_months": null,
+     "convention": "none",
+     "start_year": 2026,
+     "source": "Phase G compute_263a4_5",
+     "authority": "§1.263(a)-5 facilitative transaction cost",
+     "flags": [],
+     "notes": "Attach to the facilitated asset's basis (seed for downstream routing — asset basis / §197 / §1.446-5).",
+     "first_year_amortization": "0"
+    }
+   ],
+   "capitalized_total": "320300.00",
+   "deductible_total": "120700.01",
+   "warnings": [
+    "BRIGHT-LINE-DATES-MISSING [T5]: covered-transaction cost lacks incurred/bright-line dates — capitalized conservatively; supply dates to test the investigatory carve-out.",
+    "ABANDONED-TRANSACTION [T7]: transaction 'DEAL4' abandoned — $75,000.00 of capitalized transaction costs becomes a deductible loss (Rev. Rul. 73-580).",
+    "NEGATIVE-AMOUNT [txn cost T8]: $-2,500.00 — nothing computed; route credits/refunds through the schedule, not a negative fee."
+   ]
+  }
+ },
+ {
+  "name": "intangibles_12mo_cliff_197",
+  "engine": "intangibles",
+  "input": {
+   "transaction_costs": [],
+   "intangibles": [
+    {
+     "item_id": "I1",
+     "description": "9-month license",
+     "amount": "24000",
+     "benefit_start": "2026-02-01",
+     "benefit_end": "2026-10-31",
+     "payment_year": 2026,
+     "facilitative_commissions": "3000"
+    },
+    {
+     "item_id": "I2",
+     "description": "18-month contract",
+     "amount": "90000",
+     "benefit_start": "2026-03-01",
+     "benefit_end": "2027-08-31",
+     "payment_year": 2026,
+     "facilitative_costs": "4000"
+    },
+    {
+     "item_id": "I3",
+     "description": "over-cliff facilitative",
+     "amount": "50000",
+     "benefit_start": "2026-01-01",
+     "benefit_end": "2028-01-01",
+     "payment_year": 2026,
+     "facilitative_costs": "5001"
+    },
+    {
+     "item_id": "I4",
+     "description": "acquired customer list",
+     "amount": "400000",
+     "acquired_with_business": true,
+     "prior_capitalized_basis": "100000"
+    },
+    {
+     "item_id": "I5",
+     "description": "indefinite franchise right",
+     "amount": "80000"
+    },
+    {
+     "item_id": "I6",
+     "description": "sub-month benefit",
+     "amount": "1200",
+     "benefit_start": "2027-01-05",
+     "benefit_end": "2027-01-20",
+     "payment_year": 2025
+    },
+    {
+     "item_id": "I7",
+     "description": "reversed dates",
+     "amount": "10",
+     "benefit_start": "2026-06-01",
+     "benefit_end": "2026-01-01"
+    },
+    {
+     "item_id": "I8",
+     "description": "bad payment year",
+     "amount": "10",
+     "benefit_start": "2026-01-01",
+     "benefit_end": "2026-06-01",
+     "payment_year": 26
+    }
+   ],
+   "startup_pools": [],
+   "opts": {}
+  },
+  "expected": {
+   "transaction_items": [],
+   "intangible_items": [
+    {
+     "item_id": "I1",
+     "description": "9-month license",
+     "amount": "24000",
+     "facilitative_costs": "0",
+     "treatment": "twelve_month_rule_deduct",
+     "deductible": "24000",
+     "capitalized": "3000",
+     "posted_basis": "3000",
+     "flags": [
+      "E4-COMMISSIONS-ALWAYS-CAPITALIZED"
+     ]
+    },
+    {
+     "item_id": "I2",
+     "description": "18-month contract",
+     "amount": "90000",
+     "facilitative_costs": "4000",
+     "treatment": "capitalize_263a4",
+     "deductible": "4000",
+     "capitalized": "90000",
+     "posted_basis": "90000",
+     "flags": [
+      "E4-DE-MINIMIS-DEDUCTED"
+     ]
+    },
+    {
+     "item_id": "I3",
+     "description": "over-cliff facilitative",
+     "amount": "50000",
+     "facilitative_costs": "5001",
+     "treatment": "capitalize_263a4",
+     "deductible": "0",
+     "capitalized": "55001",
+     "posted_basis": "55001",
+     "flags": [
+      "E4-CLIFF-ALL-CAPITALIZED"
+     ]
+    },
+    {
+     "item_id": "I4",
+     "description": "acquired customer list",
+     "amount": "400000",
+     "facilitative_costs": "0",
+     "treatment": "capitalize_263a4",
+     "deductible": "0",
+     "capitalized": "400000",
+     "posted_basis": "300000",
+     "flags": []
+    },
+    {
+     "item_id": "I5",
+     "description": "indefinite franchise right",
+     "amount": "80000",
+     "facilitative_costs": "0",
+     "treatment": "capitalize_263a4",
+     "deductible": "0",
+     "capitalized": "80000",
+     "posted_basis": "80000",
+     "flags": [
+      "INDEFINITE-LIFE-SME-REVIEW"
+     ]
+    },
+    {
+     "item_id": "I6",
+     "description": "sub-month benefit",
+     "amount": "1200",
+     "facilitative_costs": "0",
+     "treatment": "capitalize_263a4",
+     "deductible": "0",
+     "capitalized": "1200",
+     "posted_basis": "1200",
+     "flags": []
+    },
+    {
+     "item_id": "I7",
+     "description": "reversed dates",
+     "amount": "10",
+     "facilitative_costs": "0",
+     "treatment": "sme_review",
+     "deductible": "0",
+     "capitalized": "0",
+     "posted_basis": "0",
+     "flags": [
+      "BENEFIT-DATES-REVERSED"
+     ]
+    },
+    {
+     "item_id": "I8",
+     "description": "bad payment year",
+     "amount": "10",
+     "facilitative_costs": "0",
+     "treatment": "sme_review",
+     "deductible": "0",
+     "capitalized": "0",
+     "posted_basis": "0",
+     "flags": [
+      "PAYMENT-YEAR-INVALID"
+     ]
+    }
+   ],
+   "startup_items": [],
+   "amortizable_items": [
+    {
+     "item_id": "I1",
+     "description": "9-month license (commissions)",
+     "category": "intangible",
+     "basis": "3000",
+     "recovery_months": null,
+     "convention": "none",
+     "start_year": 2026,
+     "source": "Phase G compute_263a4_5",
+     "authority": "§1.263(a)-4(e)(4): commissions always facilitative",
+     "flags": [
+      "E4-COMMISSIONS-ALWAYS-CAPITALIZED",
+      "INDEFINITE-LIFE-SME-REVIEW"
+     ],
+     "notes": "",
+     "first_year_amortization": "0"
+    },
+    {
+     "item_id": "I2",
+     "description": "18-month contract",
+     "category": "intangible",
+     "basis": "90000",
+     "recovery_months": 18,
+     "convention": "full-month",
+     "start_year": 2026,
+     "source": "Phase G compute_263a4_5",
+     "authority": "§1.263(a)-4: amortized over the benefit term (18 months, benefit_end − benefit_start)",
+     "flags": [
+      "E4-DE-MINIMIS-DEDUCTED"
+     ],
+     "notes": "",
+     "first_year_amortization": "60000.00"
+    },
+    {
+     "item_id": "I3",
+     "description": "over-cliff facilitative",
+     "category": "intangible",
+     "basis": "55001",
+     "recovery_months": 24,
+     "convention": "full-month",
+     "start_year": 2026,
+     "source": "Phase G compute_263a4_5",
+     "authority": "§1.263(a)-4: amortized over the benefit term (24 months, benefit_end − benefit_start)",
+     "flags": [
+      "E4-CLIFF-ALL-CAPITALIZED"
+     ],
+     "notes": "",
+     "first_year_amortization": "27500.50"
+    },
+    {
+     "item_id": "I4",
+     "description": "acquired customer list",
+     "category": "intangible",
+     "basis": "300000",
+     "recovery_months": 180,
+     "convention": "full-month",
+     "start_year": 2026,
+     "source": "Phase G compute_263a4_5",
+     "authority": "§197(a): acquired-with-business intangible, 15-year",
+     "flags": [],
+     "notes": "",
+     "first_year_amortization": "20000.00"
+    },
+    {
+     "item_id": "I5",
+     "description": "indefinite franchise right",
+     "category": "intangible",
+     "basis": "80000",
+     "recovery_months": null,
+     "convention": "none",
+     "start_year": 2026,
+     "source": "Phase G compute_263a4_5",
+     "authority": "§1.263(a)-4: no ascertainable life in schedule",
+     "flags": [
+      "INDEFINITE-LIFE-SME-REVIEW"
+     ],
+     "notes": "",
+     "first_year_amortization": "0"
+    },
+    {
+     "item_id": "I6",
+     "description": "sub-month benefit",
+     "category": "intangible",
+     "basis": "1200",
+     "recovery_months": 1,
+     "convention": "full-month",
+     "start_year": 2026,
+     "source": "Phase G compute_263a4_5",
+     "authority": "§1.263(a)-4: amortized over the benefit term (1 months, benefit_end − benefit_start)",
+     "flags": [],
+     "notes": "",
+     "first_year_amortization": "14400.00"
+    }
+   ],
+   "capitalized_total": "529201",
+   "deductible_total": "28000",
+   "warnings": [
+    "BASIS-RECONCILED [§1.263(a)-4 intangible I4]: $100,000.00 already on the books; posting only the $300,000.00 tax delta.",
+    "INDEFINITE-LIFE-SME-REVIEW [I5]: capitalized intangible with no §197 route and no benefit dates — recovery period is a per-item SME determination, not defaulted.",
+    "BENEFIT-DATES-REVERSED [I7]: benefit_end 2026-01-01 precedes benefit_start 2026-06-01 — no treatment computed; fix the schedule dates.",
+    "PAYMENT-YEAR-INVALID [I8]: payment_year=26 is not a plausible tax year — no treatment computed."
+   ]
+  }
+ },
+ {
+  "name": "intangibles_startup_pools",
+  "engine": "intangibles",
+  "input": {
+   "transaction_costs": [],
+   "intangibles": [],
+   "startup_pools": [
+    {
+     "pool_id": "S1",
+     "kind": "startup",
+     "total": "45000",
+     "business_commencement": "2026-04-10"
+    },
+    {
+     "pool_id": "S2",
+     "kind": "org_corp",
+     "total": "52000",
+     "business_commencement": "2026-07-01"
+    },
+    {
+     "pool_id": "S3",
+     "kind": "startup",
+     "total": "60000"
+    },
+    {
+     "pool_id": "S4",
+     "kind": "syndication",
+     "total": "30000"
+    },
+    {
+     "pool_id": "S5",
+     "kind": "startup",
+     "total": "-100"
+    }
+   ],
+   "opts": {}
+  },
+  "expected": {
+   "transaction_items": [],
+   "intangible_items": [],
+   "startup_items": [
+    {
+     "pool_id": "S1",
+     "kind": "startup",
+     "total": "45000",
+     "first_year_deduction": "5000",
+     "amortizable_remainder": "40000",
+     "first_year_amortization": "2000.00",
+     "flags": []
+    },
+    {
+     "pool_id": "S2",
+     "kind": "org_corp",
+     "total": "52000",
+     "first_year_deduction": "3000",
+     "amortizable_remainder": "49000",
+     "first_year_amortization": "1633.33",
+     "flags": []
+    },
+    {
+     "pool_id": "S3",
+     "kind": "startup",
+     "total": "60000",
+     "first_year_deduction": "0",
+     "amortizable_remainder": "60000",
+     "first_year_amortization": "4000.00",
+     "flags": [
+      "BUSINESS-COMMENCEMENT-DATE-MISSING"
+     ]
+    },
+    {
+     "pool_id": "S4",
+     "kind": "syndication",
+     "total": "30000",
+     "first_year_deduction": "0",
+     "amortizable_remainder": "0",
+     "first_year_amortization": "0",
+     "flags": [
+      "SYNDICATION-PERMANENTLY-CAPITALIZED"
+     ]
+    },
+    {
+     "pool_id": "S5",
+     "kind": "startup",
+     "total": "-100",
+     "first_year_deduction": "0",
+     "amortizable_remainder": "0",
+     "first_year_amortization": "0",
+     "flags": [
+      "NEGATIVE-POOL-TOTAL"
+     ]
+    }
+   ],
+   "amortizable_items": [
+    {
+     "item_id": "S1",
+     "description": "startup cost pool",
+     "category": "startup_org",
+     "basis": "40000",
+     "recovery_months": 180,
+     "convention": "full-month",
+     "start_year": 2026,
+     "source": "Phase G compute_263a4_5",
+     "authority": "§195(b)/§248(a)/§709(b)(1): 180-month straight-line from business commencement",
+     "flags": [],
+     "notes": "Year-1 amortization 9/180 (months in service, calendar-year assumption).",
+     "first_year_amortization": "2666.67"
+    },
+    {
+     "item_id": "S2",
+     "description": "org_corp cost pool",
+     "category": "startup_org",
+     "basis": "49000",
+     "recovery_months": 180,
+     "convention": "full-month",
+     "start_year": 2026,
+     "source": "Phase G compute_263a4_5",
+     "authority": "§195(b)/§248(a)/§709(b)(1): 180-month straight-line from business commencement",
+     "flags": [],
+     "notes": "Year-1 amortization 6/180 (months in service, calendar-year assumption).",
+     "first_year_amortization": "3266.67"
+    },
+    {
+     "item_id": "S3",
+     "description": "startup cost pool",
+     "category": "startup_org",
+     "basis": "60000",
+     "recovery_months": 180,
+     "convention": "full-month",
+     "start_year": 2026,
+     "source": "Phase G compute_263a4_5",
+     "authority": "§195(b)/§248(a)/§709(b)(1): 180-month straight-line from business commencement",
+     "flags": [],
+     "notes": "Year-1 amortization 12/180 (months in service, calendar-year assumption).",
+     "first_year_amortization": "4000.00"
+    },
+    {
+     "item_id": "S4",
+     "description": "Syndication costs",
+     "category": "startup_org",
+     "basis": "30000",
+     "recovery_months": null,
+     "convention": "none",
+     "start_year": 2026,
+     "source": "Phase G compute_263a4_5",
+     "authority": "§709(b): syndication costs, permanent capitalization",
+     "flags": [
+      "SYNDICATION-PERMANENTLY-CAPITALIZED"
+     ],
+     "notes": "",
+     "first_year_amortization": "0"
+    }
+   ],
+   "capitalized_total": "179000",
+   "deductible_total": "8000",
+   "warnings": [
+    "BUSINESS-COMMENCEMENT-DATE-MISSING [S3]: amortization must begin with the month the active trade or business begins — January assumed pending the date.",
+    "SYNDICATION-PERMANENTLY-CAPITALIZED [S4]: §709(b) syndication costs — no first-year deduction, no amortization; deductible only on complete liquidation.",
+    "NEGATIVE-POOL-TOTAL [startup S5]: total $-100.00 — nothing computed; fix the schedule."
+   ]
+  }
+ },
+ {
+  "name": "demolition_normal",
+  "engine": "demolition",
+  "input": {
+   "demolition_cost": "120000",
+   "remaining_structure_basis": "480000"
+  },
+  "expected": {
+   "amortizable_items": [
+    {
+     "item_id": "",
+     "description": "§280B demolition — capitalized to land",
+     "category": "land",
+     "basis": "600000",
+     "recovery_months": null,
+     "convention": "none",
+     "start_year": 0,
+     "source": "Phase G route_demolition",
+     "authority": "§280B / Reg. §1.280B-1",
+     "flags": [
+      "§280B-CAPITALIZED-TO-LAND"
+     ],
+     "notes": "",
+     "first_year_amortization": "0"
+    }
+   ],
+   "warnings": [
+    "§280B-CAPITALIZED-TO-LAND: demolition cost $120,000.00 + remaining structure basis $480,000.00 capitalized to land — no loss, no depreciation (Reg. §1.280B-1)."
+   ]
+  }
+ },
+ {
+  "name": "demolition_casualty",
+  "engine": "demolition",
+  "input": {
+   "demolition_cost": "120000",
+   "remaining_structure_basis": "480000",
+   "casualty": true
+  },
+  "expected": {
+   "amortizable_items": [],
+   "warnings": [
+    "CASUALTY-EXCEPTION-SME-REVIEW: casualty-triggered demolition — Notice 90-21 carve-out may apply; §280B land capitalization NOT auto-applied, route to SME."
+   ]
+  }
+ },
+ {
+  "name": "s59e_c_corp_gated",
+  "engine": "s59e",
+  "input": {
+   "elections": [
+    {
+     "item_id": "Q1",
+     "category": "idc",
+     "amount": "100000",
+     "elected": true,
+     "election_year": 2026
+    }
+   ],
+   "opts": {
+    "entity_type": "c_corp"
+   }
+  },
+  "expected": {
+   "items": [],
+   "amortizable_items": [],
+   "warnings": [
+    "§59(e) has no current-law use for a C corp with no individual-AMT-exposed owners (corporate AMT repealed by TCJA; CAMT §55/§56A does not use §57/§59(e) preference items)"
+   ]
+  }
+ },
+ {
+  "name": "s59e_scorp_no_exposure_gated",
+  "engine": "s59e",
+  "input": {
+   "elections": [
+    {
+     "item_id": "Q1",
+     "category": "idc",
+     "amount": "100000",
+     "elected": true,
+     "election_year": 2026
+    }
+   ],
+   "opts": {
+    "entity_type": "s_corp"
+   }
+  },
+  "expected": {
+   "items": [],
+   "amortizable_items": [],
+   "warnings": [
+    "§59E-NO-AMT-EXPOSURE: entity_type='s_corp' with individual_amt_exposure=False — §59(e) matters only when an individual owner could face §55/§56/§57 preference items (Gate 10 Q10.1). No election scheduled; re-run with individual_amt_exposure=True if owners are exposed."
+   ]
+  }
+ },
+ {
+  "name": "s59e_sole_prop_full",
+  "engine": "s59e",
+  "input": {
+   "elections": [
+    {
+     "item_id": "Q1",
+     "category": "circulation",
+     "amount": "36000",
+     "elected": true,
+     "election_year": 2026
+    },
+    {
+     "item_id": "Q2",
+     "category": "idc",
+     "amount": "600000",
+     "elected": true,
+     "election_year": 2026
+    },
+    {
+     "item_id": "Q3",
+     "category": "mining_exploration",
+     "amount": "240000",
+     "elected": true,
+     "election_year": 2026
+    },
+    {
+     "item_id": "Q4",
+     "category": "re_domestic",
+     "amount": "120000",
+     "elected": true,
+     "election_year": 2026
+    },
+    {
+     "item_id": "Q5",
+     "category": "bogus",
+     "amount": "10",
+     "elected": true,
+     "election_year": 2026
+    },
+    {
+     "item_id": "Q6",
+     "category": "idc",
+     "amount": "-5",
+     "elected": true,
+     "election_year": 2026
+    },
+    {
+     "item_id": "Q7",
+     "category": "idc",
+     "amount": "999",
+     "elected": false,
+     "election_year": 2026
+    }
+   ],
+   "opts": {
+    "entity_type": "sole_prop",
+    "overlapping_174A_items": [
+     "Q4"
+    ]
+   }
+  },
+  "expected": {
+   "items": [
+    {
+     "item_id": "Q1",
+     "category": "circulation",
+     "amount": "36000",
+     "recovery_months": 36,
+     "first_year_amortization": "6000.00",
+     "flags": []
+    },
+    {
+     "item_id": "Q2",
+     "category": "idc",
+     "amount": "600000",
+     "recovery_months": 60,
+     "first_year_amortization": "60000.00",
+     "flags": []
+    },
+    {
+     "item_id": "Q3",
+     "category": "mining_exploration",
+     "amount": "240000",
+     "recovery_months": 120,
+     "first_year_amortization": "12000.00",
+     "flags": [
+      "§57-MINING-CITE-UNVERIFIED"
+     ]
+    },
+    {
+     "item_id": "Q4",
+     "category": "re_domestic",
+     "amount": "120000",
+     "recovery_months": 120,
+     "first_year_amortization": "6000.00",
+     "flags": [
+      "§59E-174A-ELECTION-CONFLICT"
+     ]
+    },
+    {
+     "item_id": "Q5",
+     "category": "bogus",
+     "amount": "10",
+     "recovery_months": null,
+     "first_year_amortization": "0",
+     "flags": [
+      "§59E-CATEGORY-UNKNOWN"
+     ]
+    }
+   ],
+   "amortizable_items": [
+    {
+     "item_id": "Q1",
+     "description": "§59(e) election — circulation",
+     "category": "qualified_expenditure",
+     "basis": "36000",
+     "recovery_months": 36,
+     "convention": "mid-year",
+     "start_year": 2026,
+     "source": "Phase H compute_59e",
+     "authority": "§59(e)(2)(A) — §173 circulation expenditures; 3-taxable-year period per §59(e)(4)(A)",
+     "flags": [],
+     "notes": "Mid-year start is a documented proxy — the schedule carries no month data (see module docstring). Election is item-by-item and irrevocable except by IRS consent.",
+     "first_year_amortization": "6000.00"
+    },
+    {
+     "item_id": "Q2",
+     "description": "§59(e) election — idc",
+     "category": "qualified_expenditure",
+     "basis": "600000",
+     "recovery_months": 60,
+     "convention": "mid-year",
+     "start_year": 2026,
+     "source": "Phase H compute_59e",
+     "authority": "§59(e)(2)(C) — intangible drilling and development costs under §263(c); 60-month period per §59(e)(4) (§57(a)(2) preference)",
+     "flags": [],
+     "notes": "Mid-year start is a documented proxy — the schedule carries no month data (see module docstring). Election is item-by-item and irrevocable except by IRS consent.",
+     "first_year_amortization": "60000.00"
+    },
+    {
+     "item_id": "Q3",
+     "description": "§59(e) election — mining_exploration",
+     "category": "qualified_expenditure",
+     "basis": "240000",
+     "recovery_months": 120,
+     "convention": "mid-year",
+     "start_year": 2026,
+     "source": "Phase H compute_59e",
+     "authority": "§59(e)(2)(E) — mining exploration expenditures under §617(a); 10-year period per §59(e)(1) (§57(a) subparagraph UNVERIFIED — §57-MINING-CITE-UNVERIFIED)",
+     "flags": [
+      "§57-MINING-CITE-UNVERIFIED"
+     ],
+     "notes": "Mid-year start is a documented proxy — the schedule carries no month data (see module docstring). Election is item-by-item and irrevocable except by IRS consent.",
+     "first_year_amortization": "12000.00"
+    },
+    {
+     "item_id": "Q4",
+     "description": "§59(e) election — re_domestic",
+     "category": "qualified_expenditure",
+     "basis": "120000",
+     "recovery_months": 120,
+     "convention": "mid-year",
+     "start_year": 2026,
+     "source": "Phase H compute_59e",
+     "authority": "§59(e)(2)(B) — domestic research & experimental expenditures under §174A(a) (cite re-pointed from old §174(a) by OBBBA/P.L. 119-21 §70302); 10-year period per §59(e)(1)",
+     "flags": [
+      "§59E-174A-ELECTION-CONFLICT"
+     ],
+     "notes": "Mid-year start is a documented proxy — the schedule carries no month data (see module docstring). Election is item-by-item and irrevocable except by IRS consent.",
+     "first_year_amortization": "6000.00"
+    }
+   ],
+   "warnings": [
+    "§57-MINING-CITE-UNVERIFIED [Q3]: the exact §57(a) subparagraph for the mining exploration/development AMT preference is unconfirmed against primary text.",
+    "§59E-174A-ELECTION-CONFLICT [Q4]: §174A(c) capitalization was also elected on these dollars — which period governs (10-year §59(e) vs. the elected ≥60-month §174A(c)) is unresolved; routed to SME review.",
+    "§59E-CATEGORY-UNKNOWN [Q5]: 'bogus' is not a §59(e)(2) qualified-expenditure category — no schedule built.",
+    "NEGATIVE-AMOUNT [§59(e) Q6]: $-5.00 — no schedule built; fix the expenditure figure."
+   ]
+  }
+ },
+ {
+  "name": "s1060_full_waterfall_residual",
+  "engine": "s1060",
+  "input": {
+   "transaction_id": "ACQ1",
+   "aggregate_consideration": "10000000",
+   "class_fmv": {
+    "I": "500000",
+    "II": "1000000",
+    "III": "750000",
+    "IV": "2000000",
+    "V": "3000000",
+    "VI": "1250000"
+   }
+  },
+  "expected": {
+   "by_class": {
+    "I": "500000",
+    "II": "1000000",
+    "III": "750000",
+    "IV": "2000000",
+    "V": "3000000",
+    "VI": "1250000",
+    "VII": "1500000"
+   },
+   "class_vii_residual": "1500000",
+   "warnings": []
+  }
+ },
+ {
+  "name": "s1060_shortfall_mid_class",
+  "engine": "s1060",
+  "input": {
+   "transaction_id": "ACQ2",
+   "aggregate_consideration": "3000000",
+   "class_fmv": {
+    "I": "500000",
+    "II": "1000000",
+    "III": "750000",
+    "IV": "2000000",
+    "V": "3000000"
+   }
+  },
+  "expected": {
+   "by_class": {
+    "I": "500000",
+    "II": "1000000",
+    "III": "750000",
+    "IV": "750000",
+    "V": "0",
+    "VI": "0",
+    "VII": "0"
+   },
+   "class_vii_residual": "0",
+   "warnings": [
+    "CONSIDERATION-BELOW-CLASS-FMV [ACQ2]: consideration exhausted within Class IV (FMV $2,000,000.00, only $750,000.00 available) — allocated proportionally to FMV within the class per §1.338-6(b), zero to later classes; consideration below the sum of Class I-VI FMVs signals a data or valuation error."
+   ]
+  }
+ },
+ {
+  "name": "s1060_negative_consideration",
+  "engine": "s1060",
+  "input": {
+   "transaction_id": "ACQ3",
+   "aggregate_consideration": "-1",
+   "class_fmv": {
+    "I": "100"
+   }
+  },
+  "expected": {
+   "by_class": {},
+   "class_vii_residual": "0",
+   "warnings": [
+    "NEGATIVE-CONSIDERATION [ACQ3]: aggregate consideration $-1.00 is negative — no allocation computed; correct the input."
+   ]
+  }
+ },
+ {
+  "name": "s1060_unknown_and_negative_class",
+  "engine": "s1060",
+  "input": {
+   "transaction_id": "ACQ4",
+   "aggregate_consideration": "1000000",
+   "class_fmv": {
+    "I": "100000",
+    "VII": "50000",
+    "X": "1",
+    "III": "-200000",
+    "IV": "300000"
+   }
+  },
+  "expected": {
+   "by_class": {
+    "I": "100000",
+    "II": "0",
+    "III": "0",
+    "IV": "300000",
+    "V": "0",
+    "VI": "0",
+    "VII": "600000"
+   },
+   "class_vii_residual": "600000",
+   "warnings": [
+    "UNKNOWN-CLASS-KEYS [ACQ4]: ['VII', 'X'] ignored — class_fmv keys must be 'I'..'VI' (Class VII is the residual, never an input).",
+    "NEGATIVE-CLASS-FMV [ACQ4]: Class III FMV $-200,000.00 is invalid — treated as $0; fix the valuation."
+   ]
+  }
+ },
+ {
+  "name": "sca_plain_and_mixed",
+  "engine": "sca",
+  "input": {
+   "pools": [
+    {
+     "pool_id": "P1",
+     "description": "Depreciation - Building",
+     "amount": "90000",
+     "driver": "square_footage",
+     "targets": {
+      "A1": "6000",
+      "A2": "3000",
+      "NON_PRODUCTION": "1000"
+     }
+    },
+    {
+     "pool_id": "P2",
+     "description": "HR department",
+     "amount": "60000",
+     "driver": "headcount",
+     "is_mixed_service": true,
+     "targets": {
+      "A1": "40",
+      "A2": "40",
+      "NON_PRODUCTION": "20"
+     }
+    }
+   ],
+   "assets": [
+    {
+     "asset_id": "A1",
+     "book_cost": "1000000",
+     "sscm_eligible": true
+    },
+    {
+     "asset_id": "A2",
+     "book_cost": "500000",
+     "sscm_eligible": false
+    }
+   ],
+   "sscm_ratio": "0.75"
+  },
+  "expected": {
+   "per_asset": {
+    "A1": {
+     "book_cost": "1000000",
+     "indirect_263a": "54000.00",
+     "mixed_263a": "18000.00",
+     "additional_263a": "72000.00",
+     "adjusted_basis_pre_interest": "1072000.00",
+     "ape_for_interest": "1072000.00"
+    },
+    "A2": {
+     "book_cost": "500000",
+     "indirect_263a": "27000.00",
+     "mixed_263a": "0",
+     "additional_263a": "27000.00",
+     "adjusted_basis_pre_interest": "527000.00",
+     "ape_for_interest": "527000.00"
+    }
+   },
+   "ape_by_asset": {
+    "A1": "1072000.00",
+    "A2": "527000.00"
+   },
+   "audit_trail": [
+    {
+     "pool_id": "P1",
+     "target": "A1",
+     "driver": "square_footage",
+     "driver_value": "6000",
+     "share": "0.6",
+     "allocated": "54000.00",
+     "capitalized": "54000.00",
+     "deductible": "0",
+     "not_booked": "0",
+     "flags": []
+    },
+    {
+     "pool_id": "P1",
+     "target": "A2",
+     "driver": "square_footage",
+     "driver_value": "3000",
+     "share": "0.3",
+     "allocated": "27000.00",
+     "capitalized": "27000.00",
+     "deductible": "0",
+     "not_booked": "0",
+     "flags": []
+    },
+    {
+     "pool_id": "P1",
+     "target": "NON_PRODUCTION",
+     "driver": "square_footage",
+     "driver_value": "1000",
+     "share": "0.1",
+     "allocated": "9000.00",
+     "capitalized": "0",
+     "deductible": "9000.00",
+     "not_booked": "0",
+     "flags": []
+    },
+    {
+     "pool_id": "P2",
+     "target": "A1",
+     "driver": "headcount",
+     "driver_value": "40",
+     "share": "0.4",
+     "allocated": "24000.00",
+     "capitalized": "18000.00",
+     "deductible": "6000.00",
+     "not_booked": "0",
+     "flags": []
+    },
+    {
+     "pool_id": "P2",
+     "target": "A2",
+     "driver": "headcount",
+     "driver_value": "40",
+     "share": "0.4",
+     "allocated": "24000.00",
+     "capitalized": "0",
+     "deductible": "0",
+     "not_booked": "24000.00",
+     "flags": [
+      "SSCM-INELIGIBLE-NO-FALLBACK"
+     ]
+    },
+    {
+     "pool_id": "P2",
+     "target": "NON_PRODUCTION",
+     "driver": "headcount",
+     "driver_value": "20",
+     "share": "0.2",
+     "allocated": "12000.00",
+     "capitalized": "0",
+     "deductible": "12000.00",
+     "not_booked": "0",
+     "flags": []
+    }
+   ],
+   "warnings": [
+    "SSCM-INELIGIBLE-NO-FALLBACK [pool P2 → A2]: asset fails §1.263A-1(h)(2) routes (C)/(D); driver share $24,000.00 computed but NOT booked to bucket B — general §1.263A-1(g)(4) method required"
+   ],
+   "not_booked_total": "24000.00",
+   "deductible_total": "27000.00",
+   "conservation_checks": [
+    {
+     "pool_id": "P1",
+     "pool_amount": "90000",
+     "allocated_sum": "90000.00",
+     "expected": "90000",
+     "ok": true,
+     "note": ""
+    },
+    {
+     "pool_id": "P2",
+     "pool_amount": "60000",
+     "allocated_sum": "60000.00",
+     "expected": "60000",
+     "ok": true,
+     "note": ""
+    }
+   ]
+  }
+ },
+ {
+  "name": "sca_guardrails",
+  "engine": "sca",
+  "input": {
+   "pools": [
+    {
+     "pool_id": "B1",
+     "description": "HR payroll services",
+     "amount": "10000",
+     "driver": "machine_hours",
+     "targets": {
+      "A1": "10"
+     }
+    },
+    {
+     "pool_id": "B2",
+     "description": "Mystery pool",
+     "amount": "10000",
+     "driver": "teleportation",
+     "targets": {
+      "A1": "10"
+     }
+    },
+    {
+     "pool_id": "B3",
+     "description": "Facilities rent",
+     "amount": "10000",
+     "driver": "direct_labor",
+     "targets": {
+      "A1": "10"
+     }
+    },
+    {
+     "pool_id": "B4",
+     "description": "Utilities",
+     "amount": "-5000",
+     "driver": "square_footage",
+     "targets": {
+      "A1": "10"
+     }
+    },
+    {
+     "pool_id": "B5",
+     "description": "Utilities",
+     "amount": "5000",
+     "driver": "square_footage",
+     "targets": {
+      "A1": "-10",
+      "A2": "20"
+     }
+    },
+    {
+     "pool_id": "B6",
+     "description": "Utilities",
+     "amount": "5000",
+     "driver": "square_footage",
+     "targets": {
+      "A1": "0",
+      "A2": "0"
+     }
+    },
+    {
+     "pool_id": "B7",
+     "description": "Utilities",
+     "amount": "5000",
+     "driver": "square_footage",
+     "targets": {
+      "GHOST": "10",
+      "A1": "10"
+     }
+    }
+   ],
+   "assets": [
+    {
+     "asset_id": "A1",
+     "book_cost": "100000",
+     "sscm_eligible": true
+    },
+    {
+     "asset_id": "A2",
+     "book_cost": "50000",
+     "sscm_eligible": true
+    }
+   ],
+   "sscm_ratio": "1.4",
+   "book_capitalized_indirect": {
+    "A1": "12345"
+   }
+  },
+  "expected": {
+   "per_asset": {
+    "A1": {
+     "book_cost": "100000",
+     "indirect_263a": "12500.00",
+     "mixed_263a": "0",
+     "additional_263a": "12500.00",
+     "adjusted_basis_pre_interest": "112500.00",
+     "ape_for_interest": "112500.00"
+    },
+    "A2": {
+     "book_cost": "50000",
+     "indirect_263a": "0",
+     "mixed_263a": "0",
+     "additional_263a": "0",
+     "adjusted_basis_pre_interest": "50000",
+     "ape_for_interest": "50000"
+    }
+   },
+   "ape_by_asset": {
+    "A1": "112500.00",
+    "A2": "50000"
+   },
+   "audit_trail": [
+    {
+     "pool_id": "B1",
+     "target": "A1",
+     "driver": "machine_hours",
+     "driver_value": "10",
+     "share": "0",
+     "allocated": "0",
+     "capitalized": "0",
+     "deductible": "0",
+     "not_booked": "0",
+     "flags": [
+      "HARD-BLOCKED-DRIVER"
+     ]
+    },
+    {
+     "pool_id": "B2",
+     "target": "A1",
+     "driver": "teleportation",
+     "driver_value": "10",
+     "share": "0",
+     "allocated": "0",
+     "capitalized": "0",
+     "deductible": "0",
+     "not_booked": "0",
+     "flags": [
+      "HARD-BLOCKED-DRIVER"
+     ]
+    },
+    {
+     "pool_id": "B3",
+     "target": "A1",
+     "driver": "direct_labor",
+     "driver_value": "10",
+     "share": "1",
+     "allocated": "10000.00",
+     "capitalized": "10000.00",
+     "deductible": "0",
+     "not_booked": "0",
+     "flags": []
+    },
+    {
+     "pool_id": "B4",
+     "target": "A1",
+     "driver": "square_footage",
+     "driver_value": "10",
+     "share": "0",
+     "allocated": "0",
+     "capitalized": "0",
+     "deductible": "0",
+     "not_booked": "0",
+     "flags": [
+      "NEGATIVE-POOL-AMOUNT"
+     ]
+    },
+    {
+     "pool_id": "B5",
+     "target": "A1",
+     "driver": "square_footage",
+     "driver_value": "-10",
+     "share": "0",
+     "allocated": "0",
+     "capitalized": "0",
+     "deductible": "0",
+     "not_booked": "0",
+     "flags": [
+      "NEGATIVE-DRIVER-VALUE"
+     ]
+    },
+    {
+     "pool_id": "B5",
+     "target": "A2",
+     "driver": "square_footage",
+     "driver_value": "20",
+     "share": "0",
+     "allocated": "0",
+     "capitalized": "0",
+     "deductible": "0",
+     "not_booked": "0",
+     "flags": [
+      "NEGATIVE-DRIVER-VALUE"
+     ]
+    },
+    {
+     "pool_id": "B6",
+     "target": "A1",
+     "driver": "square_footage",
+     "driver_value": "0",
+     "share": "0",
+     "allocated": "0",
+     "capitalized": "0",
+     "deductible": "0",
+     "not_booked": "0",
+     "flags": [
+      "POOL-DEGENERATE-DENOMINATOR"
+     ]
+    },
+    {
+     "pool_id": "B6",
+     "target": "A2",
+     "driver": "square_footage",
+     "driver_value": "0",
+     "share": "0",
+     "allocated": "0",
+     "capitalized": "0",
+     "deductible": "0",
+     "not_booked": "0",
+     "flags": [
+      "POOL-DEGENERATE-DENOMINATOR"
+     ]
+    },
+    {
+     "pool_id": "B7",
+     "target": "GHOST",
+     "driver": "square_footage",
+     "driver_value": "10",
+     "share": "0.5",
+     "allocated": "2500.00",
+     "capitalized": "0",
+     "deductible": "0",
+     "not_booked": "2500.00",
+     "flags": [
+      "POOL-TARGET-UNKNOWN"
+     ]
+    },
+    {
+     "pool_id": "B7",
+     "target": "A1",
+     "driver": "square_footage",
+     "driver_value": "10",
+     "share": "0.5",
+     "allocated": "2500.00",
+     "capitalized": "2500.00",
+     "deductible": "0",
+     "not_booked": "0",
+     "flags": []
+    }
+   ],
+   "warnings": [
+    "SSCM RATIO = 1.4 is outside [0,1] — clamped. Review.",
+    "HARD-BLOCKED-DRIVER [pool B1 ('HR payroll services')]: 'machine_hours' is a nonsensical driver for this pool category (keywords ['hr', 'human resources', 'personnel', 'payroll']) — pool not allocated",
+    "HARD-BLOCKED-DRIVER [pool B2 ('Mystery pool')]: driver 'teleportation' is not a recognized allocation driver — pool not allocated",
+    "SOFT-DRIVER-MISMATCH [pool B3 ('Facilities rent')]: 'direct_labor' is not a preferred driver for this pool category (preferred ['square_footage', 'book_cost']) — allocated anyway; review",
+    "NEGATIVE-POOL-AMOUNT [pool B4]: pool amount is $-5,000.00 — a cost pool cannot be negative; pool NOT allocated. Route credits/reversals through the classifier, not a negative pool.",
+    "NEGATIVE-DRIVER-VALUE [pool B5]: driver values for ['A1'] are negative — a driver share is a fraction of a physical quantity; pool NOT allocated. Fix the driver data.",
+    "POOL-DEGENERATE-DENOMINATOR [pool B6]: Σ driver values == 0 — nothing allocated; supply real driver data",
+    "POOL-TARGET-UNKNOWN [pool B7]: target 'GHOST' matches no asset — share $2,500.00 not booked",
+    "CIP-DOUBLE-COUNT-REVIEW [A1]: $12,345.00 of indirect cost is already book-capitalized in CIP (bucket A); bucket B may re-add some or all of it. No adjustment made — routed to review queue pending the bucket A/B double-count rule"
+   ],
+   "not_booked_total": "2500.00",
+   "deductible_total": "0",
+   "conservation_checks": [
+    {
+     "pool_id": "B1",
+     "pool_amount": "10000",
+     "allocated_sum": "0",
+     "expected": "0",
+     "ok": true,
+     "note": "pool not allocated (blocked/degenerate driver)"
+    },
+    {
+     "pool_id": "B2",
+     "pool_amount": "10000",
+     "allocated_sum": "0",
+     "expected": "0",
+     "ok": true,
+     "note": "pool not allocated (blocked/degenerate driver)"
+    },
+    {
+     "pool_id": "B3",
+     "pool_amount": "10000",
+     "allocated_sum": "10000.00",
+     "expected": "10000",
+     "ok": true,
+     "note": ""
+    },
+    {
+     "pool_id": "B4",
+     "pool_amount": "-5000",
+     "allocated_sum": "0",
+     "expected": "0",
+     "ok": true,
+     "note": "pool not allocated (blocked/degenerate driver)"
+    },
+    {
+     "pool_id": "B5",
+     "pool_amount": "5000",
+     "allocated_sum": "0",
+     "expected": "0",
+     "ok": true,
+     "note": "pool not allocated (blocked/degenerate driver)"
+    },
+    {
+     "pool_id": "B6",
+     "pool_amount": "5000",
+     "allocated_sum": "0",
+     "expected": "0",
+     "ok": true,
+     "note": "pool not allocated (blocked/degenerate driver)"
+    },
+    {
+     "pool_id": "B7",
+     "pool_amount": "5000",
+     "allocated_sum": "5000.00",
+     "expected": "5000",
+     "ok": true,
+     "note": ""
+    }
+   ]
+  }
+ },
+ {
+  "name": "sca_penny_plug",
+  "engine": "sca",
+  "input": {
+   "pools": [
+    {
+     "pool_id": "P",
+     "description": "Utilities",
+     "amount": "100",
+     "driver": "square_footage",
+     "targets": {
+      "A1": "1",
+      "A2": "1",
+      "A3": "1"
+     }
+    }
+   ],
+   "assets": [
+    {
+     "asset_id": "A1",
+     "book_cost": "0"
+    },
+    {
+     "asset_id": "A2",
+     "book_cost": "0"
+    },
+    {
+     "asset_id": "A3",
+     "book_cost": "0"
+    }
+   ],
+   "sscm_ratio": "0"
+  },
+  "expected": {
+   "per_asset": {
+    "A1": {
+     "book_cost": "0",
+     "indirect_263a": "33.34",
+     "mixed_263a": "0",
+     "additional_263a": "33.34",
+     "adjusted_basis_pre_interest": "33.34",
+     "ape_for_interest": "33.34"
+    },
+    "A2": {
+     "book_cost": "0",
+     "indirect_263a": "33.33",
+     "mixed_263a": "0",
+     "additional_263a": "33.33",
+     "adjusted_basis_pre_interest": "33.33",
+     "ape_for_interest": "33.33"
+    },
+    "A3": {
+     "book_cost": "0",
+     "indirect_263a": "33.33",
+     "mixed_263a": "0",
+     "additional_263a": "33.33",
+     "adjusted_basis_pre_interest": "33.33",
+     "ape_for_interest": "33.33"
+    }
+   },
+   "ape_by_asset": {
+    "A1": "33.34",
+    "A2": "33.33",
+    "A3": "33.33"
+   },
+   "audit_trail": [
+    {
+     "pool_id": "P",
+     "target": "A1",
+     "driver": "square_footage",
+     "driver_value": "1",
+     "share": "0.3333333333333333333333333333",
+     "allocated": "33.34",
+     "capitalized": "33.34",
+     "deductible": "0",
+     "not_booked": "0",
+     "flags": []
+    },
+    {
+     "pool_id": "P",
+     "target": "A2",
+     "driver": "square_footage",
+     "driver_value": "1",
+     "share": "0.3333333333333333333333333333",
+     "allocated": "33.33",
+     "capitalized": "33.33",
+     "deductible": "0",
+     "not_booked": "0",
+     "flags": []
+    },
+    {
+     "pool_id": "P",
+     "target": "A3",
+     "driver": "square_footage",
+     "driver_value": "1",
+     "share": "0.3333333333333333333333333333",
+     "allocated": "33.33",
+     "capitalized": "33.33",
+     "deductible": "0",
+     "not_booked": "0",
+     "flags": []
+    }
+   ],
+   "warnings": [],
+   "not_booked_total": "0",
+   "deductible_total": "0",
+   "conservation_checks": [
+    {
+     "pool_id": "P",
+     "pool_amount": "100",
+     "allocated_sum": "100.00",
+     "expected": "100",
+     "ok": true,
+     "note": ""
+    }
+   ]
+  }
+ },
+ {
+  "name": "taxtb_matching_and_unmatched",
+  "engine": "taxtb",
+  "input": {
+   "tb_lines": [
+    {
+     "acct_num": "5000",
+     "acct_desc": "Direct labor",
+     "cc_num": "100",
+     "amount": "100000"
+    },
+    {
+     "acct_num": "6000",
+     "acct_desc": "Rent",
+     "cc_num": "200",
+     "amount": "50000"
+    },
+    {
+     "acct_num": "6000",
+     "acct_desc": "Rent",
+     "cc_num": "300",
+     "amount": "70000"
+    },
+    {
+     "acct_num": "7000",
+     "acct_desc": "Depreciation",
+     "cc_num": "100",
+     "amount": "20000"
+    },
+    {
+     "acct_num": "7000",
+     "acct_desc": "Depreciation",
+     "cc_num": "100",
+     "amount": "5000"
+    }
+   ],
+   "btds": [
+    {
+     "btd_id": "B1",
+     "acct_num": "5000",
+     "cc_num": "100",
+     "description": "…",
+     "adjustment": "-1500"
+    },
+    {
+     "btd_id": "B2",
+     "acct_num": "6000",
+     "description": "multi-cc",
+     "adjustment": "999"
+    },
+    {
+     "btd_id": "B3",
+     "acct_num": "7000",
+     "cc_num": "100",
+     "description": "dup-key target",
+     "adjustment": "250"
+    },
+    {
+     "btd_id": "B4",
+     "acct_num": "9999",
+     "description": "orphan reserve",
+     "adjustment": "4321"
+    }
+   ]
+  },
+  "expected": {
+   "tax_lines": [
+    {
+     "acct_num": "5000",
+     "acct_desc": "Direct labor",
+     "cc_num": "100",
+     "amount": "98500"
+    },
+    {
+     "acct_num": "6000",
+     "acct_desc": "Rent",
+     "cc_num": "200",
+     "amount": "50000"
+    },
+    {
+     "acct_num": "6000",
+     "acct_desc": "Rent",
+     "cc_num": "300",
+     "amount": "70000"
+    },
+    {
+     "acct_num": "7000",
+     "acct_desc": "Depreciation",
+     "cc_num": "100",
+     "amount": "20000"
+    },
+    {
+     "acct_num": "7000",
+     "acct_desc": "Depreciation",
+     "cc_num": "100",
+     "amount": "5250"
+    },
+    {
+     "acct_num": "9999",
+     "acct_desc": "[BTD] orphan reserve",
+     "cc_num": "",
+     "amount": "4321"
+    }
+   ],
+   "m1_reconciliation": {
+    "book_total": "245000",
+    "btd_total": "4070",
+    "tax_total": "248071",
+    "tie_check": "-999"
+   },
+   "cc_rollup": {
+    "100": "123750",
+    "200": "50000",
+    "300": "70000",
+    "": "4321"
+   },
+   "warnings": [
+    "DUPLICATE-TB-KEY (acct='7000', cc='100'): multiple TB lines share this key — a BTD matching it applies to the LAST line only ('Depreciation'). Split the BTD or disambiguate the accounts if that's not the intended target.",
+    "BTD 'B2' matches account '6000' in 2 cost centers — no cc_num given; applied to none. Split the BTD by cost center.",
+    "BTD 'B4' matched no TB line (acct='9999', cc='') — carried as a standalone tax-only line; verify the account mapping.",
+    "TAX-BASIS TB TIE-CHECK FAILED: -999 — a BTD was dropped or double-applied. Do not proceed."
+   ]
+  }
+ },
+ {
+  "name": "threshold_2023_receipts_30m_not_exempt",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "30000000",
+    "tax_year": 2023,
+    "ending_inventory_471": "100000"
+   },
+   "rows": [
+    {
+     "amount": "500000",
+     "tier1": "§471 Cost",
+     "is_labor": true
+    },
+    {
+     "amount": "100000",
+     "tier1": "Additional §263A"
+    }
+   ]
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "500000",
+    "§263A Additional": "100000",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "0",
+    "Deductible": "0",
+    "Non-Operating": "0"
+   },
+   "is_total": "600000",
+   "capitalized_total": "600000",
+   "mixed_total": "0",
+   "deductible_total": "0",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "SPM",
+    "warnings": [],
+    "mixed_alloc_ratio": "1.000000",
+    "production_labor": "500000",
+    "total_labor": "500000",
+    "mixed_capitalized": "0.00",
+    "mixed_deductible": "0.00",
+    "sec471_pool": "500000",
+    "additional_263a_pool": "100000.00",
+    "absorption_ratio": "0.20",
+    "ending_inventory_471": "100000",
+    "additional_capitalized_to_inventory": "20000.00",
+    "adjusted_deductible_post": "0.00"
+   }
+  }
+ },
+ {
+  "name": "threshold_2022_boundary_exempt",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "27000000",
+    "tax_year": 2022
+   },
+   "rows": [
+    {
+     "amount": "500000",
+     "tier1": "§471 Cost",
+     "is_labor": true
+    }
+   ]
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "0",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "0",
+    "Deductible": "500000",
+    "Non-Operating": "0"
+   },
+   "is_total": "500000",
+   "capitalized_total": "0",
+   "mixed_total": "0",
+   "deductible_total": "500000",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": true,
+    "note": "§263A(i)/§448(c) small-business exception — UNICAP off.",
+    "warnings": [],
+    "mixed_capitalized": "0",
+    "mixed_deductible": "0",
+    "absorption_ratio": "0",
+    "additional_capitalized_to_inventory": "0"
+   }
+  }
+ },
+ {
+  "name": "threshold_pre_tcja_exempt_warns",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "5000000",
+    "tax_year": 2017
+   },
+   "rows": [
+    {
+     "amount": "500000",
+     "tier1": "§471 Cost",
+     "is_labor": true
+    }
+   ]
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "0",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "0",
+    "Deductible": "500000",
+    "Non-Operating": "0"
+   },
+   "is_total": "500000",
+   "capitalized_total": "0",
+   "mixed_total": "0",
+   "deductible_total": "500000",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": true,
+    "note": "§263A(i)/§448(c) small-business exception — UNICAP off.",
+    "warnings": [
+     "PRE-TCJA-YEAR: TY 2017 begins before 2018 — the §263A(i)/§448(c) small-business exemption DID NOT EXIST for that year (old law: former §263A(b)(2)(B) $10M reseller exception only; producers had no exemption). This exempt determination is NOT valid for TY 2017; apply pre-TCJA law.",
+     "§448(c) threshold for TY 2017 is not on file — the 2026 figure ($32,000,000) was used to determine the exemption. VERIFY: a higher indexed threshold cannot change this result, but relying on it should be documented."
+    ],
+    "mixed_capitalized": "0",
+    "mixed_deductible": "0",
+    "absorption_ratio": "0",
+    "additional_capitalized_to_inventory": "0"
+   }
+  }
+ },
+ {
+  "name": "threshold_pre_tcja_nonexempt_warns",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "50000000",
+    "tax_year": 2017,
+    "ending_inventory_471": "100000"
+   },
+   "rows": [
+    {
+     "amount": "500000",
+     "tier1": "§471 Cost",
+     "is_labor": true
+    },
+    {
+     "amount": "100000",
+     "tier1": "Additional §263A"
+    }
+   ]
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "500000",
+    "§263A Additional": "100000",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "0",
+    "Deductible": "0",
+    "Non-Operating": "0"
+   },
+   "is_total": "600000",
+   "capitalized_total": "600000",
+   "mixed_total": "0",
+   "deductible_total": "0",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "SPM",
+    "warnings": [
+     "PRE-TCJA-YEAR: TY 2017 begins before 2018 — §448(c)/§263A(i) do not apply to that year; the small-business gate ran on post-TCJA law. Apply former §263A(b)(2)(B) instead.",
+     "§448(c) threshold for TY 2017 is not on file — the 2026 figure ($32,000,000) was used. The threshold is inflation-indexed; VERIFY before relying on the small-business exemption determination."
+    ],
+    "mixed_alloc_ratio": "1.000000",
+    "production_labor": "500000",
+    "total_labor": "500000",
+    "mixed_capitalized": "0.00",
+    "mixed_deductible": "0.00",
+    "sec471_pool": "500000",
+    "additional_263a_pool": "100000.00",
+    "absorption_ratio": "0.20",
+    "ending_inventory_471": "100000",
+    "additional_capitalized_to_inventory": "20000.00",
+    "adjusted_deductible_post": "0.00"
+   }
+  }
+ },
+ {
+  "name": "tangible_de_minimis_afs_ceiling",
+  "engine": "tangible",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "5000000",
+    "has_afs": true
+   },
+   "items": [
+    {
+     "item_id": "D1",
+     "description": "D1",
+     "amount": "5000",
+     "invoice_or_item_cost": "5000"
+    },
+    {
+     "item_id": "D2",
+     "description": "D2",
+     "amount": "5000",
+     "invoice_or_item_cost": "5000.01",
+     "betterment": false,
+     "adaptation": false,
+     "restoration": false,
+     "routine_maintenance_expected_more_than_once": false
+    }
+   ],
+   "opts": {
+    "de_minimis_election": true
+   }
+  },
+  "expected": {
+   "items": [
+    {
+     "item_id": "D1",
+     "description": "D1",
+     "amount": "5000",
+     "treatment": "de_minimis_deduct",
+     "authority": "Reg. §1.263(a)-1(f); Notice 2015-82",
+     "flags": [],
+     "deductible": "5000",
+     "capitalized": "0"
+    },
+    {
+     "item_id": "D2",
+     "description": "D2",
+     "amount": "5000",
+     "treatment": "repair_deduct",
+     "authority": "§162; Reg. §1.263(a)-3(d)",
+     "flags": [],
+     "deductible": "5000",
+     "capitalized": "0"
+    }
+   ],
+   "open_questions": [],
+   "deductible_total": "10000",
+   "capitalized_total": "0",
+   "elective_capitalized_total": "0",
+   "warnings": [
+    "DE-MINIMIS-POLICY-CONDITION: the §1.263(a)-1(f) de minimis safe harbor is elected and the taxpayer has an AFS — a WRITTEN accounting policy expensing amounts under the ceiling, in place as of the START of the taxable year, is a condition of the election ((f)(1)(i)(B)). Confirm it exists; the election is annual, irrevocable, and all-or-nothing for qualifying items."
+   ]
+  }
+ },
+ {
+  "name": "tangible_de_minimis_no_afs_2500",
+  "engine": "tangible",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "5000000",
+    "has_afs": false
+   },
+   "items": [
+    {
+     "item_id": "D1",
+     "description": "D1",
+     "amount": "2500",
+     "invoice_or_item_cost": "2500"
+    },
+    {
+     "item_id": "D2",
+     "description": "D2",
+     "amount": "2500",
+     "invoice_or_item_cost": "2500.01",
+     "betterment": false,
+     "adaptation": false,
+     "restoration": false,
+     "routine_maintenance_expected_more_than_once": false
+    }
+   ],
+   "opts": {
+    "de_minimis_election": true
+   }
+  },
+  "expected": {
+   "items": [
+    {
+     "item_id": "D1",
+     "description": "D1",
+     "amount": "2500",
+     "treatment": "de_minimis_deduct",
+     "authority": "Reg. §1.263(a)-1(f); Notice 2015-82",
+     "flags": [],
+     "deductible": "2500",
+     "capitalized": "0"
+    },
+    {
+     "item_id": "D2",
+     "description": "D2",
+     "amount": "2500",
+     "treatment": "repair_deduct",
+     "authority": "§162; Reg. §1.263(a)-3(d)",
+     "flags": [],
+     "deductible": "2500",
+     "capitalized": "0"
+    }
+   ],
+   "open_questions": [],
+   "deductible_total": "5000",
+   "capitalized_total": "0",
+   "elective_capitalized_total": "0",
+   "warnings": []
+  }
+ },
+ {
+  "name": "tangible_de_minimis_cost_unknown_open_question",
+  "engine": "tangible",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "5000000"
+   },
+   "items": [
+    {
+     "item_id": "U1",
+     "description": "Shop equipment",
+     "amount": "3000"
+    }
+   ],
+   "opts": {
+    "de_minimis_election": true
+   }
+  },
+  "expected": {
+   "items": [
+    {
+     "item_id": "U1",
+     "description": "Shop equipment",
+     "amount": "3000",
+     "treatment": "open_question_capitalize_pending",
+     "authority": "Reg. §1.263(a)-3(d)/(j)/(k)/(l) — improvement facts pending; capitalized conservatively",
+     "flags": [
+      "DE-MINIMIS-COST-UNKNOWN",
+      "BAR-FACTS-INCOMPLETE"
+     ],
+     "deductible": "0",
+     "capitalized": "3000"
+    }
+   ],
+   "open_questions": [
+    {
+     "item_id": "U1",
+     "question": "Item U1 'Shop equipment': what is the per-invoice (or per-item as substantiated on the invoice) cost (Reg. §1.263(a)-1(f))? Supply invoice_or_item_cost to test it against the $5,000 de minimis ceiling.",
+     "why": "The de minimis election is on but the schedule does not carry the per-invoice/per-item cost — the item continued down the decision tree conservatively."
+    },
+    {
+     "item_id": "U1",
+     "question": "Item U1 'Shop equipment': the following improvement facts are not established: betterment, adaptation, restoration. Answer each True/False: betterment (§1.263(a)-3(j)) — does the work ameliorate a pre-existing material condition or defect, or materially add to or increase the capacity, productivity, efficiency, strength, or quality of the unit of property? adaptation (§1.263(a)-3(l)) — does the work adapt the unit of property to a new or different use? restoration (§1.263(a)-3(k)) — does the work replace a major component or substantial structural part, restore after a basis-adjusted loss, or return the property to ordinary efficient operating condition after deterioration to a state of disrepair where it was no longer functional?",
+     "why": "Any single True prong requires capitalization as an improvement (§1.263(a)-3(d)(2)); all-False opens the repair / routine-maintenance path. The amount is capitalized CONSERVATIVELY pending the answer — never silently deducted on missing facts."
+    }
+   ],
+   "deductible_total": "0",
+   "capitalized_total": "3000",
+   "elective_capitalized_total": "0",
+   "warnings": [
+    "DE-MINIMIS-POLICY-CONDITION: the §1.263(a)-1(f) de minimis safe harbor is elected and the taxpayer has an AFS — a WRITTEN accounting policy expensing amounts under the ceiling, in place as of the START of the taxable year, is a condition of the election ((f)(1)(i)(B)). Confirm it exists; the election is annual, irrevocable, and all-or-nothing for qualifying items."
+   ]
+  }
+ },
+ {
+  "name": "tangible_materials_supplies_both_prongs",
+  "engine": "tangible",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "5000000"
+   },
+   "items": [
+    {
+     "item_id": "M1",
+     "description": "M1",
+     "amount": "150",
+     "is_material_or_supply": true,
+     "ms_unit_cost_200_or_less": true
+    },
+    {
+     "item_id": "M2",
+     "description": "M2",
+     "amount": "500",
+     "is_material_or_supply": true,
+     "ms_economic_life_12mo_or_less": true
+    },
+    {
+     "item_id": "M3",
+     "description": "M3",
+     "amount": "300",
+     "is_material_or_supply": true,
+     "betterment": false,
+     "adaptation": false,
+     "restoration": false,
+     "routine_maintenance_expected_more_than_once": false
+    }
+   ],
+   "opts": {}
+  },
+  "expected": {
+   "items": [
+    {
+     "item_id": "M1",
+     "description": "M1",
+     "amount": "150",
+     "treatment": "materials_supplies_deduct",
+     "authority": "§1.162-3(c)(1)(iv) unit cost ≤ $200",
+     "flags": [
+      "MS-TIMING-NOT-DETERMINED"
+     ],
+     "deductible": "150",
+     "capitalized": "0"
+    },
+    {
+     "item_id": "M2",
+     "description": "M2",
+     "amount": "500",
+     "treatment": "materials_supplies_deduct",
+     "authority": "§1.162-3(c)(1)(iii) economic life ≤ 12 months",
+     "flags": [
+      "MS-TIMING-NOT-DETERMINED"
+     ],
+     "deductible": "500",
+     "capitalized": "0"
+    },
+    {
+     "item_id": "M3",
+     "description": "M3",
+     "amount": "300",
+     "treatment": "repair_deduct",
+     "authority": "§162; Reg. §1.263(a)-3(d)",
+     "flags": [],
+     "deductible": "300",
+     "capitalized": "0"
+    }
+   ],
+   "open_questions": [
+    {
+     "item_id": "M3",
+     "question": "Item M3 'M3': is the unit acquisition/production cost $200 or less (§1.162-3(c)(1)(iv)), or is the economic useful life 12 months or less (§1.162-3(c)(1)(iii))? Answer ms_unit_cost_200_or_less and ms_economic_life_12mo_or_less True/False.",
+     "why": "The item is marked as a materials & supplies candidate but neither §1.162-3 prong is established — it continued down the decision tree."
+    }
+   ],
+   "deductible_total": "950",
+   "capitalized_total": "0",
+   "elective_capitalized_total": "0",
+   "warnings": [
+    "MS-TIMING-NOT-DETERMINED: materials & supplies were deducted under §1.162-3, but the incidental (deduct when paid/incurred, (a)(2)) vs non-incidental (deduct when used or consumed, (a)(1)) TIMING distinction is out of scope for this engine — confirm the deduction year per item."
+   ]
+  }
+ },
+ {
+  "name": "tangible_stsh_at_and_over_ceiling",
+  "engine": "tangible",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "5000000"
+   },
+   "items": [
+    {
+     "item_id": "B1",
+     "description": "B1",
+     "amount": "8000",
+     "is_building": true,
+     "unit_of_property": "BLDG1",
+     "building_unadjusted_basis": "400000"
+    },
+    {
+     "item_id": "B2",
+     "description": "B2",
+     "amount": "8000.01",
+     "is_building": true,
+     "unit_of_property": "BLDG2",
+     "building_unadjusted_basis": "400000",
+     "betterment": false,
+     "adaptation": false,
+     "restoration": false,
+     "routine_maintenance_expected_more_than_once": false
+    }
+   ],
+   "opts": {
+    "small_taxpayer_building_election": true
+   }
+  },
+  "expected": {
+   "items": [
+    {
+     "item_id": "B1",
+     "description": "B1",
+     "amount": "8000",
+     "treatment": "small_taxpayer_sh_deduct",
+     "authority": "Reg. §1.263(a)-3(h) small taxpayer building safe harbor",
+     "flags": [],
+     "deductible": "8000",
+     "capitalized": "0"
+    },
+    {
+     "item_id": "B2",
+     "description": "B2",
+     "amount": "8000.01",
+     "treatment": "repair_deduct",
+     "authority": "§162; Reg. §1.263(a)-3(d)",
+     "flags": [
+      "STSH-CEILING-EXCEEDED"
+     ],
+     "deductible": "8000.01",
+     "capitalized": "0"
+    }
+   ],
+   "open_questions": [],
+   "deductible_total": "16000.01",
+   "capitalized_total": "0",
+   "elective_capitalized_total": "0",
+   "warnings": [
+    "STSH-AGGREGATE-FROM-SCHEDULE-ONLY: the §1.263(a)-3(h) per-building aggregate was summed from the items ON THIS SCHEDULE only — the test requires ALL amounts paid during the year for repairs, maintenance, and improvements on the building, including amounts outside this schedule. Supply total_building_repairs_maintenance_improvements to test the true aggregate."
+   ]
+  }
+ },
+ {
+  "name": "tangible_stsh_ineligible_receipts",
+  "engine": "tangible",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "15000000"
+   },
+   "items": [
+    {
+     "item_id": "B1",
+     "description": "B1",
+     "amount": "1000",
+     "is_building": true,
+     "unit_of_property": "BLDG1",
+     "building_unadjusted_basis": "400000",
+     "betterment": false,
+     "adaptation": false,
+     "restoration": false,
+     "routine_maintenance_expected_more_than_once": false
+    }
+   ],
+   "opts": {
+    "small_taxpayer_building_election": true
+   }
+  },
+  "expected": {
+   "items": [
+    {
+     "item_id": "B1",
+     "description": "B1",
+     "amount": "1000",
+     "treatment": "repair_deduct",
+     "authority": "§162; Reg. §1.263(a)-3(d)",
+     "flags": [
+      "STSH-NOT-ELIGIBLE"
+     ],
+     "deductible": "1000",
+     "capitalized": "0"
+    }
+   ],
+   "open_questions": [],
+   "deductible_total": "1000",
+   "capitalized_total": "0",
+   "elective_capitalized_total": "0",
+   "warnings": [
+    "STSH-INELIGIBLE-RECEIPTS: the §1.263(a)-3(h) small-taxpayer building safe harbor is elected but average annual gross receipts ($15,000,000) exceed the $10,000,000 ceiling — the safe harbor is unavailable; no item was deducted under it."
+   ]
+  }
+ },
+ {
+  "name": "tangible_stsh_explicit_aggregate",
+  "engine": "tangible",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "5000000"
+   },
+   "items": [
+    {
+     "item_id": "B1",
+     "description": "B1",
+     "amount": "5000",
+     "is_building": true,
+     "unit_of_property": "BLDG1",
+     "building_unadjusted_basis": "1000000"
+    }
+   ],
+   "opts": {
+    "small_taxpayer_building_election": true,
+    "total_building_repairs_maintenance_improvements": {
+     "BLDG1": "9999"
+    }
+   }
+  },
+  "expected": {
+   "items": [
+    {
+     "item_id": "B1",
+     "description": "B1",
+     "amount": "5000",
+     "treatment": "small_taxpayer_sh_deduct",
+     "authority": "Reg. §1.263(a)-3(h) small taxpayer building safe harbor",
+     "flags": [],
+     "deductible": "5000",
+     "capitalized": "0"
+    }
+   ],
+   "open_questions": [],
+   "deductible_total": "5000",
+   "capitalized_total": "0",
+   "elective_capitalized_total": "0",
+   "warnings": []
+  }
+ },
+ {
+  "name": "tangible_bar_each_prong_capitalizes",
+  "engine": "tangible",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "5000000"
+   },
+   "items": [
+    {
+     "item_id": "I1",
+     "description": "I1",
+     "amount": "10000",
+     "betterment": true,
+     "adaptation": false,
+     "restoration": false
+    },
+    {
+     "item_id": "I2",
+     "description": "I2",
+     "amount": "20000",
+     "betterment": false,
+     "adaptation": true,
+     "restoration": false
+    },
+    {
+     "item_id": "I3",
+     "description": "I3",
+     "amount": "30000",
+     "betterment": false,
+     "adaptation": false,
+     "restoration": true
+    }
+   ],
+   "opts": {}
+  },
+  "expected": {
+   "items": [
+    {
+     "item_id": "I1",
+     "description": "I1",
+     "amount": "10000",
+     "treatment": "improvement_capitalize",
+     "authority": "Reg. §1.263(a)-3(j) betterment",
+     "flags": [],
+     "deductible": "0",
+     "capitalized": "10000"
+    },
+    {
+     "item_id": "I2",
+     "description": "I2",
+     "amount": "20000",
+     "treatment": "improvement_capitalize",
+     "authority": "Reg. §1.263(a)-3(l) adaptation to a new/different use",
+     "flags": [],
+     "deductible": "0",
+     "capitalized": "20000"
+    },
+    {
+     "item_id": "I3",
+     "description": "I3",
+     "amount": "30000",
+     "treatment": "improvement_capitalize",
+     "authority": "Reg. §1.263(a)-3(k) restoration",
+     "flags": [],
+     "deductible": "0",
+     "capitalized": "30000"
+    }
+   ],
+   "open_questions": [],
+   "deductible_total": "0",
+   "capitalized_total": "60000",
+   "elective_capitalized_total": "0",
+   "warnings": []
+  }
+ },
+ {
+  "name": "tangible_bar_missing_facts_conservative",
+  "engine": "tangible",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "5000000"
+   },
+   "items": [
+    {
+     "item_id": "P1",
+     "description": "Roof membrane replacement",
+     "amount": "4000",
+     "betterment": null,
+     "adaptation": false,
+     "restoration": null
+    }
+   ],
+   "opts": {}
+  },
+  "expected": {
+   "items": [
+    {
+     "item_id": "P1",
+     "description": "Roof membrane replacement",
+     "amount": "4000",
+     "treatment": "open_question_capitalize_pending",
+     "authority": "Reg. §1.263(a)-3(d)/(j)/(k)/(l) — improvement facts pending; capitalized conservatively",
+     "flags": [
+      "BAR-FACTS-INCOMPLETE"
+     ],
+     "deductible": "0",
+     "capitalized": "4000"
+    }
+   ],
+   "open_questions": [
+    {
+     "item_id": "P1",
+     "question": "Item P1 'Roof membrane replacement': the following improvement facts are not established: betterment, restoration. Answer each True/False: betterment (§1.263(a)-3(j)) — does the work ameliorate a pre-existing material condition or defect, or materially add to or increase the capacity, productivity, efficiency, strength, or quality of the unit of property? restoration (§1.263(a)-3(k)) — does the work replace a major component or substantial structural part, restore after a basis-adjusted loss, or return the property to ordinary efficient operating condition after deterioration to a state of disrepair where it was no longer functional?",
+     "why": "Any single True prong requires capitalization as an improvement (§1.263(a)-3(d)(2)); all-False opens the repair / routine-maintenance path. The amount is capitalized CONSERVATIVELY pending the answer — never silently deducted on missing facts."
+    }
+   ],
+   "deductible_total": "0",
+   "capitalized_total": "4000",
+   "elective_capitalized_total": "0",
+   "warnings": []
+  }
+ },
+ {
+  "name": "tangible_routine_maintenance",
+  "engine": "tangible",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "5000000"
+   },
+   "items": [
+    {
+     "item_id": "R1",
+     "description": "R1",
+     "amount": "1500",
+     "betterment": false,
+     "adaptation": false,
+     "restoration": false,
+     "routine_maintenance_expected_more_than_once": true
+    },
+    {
+     "item_id": "R2",
+     "description": "R2",
+     "amount": "1600",
+     "betterment": false,
+     "adaptation": false,
+     "restoration": false,
+     "routine_maintenance_expected_more_than_once": null
+    }
+   ],
+   "opts": {}
+  },
+  "expected": {
+   "items": [
+    {
+     "item_id": "R1",
+     "description": "R1",
+     "amount": "1500",
+     "treatment": "routine_maintenance_deduct",
+     "authority": "Reg. §1.263(a)-3(i) routine maintenance safe harbor",
+     "flags": [],
+     "deductible": "1500",
+     "capitalized": "0"
+    },
+    {
+     "item_id": "R2",
+     "description": "R2",
+     "amount": "1600",
+     "treatment": "repair_deduct",
+     "authority": "§162; Reg. §1.263(a)-3(d)",
+     "flags": [],
+     "deductible": "1600",
+     "capitalized": "0"
+    }
+   ],
+   "open_questions": [
+    {
+     "item_id": "R2",
+     "question": "Item R2 'R2': at the time the unit of property was placed in service, was this maintenance expected to be performed more than once over the property's class life (for a building: more than once in 10 years) (§1.263(a)-3(i))? Answer routine_maintenance_expected_more_than_once True/False.",
+     "why": "All BAR prongs are False, so the amount is deductible either way — the answer only settles whether the routine maintenance safe harbor or the general repair rule is the cited authority."
+    }
+   ],
+   "deductible_total": "3100",
+   "capitalized_total": "0",
+   "elective_capitalized_total": "0",
+   "warnings": []
+  }
+ },
+ {
+  "name": "tangible_repair_and_n_election",
+  "engine": "tangible",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "5000000"
+   },
+   "items": [
+    {
+     "item_id": "N1",
+     "description": "N1",
+     "amount": "700",
+     "betterment": false,
+     "adaptation": false,
+     "restoration": false,
+     "routine_maintenance_expected_more_than_once": false,
+     "book_capitalized": true
+    },
+    {
+     "item_id": "N2",
+     "description": "N2",
+     "amount": "800",
+     "betterment": false,
+     "adaptation": false,
+     "restoration": false,
+     "routine_maintenance_expected_more_than_once": false,
+     "book_capitalized": false
+    }
+   ],
+   "opts": {
+    "capitalize_repairs_following_books": true
+   }
+  },
+  "expected": {
+   "items": [
+    {
+     "item_id": "N1",
+     "description": "N1",
+     "amount": "700",
+     "treatment": "elective_capitalize_books",
+     "authority": "Reg. §1.263(a)-3(n) election to capitalize repairs capitalized on books",
+     "flags": [],
+     "deductible": "0",
+     "capitalized": "700"
+    },
+    {
+     "item_id": "N2",
+     "description": "N2",
+     "amount": "800",
+     "treatment": "repair_deduct",
+     "authority": "§162; Reg. §1.263(a)-3(d)",
+     "flags": [],
+     "deductible": "800",
+     "capitalized": "0"
+    }
+   ],
+   "open_questions": [],
+   "deductible_total": "800",
+   "capitalized_total": "0",
+   "elective_capitalized_total": "700",
+   "warnings": [
+    "N-ELECTION-CONSISTENCY: the §1.263(a)-3(n) election is on, but some repair items are capitalized on books and others are not — the election applies to ALL amounts paid for repair and maintenance capitalized on the books and records for the year. Verify the book treatment of every repair line is consistent with the election."
+   ]
+  }
+ },
+ {
+  "name": "tangible_negative_amount",
+  "engine": "tangible",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "5000000"
+   },
+   "items": [
+    {
+     "item_id": "X1",
+     "description": "X1",
+     "amount": "-500"
+    }
+   ],
+   "opts": {}
+  },
+  "expected": {
+   "items": [
+    {
+     "item_id": "X1",
+     "description": "X1",
+     "amount": "-500",
+     "treatment": "sme_review",
+     "authority": "",
+     "flags": [
+      "NEGATIVE-AMOUNT"
+     ],
+     "deductible": "0",
+     "capitalized": "0"
+    }
+   ],
+   "open_questions": [],
+   "deductible_total": "0",
+   "capitalized_total": "0",
+   "elective_capitalized_total": "0",
+   "warnings": [
+    "NEGATIVE-AMOUNT [tangible X1]: $-500.00 — nothing computed; route credits/refunds through the schedule, not a negative expenditure."
+   ]
+  }
+ }
+]

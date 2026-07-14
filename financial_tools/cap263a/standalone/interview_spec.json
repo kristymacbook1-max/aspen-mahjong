@@ -1,0 +1,1070 @@
+{
+  "version": 1,
+  "source_of_truth": "financial_tools/cap263a/interview.py + taxonomy/interview.yaml (Phase E Gates 0-10); gateT from the new tangible-property engine spec",
+  "renderer_contract": {
+    "conditions": "A condition is one of: {question, equals}, {question, in:[..]}, {question, lte:n}, {question, answered:bool}, {derived, equals}, {any:[conds]}, {all:[conds]}, {differs:[qidA,qidB]}. Every entry of a show_if/when list must hold (AND).",
+    "unanswered_semantics": "An unanswered question evaluates as null. For bool questions {equals:false} matches null OR false (falsy semantics, mirroring interview.py where never-asked answers are None/falsy). {equals:true}, {in:[..]}, {lte:n} and choice {equals:v} never match null. {derived:.., equals:null} tests the three-valued 'unknown' state.",
+    "gate_skip": "A gate with skip_if whose conditions all hold is skipped entirely (mirrors interview.py _EXEMPT_SKIPPED_GATES: gates 1,2,3,6,7 are §263A provisions and switch off for a §448(c)-exempt small business; gates 4,5,8,9,10 and gateT still run).",
+    "maps_to": "Exactly one of profile_field (EntityProfile attribute), flag (interview flag name), election_kwarg (run_engagement / engine kwarg). Answers land on the profile object the HTML engines consume.",
+    "schedules": "requires_schedule_if adds the named schedule tab(s) to the required list when the answer matches. always_required_schedules are appended unconditionally."
+  },
+  "derived": {
+    "under_448c_threshold": {
+      "description": "Q0.4 <= the §448(c) inflation-indexed threshold for Q0.2's year (EntityProfile.THRESHOLDS; unknown years fall back to the 2026 figure and should be flagged as an estimate). null while Q0.4 is unanswered.",
+      "rule": {
+        "type": "receipts_le_threshold",
+        "receipts_question": "Q0.4",
+        "year_question": "Q0.2",
+        "thresholds": { "2024": 30000000, "2025": 31000000, "2026": 32000000 },
+        "fallback_threshold": 32000000
+      }
+    },
+    "small_business_exempt": {
+      "description": "under_448c_threshold AND Q0.3 (tax shelter) is false — §263A(i)/§448(c) small-business exemption; §1.263A-1(b)(1)/(j) bars a tax shelter regardless of receipts. false while receipts are unanswered (interview.py treats undetermined as not-exempt for gate walking, then warns EXEMPTION-UNDETERMINED).",
+      "rule": {
+        "type": "all",
+        "conditions": [
+          { "derived": "under_448c_threshold", "equals": true },
+          { "question": "Q0.3", "equals": false }
+        ]
+      }
+    },
+    "srm_available": {
+      "description": "Gate 1 consequence matrix, §1.263A-3(a)(4) — three-valued. null: Q1.1a unanswered, or a producer whose Q1.2 de minimis determination was never established. true: not a producer (pure reseller), or private-label goods (Q1.4), or de-minimis production incident to resale (Q1.2=de_minimis AND Q1.3). false: otherwise (producer above de minimis with no carve-out) — SPM/MSPM only.",
+      "rule": {
+        "type": "srm_matrix",
+        "produces": "Q1.1a",
+        "production_activity_level": "Q1.2",
+        "incident_to_resale": "Q1.3",
+        "private_label": "Q1.4"
+      }
+    }
+  },
+  "always_required_schedules": ["btd"],
+  "gates": [
+    {
+      "id": "gate0",
+      "title": "Entity & exemption",
+      "purpose": "Identify the taxpayer, the tax year, and whether the §448(c)/§263A(i) small-business exemption switches all of §263A off (Gates 1-3, 6-7 skipped).",
+      "questions": [
+        {
+          "id": "Q0.1",
+          "text": "What type of entity is the taxpayer?",
+          "help": "Determines who signs elections and unlocks partnership-only questions (guaranteed payments, §707(c); syndication costs, §709(b)). §448.",
+          "type": "choice",
+          "choices": [
+            { "value": "c_corp", "label": "C corporation" },
+            { "value": "s_corp", "label": "S corporation" },
+            { "value": "partnership", "label": "Partnership" },
+            { "value": "sole_prop", "label": "Sole proprietorship" }
+          ],
+          "maps_to": { "profile_field": "entity_type" }
+        },
+        {
+          "id": "Q0.2",
+          "text": "What tax year is this engagement for?",
+          "help": "Sets the §448(c) gross-receipts threshold lookup ($30M/2024, $31M/2025, $32M/2026) and the T.D. 10034 pre/post-Oct-2025 interest-capitalization regime.",
+          "type": "number",
+          "maps_to": { "profile_field": "tax_year" }
+        },
+        {
+          "id": "Q0.3",
+          "text": "Is the taxpayer a tax shelter under §448(a)(3) (syndicate / loss-allocation tests)?",
+          "help": "A §448(a)(3) tax shelter is statutorily barred from the small-business exemption regardless of gross receipts. §1.263A-1(b)(1)/(j).",
+          "type": "bool",
+          "maps_to": { "profile_field": "is_tax_shelter" }
+        },
+        {
+          "id": "Q0.4",
+          "text": "Aggregated 3-year average annual gross receipts under §448(c)(2)/§1.448-2 (related entities combined)?",
+          "help": "Must be the single-employer AGGREGATED figure, not this entity's receipts alone. At or under the threshold (and not a tax shelter): all of §263A — including (f) interest — is off; Gates 1-3 and 6-7 are skipped. §448(c)(2); §1.448-2.",
+          "type": "money",
+          "maps_to": { "profile_field": "avg_gross_receipts" }
+        },
+        {
+          "id": "Q0.5",
+          "text": "Is this the first taxable year with production or resale activities?",
+          "help": "In the first §263A year, methods below are ADOPTED — no Form 3115 and no prior-method reconciliation. §1.263A-7(a).",
+          "type": "bool",
+          "maps_to": { "profile_field": "is_first_263a_year" }
+        },
+        {
+          "id": "Q0.6",
+          "text": "What §263A method was established last year?",
+          "help": "Any divergence from this year's method-of-accounting answers triggers Form 3115 / §481(a) and §1.263A-7 revalued beginning-inventory inputs. §446(e); §1.263A-7.",
+          "type": "choice",
+          "choices": [
+            { "value": "SPM", "label": "Simplified production method (SPM)" },
+            { "value": "MSPM", "label": "Modified simplified production method (MSPM)" },
+            { "value": "SRM", "label": "Simplified resale method (SRM)" },
+            { "value": "facts_and_circumstances", "label": "Facts-and-circumstances method" },
+            { "value": "none_noncompliant", "label": "None / not compliant with §263A" }
+          ],
+          "maps_to": { "profile_field": "prior_year_method" },
+          "show_if": [
+            { "question": "Q0.5", "equals": false },
+            { "derived": "small_business_exempt", "equals": false }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gate1",
+      "title": "Producer / reseller status",
+      "purpose": "Establish producer vs reseller status and the §1.263A-3(a)(4) SRM-availability consequence matrix (computed, not asked).",
+      "skip_if": [{ "derived": "small_business_exempt", "equals": true }],
+      "questions": [
+        {
+          "id": "Q1.1a",
+          "text": "Does the taxpayer produce real or tangible personal property?",
+          "help": "Producer status under §1.263A-2(a) — construction, manufacturing, growing, improvement all count.",
+          "type": "bool",
+          "maps_to": { "profile_field": "produces" }
+        },
+        {
+          "id": "Q1.1b",
+          "text": "Does the taxpayer acquire property for resale?",
+          "help": "Reseller status under §1.263A-3(a).",
+          "type": "bool",
+          "maps_to": { "profile_field": "acquires_for_resale" }
+        },
+        {
+          "id": "Q1.2",
+          "text": "Are production gross receipts and production labor each 10% or less of the trade or business (the de minimis presumption)?",
+          "help": "The 10%/10% presumption of §1.263A-3(a)(5)(ii). Above either threshold, the facts-and-circumstances follow-up is an SME review-queue call, not a formula.",
+          "type": "choice",
+          "choices": [
+            { "value": "de_minimis", "label": "De minimis (within the 10%/10% presumption)" },
+            { "value": "more_than_de_minimis", "label": "More than de minimis" }
+          ],
+          "maps_to": { "profile_field": "production_activity_level" },
+          "show_if": [
+            { "question": "Q1.1a", "equals": true },
+            { "question": "Q1.1b", "equals": true }
+          ]
+        },
+        {
+          "id": "Q1.3",
+          "text": "Is the de minimis production incident to resale of §1221(a)(1) property?",
+          "help": "The §1.263A-3(a)(4)(ii) route that keeps SRM available for a de-minimis producer.",
+          "type": "bool",
+          "maps_to": { "profile_field": "production_incident_to_resale" },
+          "show_if": [{ "question": "Q1.2", "equals": "de_minimis" }]
+        },
+        {
+          "id": "Q1.4",
+          "text": "Private-label production — goods produced under contract by an UNRELATED party, incident to resale, sold to customers?",
+          "help": "Asked always (not gated on Q1.3): the §1.263A-3(a)(4)(iii) private-label carve-out can qualify even a more-than-de-minimis producer for SRM.",
+          "type": "bool",
+          "maps_to": { "profile_field": "private_label_goods" }
+        }
+      ]
+    },
+    {
+      "id": "gate2",
+      "title": "Inventory & §263A method elections",
+      "purpose": "Inventory method, this year's §263A simplified method, and the SSCM / HAR / split sub-elections.",
+      "skip_if": [{ "derived": "small_business_exempt", "equals": true }],
+      "questions": [
+        {
+          "id": "Q2.1",
+          "text": "What inventory method is established?",
+          "help": "§471/§472 established method. LIFO routes the MSPM combined-ratio and SRM increment mechanics.",
+          "type": "choice",
+          "choices": [
+            { "value": "FIFO", "label": "FIFO" },
+            { "value": "lifo_specific", "label": "LIFO — specific goods" },
+            { "value": "lifo_dollar_value", "label": "LIFO — dollar value" }
+          ],
+          "maps_to": { "profile_field": "inventory_method" }
+        },
+        {
+          "id": "Q2.2",
+          "text": "Which §263A method applies this year?",
+          "help": "SPM/MSPM per §1.263A-2; SRM per §1.263A-3. The menu is constrained by Gate 1's srm_available matrix; differing from Q0.6 in a non-first year requires Form 3115 / §481(a) (see derived checks).",
+          "type": "choice",
+          "choices": [
+            { "value": "SPM", "label": "Simplified production method (SPM)" },
+            { "value": "MSPM", "label": "Modified simplified production method (MSPM)" },
+            { "value": "SRM", "label": "Simplified resale method (SRM)" }
+          ],
+          "maps_to": { "profile_field": "method" }
+        },
+        {
+          "id": "Q2.3",
+          "text": "(SPM only) Are 3-year average gross receipts over $50 million?",
+          "help": "§1.263A-1(d)(3)(ii)(B)(1): a producer over $50M may not include negative §263A adjustments under the SPM (MSPM has no size limit).",
+          "type": "bool",
+          "maps_to": { "flag": "SPM_OVER_50M" },
+          "show_if": [{ "question": "Q2.2", "equals": "SPM" }]
+        },
+        {
+          "id": "Q2.4",
+          "text": "Include negative §263A adjustments?",
+          "help": "§1.263A-1(d)(3)(ii). Not offered to an over-$50M SPM taxpayer. If yes, the (d)(3)(ii)(C)-(E) restrictions apply.",
+          "type": "bool",
+          "maps_to": { "profile_field": "include_negative_263a" },
+          "show_if": [
+            { "question": "Q2.2", "in": ["SPM", "MSPM", "SRM"] },
+            { "any": [
+              { "question": "Q2.2", "in": ["MSPM", "SRM"] },
+              { "question": "Q2.3", "equals": false }
+            ] }
+          ],
+          "warning_if": [
+            {
+              "equals": true,
+              "code": "NEGATIVE-263A-RESTRICTIONS",
+              "text": "§1.263A-1(d)(3)(ii)(C)-(E): no negative adjustments for cash/trade discounts or §162(c)/(e)/(f)/(g) items; consistency required."
+            }
+          ]
+        },
+        {
+          "id": "Q2.5",
+          "text": "(Producers) Are total indirect costs $200,000 or less (after excluding not-required-to-capitalize categories; related parties aggregated)?",
+          "help": "§1.263A-2(b)(3)(iv): if yes, additional §263A costs are DEEMED ZERO — the ratio-input questions below are skipped and the HAR election is barred.",
+          "type": "bool",
+          "maps_to": { "profile_field": "producer_de_minimis_200k" },
+          "show_if": [{ "question": "Q1.1a", "equals": true }]
+        },
+        {
+          "id": "Q2.6a",
+          "text": "(MSPM) Has the taxpayer used MSPM with actual ratios for 3 or more consecutive prior years?",
+          "help": "Eligibility fact for the Historic Absorption Ratio election. §1.263A-2(c)(4).",
+          "type": "bool",
+          "maps_to": { "flag": "MSPM_3YR_ACTUAL_RATIO_HISTORY" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "MSPM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q2.6b",
+          "text": "Elect the Historic Absorption Ratio (HAR)?",
+          "help": "§1.263A-2(c)(4) — MSPM-only, applied on a cut-off basis; frozen ratio and qualifying-year inputs are then required.",
+          "type": "bool",
+          "maps_to": { "profile_field": "har_election" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "MSPM" },
+            { "question": "Q2.6a", "equals": true },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q2.6c",
+          "text": "HAR: frozen PRE-PRODUCTION historic absorption ratio (fraction)?",
+          "help": "Frozen for the 5-year qualifying period. §1.263A-2(c)(4).",
+          "type": "number",
+          "maps_to": { "profile_field": "har_preprod_ratio" },
+          "show_if": [
+            { "question": "Q2.6b", "equals": true },
+            { "question": "Q2.1", "equals": "FIFO" }
+          ]
+        },
+        {
+          "id": "Q2.6d",
+          "text": "HAR: frozen PRODUCTION historic absorption ratio (fraction)?",
+          "help": "Frozen for the 5-year qualifying period. §1.263A-2(c)(4).",
+          "type": "number",
+          "maps_to": { "profile_field": "har_production_ratio" },
+          "show_if": [
+            { "question": "Q2.6b", "equals": true },
+            { "question": "Q2.1", "equals": "FIFO" }
+          ]
+        },
+        {
+          "id": "Q2.6e",
+          "text": "HAR (LIFO): frozen COMBINED historic absorption ratio (fraction)?",
+          "help": "The LIFO variant uses a single combined ratio. §1.263A-2(c)(4)(iii).",
+          "type": "number",
+          "maps_to": { "profile_field": "har_combined_ratio" },
+          "show_if": [
+            { "question": "Q2.6b", "equals": true },
+            { "question": "Q2.1", "in": ["lifo_specific", "lifo_dollar_value"] }
+          ]
+        },
+        {
+          "id": "Q2.6f",
+          "text": "HAR: qualifying-year index (1-5 within the qualifying period; 6 = recomputation year)?",
+          "help": "§1.263A-2(c)(4): in the recomputation year, BOTH frozen ratios must be within ±0.5 percentage points of actuals (conjunctive) — pass extends 6 years; fail means actuals now with mandatory resumption in the 3rd following year.",
+          "type": "number",
+          "maps_to": { "profile_field": "har_qualifying_year_index" },
+          "show_if": [{ "question": "Q2.6b", "equals": true }]
+        },
+        {
+          "id": "Q2.7a",
+          "text": "(MSPM) SSCM-split method — direct-material or labor?",
+          "help": "How capitalizable mixed-service costs split between the pre-production and production pools. §1.263A-2(c)(3)(iii)(B).",
+          "type": "choice",
+          "choices": [
+            { "value": "direct_material", "label": "Direct-material proportion" },
+            { "value": "labor", "label": "Labor proportion" }
+          ],
+          "maps_to": { "profile_field": "mspm_mixed_split_method" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "MSPM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q2.7b",
+          "text": "(MSPM) Elect the 90% one-bucket split?",
+          "help": "§1.263A-2(c)(3)(iii)(C): if 90% or more of capitalizable mixed-service costs would land in one pool, elect to put ALL of them there.",
+          "type": "bool",
+          "maps_to": { "profile_field": "mspm_90pct_split_election" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "MSPM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q2.8a",
+          "text": "Elect the simplified service cost method (SSCM)?",
+          "help": "§1.263A-1(h): allocates mixed-service costs by a simple ratio instead of department-level allocation.",
+          "type": "bool",
+          "maps_to": { "flag": "SSCM_ELECTED" },
+          "show_if": [{ "question": "Q2.5", "equals": false }]
+        },
+        {
+          "id": "Q2.8b",
+          "text": "SSCM ratio method?",
+          "help": "§1.263A-1(h)(3)(ii): the production-cost ratio is offered ONLY to producers; a reseller must use the labor-based ratio (see derived check SSCM-RATIO-RESELLER).",
+          "type": "choice",
+          "choices": [
+            { "value": "labor", "label": "Labor-based ratio" },
+            { "value": "production_cost", "label": "Production-cost ratio (producers only)" }
+          ],
+          "maps_to": { "profile_field": "sscm_ratio_method" },
+          "show_if": [
+            { "question": "Q2.8a", "equals": true },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q2.8c",
+          "text": "SSCM: elect to EXCLUDE self-constructed assets?",
+          "help": "§1.263A-1(h)(2)(ii): routes self-constructed-asset mixed costs to the general (g)(4) method instead of SSCM.",
+          "type": "bool",
+          "maps_to": { "flag": "SSCM_EXCLUDE_SELF_CONSTRUCTED" },
+          "show_if": [
+            { "question": "Q2.8a", "equals": true },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q2.8d",
+          "text": "Elect the (g)(4)(ii) all-departments 90% mixed-service treatment?",
+          "help": "§1.263A-1(g)(4)(ii). Note: the department-level carve-out mechanics are not built in this tool — setting this triggers an honesty-gate warning downstream.",
+          "type": "bool",
+          "maps_to": { "profile_field": "msc_90_10_election" },
+          "show_if": [
+            { "question": "Q2.8a", "equals": true },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q2.9",
+          "text": "Book-conformity check: does financial-statement capitalization match the §471 / Additional-§263A tier split (including TD 9843 elective methods (d)(2)(iii)/(iv)/(v))?",
+          "help": "§1.263A-1(d)(2); TD 9843. A review-queue flag, not a computed field.",
+          "type": "bool",
+          "maps_to": { "flag": "BOOK_CONFORMITY_REVIEW" }
+        }
+      ]
+    },
+    {
+      "id": "gate3",
+      "title": "Method inputs (SPM / MSPM / SRM balances)",
+      "purpose": "The dollar inputs each simplified method needs. Menu strictly follows Q2.2; all inputs suppressed when Q2.5's $200K deemed-zero applies.",
+      "skip_if": [{ "derived": "small_business_exempt", "equals": true }],
+      "questions": [
+        {
+          "id": "Q3.1",
+          "text": "(SPM) §471 costs remaining in ending inventory?",
+          "help": "The SPM absorption ratio's multiplicand. §1.263A-2(b).",
+          "type": "money",
+          "maps_to": { "profile_field": "ending_inventory_471" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "SPM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q3.2",
+          "text": "(MSPM) Pre-production §471 costs incurred during the year (direct material + resale)?",
+          "help": "§1.263A-2(c)(3).",
+          "type": "money",
+          "maps_to": { "profile_field": "pre_production_471" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "MSPM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q3.3",
+          "text": "(MSPM) Production §471 costs incurred during the year?",
+          "help": "§1.263A-2(c)(3).",
+          "type": "money",
+          "maps_to": { "profile_field": "production_471" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "MSPM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q3.4",
+          "text": "(MSPM) Pre-production additional §263A costs incurred?",
+          "help": "§1.263A-2(c)(3).",
+          "type": "money",
+          "maps_to": { "profile_field": "pre_production_additional_263A" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "MSPM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q3.5",
+          "text": "(MSPM) Production additional §263A costs incurred?",
+          "help": "§1.263A-2(c)(3).",
+          "type": "money",
+          "maps_to": { "profile_field": "production_additional_263A" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "MSPM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q3.6",
+          "text": "(MSPM) Pre-production §471 costs on hand at year end (current-year-incurred only)?",
+          "help": "§1.263A-2(c)(3)(ii)(C)/(E).",
+          "type": "money",
+          "maps_to": { "profile_field": "pre_production_471_on_hand" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "MSPM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q3.7",
+          "text": "(MSPM) Production §471 costs on hand at year end (current-year-incurred only)?",
+          "help": "§1.263A-2(c)(3)(ii)(C)/(E).",
+          "type": "money",
+          "maps_to": { "profile_field": "production_471_on_hand" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "MSPM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q3.8",
+          "text": "(MSPM) Beginning direct materials not yet in production?",
+          "help": "§1.263A-2(c)(3); feeds the direct-materials adjustment.",
+          "type": "money",
+          "maps_to": { "profile_field": "beginning_DM_not_yet_in_production" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "MSPM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q3.9",
+          "text": "(MSPM) Ending direct materials not yet in production?",
+          "help": "§1.263A-2(c)(3); feeds the direct-materials adjustment.",
+          "type": "money",
+          "maps_to": { "profile_field": "ending_DM_not_yet_in_production" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "MSPM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q3.10",
+          "text": "(MSPM) Direct materials purchased during the year?",
+          "help": "Feeds the direct-materials adjustment. §1.263A-2(c)(3).",
+          "type": "money",
+          "maps_to": { "profile_field": "DM_purchased_during_year" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "MSPM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q3.10a",
+          "text": "(MSPM, LIFO) Current-year LIFO increment stated in §471 costs?",
+          "help": "The combined absorption ratio's multiplicand under §1.263A-2(c)(3)(iv) (the regulation's Example 3: 9.48% × $1,500,000 increment). Without it the engine warns MSPM-LIFO-INCREMENT-MISSING.",
+          "type": "money",
+          "maps_to": { "profile_field": "lifo_current_year_increment_471" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "MSPM" },
+            { "question": "Q2.5", "equals": false },
+            { "question": "Q2.1", "in": ["lifo_specific", "lifo_dollar_value"] }
+          ]
+        },
+        {
+          "id": "Q3.11",
+          "text": "(SRM) Current year's purchases — §471 costs incurred on property acquired for resale during the year?",
+          "help": "The purchasing-ratio DENOMINATOR. §1.263A-3(d)(3).",
+          "type": "money",
+          "maps_to": { "profile_field": "current_year_471_costs" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "SRM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q3.12",
+          "text": "(SRM) Purchasing-department cost pool?",
+          "help": "The purchasing-ratio NUMERATOR. §1.263A-3(d)(3).",
+          "type": "money",
+          "maps_to": { "profile_field": "purchasing_costs" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "SRM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q3.13",
+          "text": "(SRM) Storage and handling costs?",
+          "help": "The storage-and-handling ratio's numerator pool. §1.263A-3(d)(3).",
+          "type": "money",
+          "maps_to": { "profile_field": "storage_handling_costs" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "SRM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q3.14",
+          "text": "(SRM) Beginning inventory §471 costs (LIFO carrying value if Q2.1 is LIFO)?",
+          "help": "Part of the S&H ratio denominator (unless variation A excludes it). §1.263A-3(d)(3).",
+          "type": "money",
+          "maps_to": { "profile_field": "beginning_inventory_471" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "SRM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q3.15",
+          "text": "(SRM) §471 costs remaining on hand at year end (LIFO: the current-year increment, unless variation B is elected)?",
+          "help": "The combined ratio's multiplicand. §1.263A-3(d)(3)(i)(C).",
+          "type": "money",
+          "maps_to": { "profile_field": "ending_inventory_471" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "SRM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q3.16",
+          "text": "(SRM) Elect the 1/3-2/3 purchasing-labor allocation (all-or-nothing)?",
+          "help": "§1.263A-3(d): dual-function purchasing personnel may be allocated 1/3-2/3 instead of by time — but for ALL such personnel or none.",
+          "type": "bool",
+          "maps_to": { "flag": "SRM_ONE_THIRD_TWO_THIRDS_ELECTION" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "SRM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q3.18a",
+          "text": "(SRM) Permissible variation A — exclude beginning inventory from the storage-and-handling denominator?",
+          "help": "§1.263A-3(d)(3)(iii)(A). A method of accounting once used.",
+          "type": "bool",
+          "maps_to": { "profile_field": "srm_variation_a" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "SRM" },
+            { "question": "Q2.5", "equals": false }
+          ]
+        },
+        {
+          "id": "Q3.18b",
+          "text": "(SRM, LIFO) Permissible variation B — multiply the S&H ratio by TOTAL ending-inventory §471 costs instead of the increment?",
+          "help": "§1.263A-3(d)(3)(iii)(B). Requires the total ending-inventory §471 figure at LIFO carrying value (see completeness rule SRM-VARIATION-B-INPUT-MISSING).",
+          "type": "bool",
+          "maps_to": { "profile_field": "srm_variation_b" },
+          "show_if": [
+            { "question": "Q2.2", "equals": "SRM" },
+            { "question": "Q2.5", "equals": false },
+            { "question": "Q2.1", "in": ["lifo_specific", "lifo_dollar_value"] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gate4",
+      "title": "§263(a) tangible-property facts & elections (interview.py Gate 4)",
+      "purpose": "AFS / written-policy facts and the annual tangible-property elections as interview.py records them (flags). gateT below carries the same three elections as engine kwargs for the new tangible engine.",
+      "questions": [
+        {
+          "id": "Q4.1a",
+          "text": "Does the taxpayer have an applicable financial statement (AFS)?",
+          "help": "Sets the de minimis safe-harbor ceiling authority: $5,000 per invoice/item with an AFS, $2,500 without (Notice 2015-82 raise of the reg's $500). §1.263(a)-1(f)(1).",
+          "type": "bool",
+          "maps_to": { "profile_field": "has_afs" }
+        },
+        {
+          "id": "Q4.1b",
+          "text": "Were written accounting procedures in place at the BEGINNING of the year?",
+          "help": "A precondition of the de minimis safe harbor. §1.263(a)-1(f)(1)(i)(B)/(ii)(B).",
+          "type": "bool",
+          "maps_to": { "flag": "WRITTEN_CAP_PROCEDURES" }
+        },
+        {
+          "id": "Q4.1c",
+          "text": "Elect the de minimis safe harbor this year?",
+          "help": "§1.263(a)-1(f): an ANNUAL statement election, irrevocable for the year — NOT a method change ((f)(5)).",
+          "type": "bool",
+          "maps_to": { "flag": "DE_MINIMIS_SAFE_HARBOR_ELECTION" },
+          "show_if": [{ "question": "Q4.1b", "equals": true }]
+        },
+        {
+          "id": "Q4.2a",
+          "text": "Small-taxpayer building safe harbor: are average gross receipts $10M or less under §1.263(a)-3(h)(3)'s OWN definition (not §448(c))?",
+          "help": "§1.263(a)-3(h)(3) has its own receipts test — do not reuse the Q0.4 §448(c) figure.",
+          "type": "bool",
+          "maps_to": { "flag": "SMALL_TAXPAYER_UNDER_10M" }
+        },
+        {
+          "id": "Q4.4a",
+          "text": "Elect to capitalize repairs following books (§1.263(a)-3(n))?",
+          "help": "An ANNUAL election that ADDS capitalization of amounts otherwise deductible as repairs, conforming tax to book capitalization.",
+          "type": "bool",
+          "maps_to": { "flag": "CAPITALIZE_REPAIRS_PER_BOOKS" }
+        }
+      ]
+    },
+    {
+      "id": "gate5",
+      "title": "§266 carrying-charge elections",
+      "purpose": "Elective capitalization of taxes and carrying charges.",
+      "questions": [
+        {
+          "id": "Q5.1",
+          "text": "Is property unimproved AND unproductive this year — elect §266 capitalization of taxes/carrying charges?",
+          "help": "§1.266-1(b)(1)(i): an annual, year-by-year election.",
+          "type": "bool",
+          "maps_to": { "flag": "SEC266_UNIMPROVED_ELECTION" }
+        },
+        {
+          "id": "Q5.2",
+          "text": "Development/construction project — elect §266 capitalization?",
+          "help": "§1.266-1(b)(1)(ii): sticks until the work completes. ORDERING NOTE: for an asset flagged in BOTH Gate 5 and Gate 7, §§1.263A-8..-15 apply FIRST (§1.266-1(a)(2)).",
+          "type": "bool",
+          "maps_to": { "flag": "SEC266_DEVELOPMENT_ELECTION" }
+        },
+        {
+          "id": "Q5.3",
+          "text": "Was the §266 election statement confirmed filed with the original return?",
+          "help": "§1.266-1(c)(3) requires a statement with the original return.",
+          "type": "bool",
+          "maps_to": { "flag": "SEC266_STATEMENT_FILED" },
+          "show_if": [
+            { "any": [
+              { "question": "Q5.1", "equals": true },
+              { "question": "Q5.2", "equals": true }
+            ] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gate6",
+      "title": "Self-constructed assets",
+      "purpose": "Presence screen for the SCA engine (per-asset detail lives in the Self-Constructed Assets tab, not the wizard).",
+      "skip_if": [{ "derived": "small_business_exempt", "equals": true }],
+      "questions": [
+        {
+          "id": "Q6.0",
+          "text": "Any self-constructed assets (SCA) this year?",
+          "help": "If yes, the fixed-asset and CIP schedules are required and the per-asset SCA detail (cost-allocation method, SSCM eligibility route, pool/driver assignments) is entered on the SCA tab.",
+          "type": "bool",
+          "maps_to": { "flag": "HAS_SCA" },
+          "requires_schedule_if": [
+            { "equals": true, "schedule": "fixed_assets" },
+            { "equals": true, "schedule": "cip" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gate7",
+      "title": "§263A(f) interest capitalization",
+      "purpose": "Designated-property presence screen and the taxpayer-level interest-method answers (per-unit and per-debt detail lives in the §263A(f) tab).",
+      "skip_if": [{ "derived": "small_business_exempt", "equals": true }],
+      "questions": [
+        {
+          "id": "Q7.0",
+          "text": "Any §263A(f) designated-property candidates?",
+          "help": "§1.263A-8(b): real property, or tangible personal property with a long class life / production period. If yes, CIP and debt schedules are required.",
+          "type": "bool",
+          "maps_to": { "profile_field": "has_designated_property" },
+          "requires_schedule_if": [
+            { "equals": true, "schedule": "cip" },
+            { "equals": true, "schedule": "debt" }
+          ]
+        },
+        {
+          "id": "Q7.16",
+          "text": "Computation period and measurement-date frequency?",
+          "help": "§1.263A-9(f): the taxpayer's chosen computation period (e.g. annual, quarterly) and measurement dates — a method of accounting.",
+          "type": "text",
+          "maps_to": { "flag": "INTEREST_COMPUTATION_PERIOD" },
+          "show_if": [{ "question": "Q7.0", "equals": true }]
+        },
+        {
+          "id": "Q7.17",
+          "text": "Tracing posture: trace, §1.263A-9(d) no-tracing election, or AFR-plus-3?",
+          "help": "§1.263A-8/-9. AFR-plus-3 requires the $10M since-1994 receipts test OR the small-business route and forecloses tracing.",
+          "type": "choice",
+          "choices": [
+            { "value": "trace", "label": "Trace debt to expenditures" },
+            { "value": "no_tracing", "label": "No-tracing election (§1.263A-9(d))" },
+            { "value": "afr_plus_3", "label": "AFR-plus-3 simplified rate" }
+          ],
+          "maps_to": { "flag": "TRACING_POSTURE" },
+          "show_if": [{ "question": "Q7.0", "equals": true }]
+        },
+        {
+          "id": "Q7.18",
+          "text": "Since-1994 average annual gross receipts (for the AFR-plus-3 $10M eligibility test)?",
+          "help": "A LONGER look-back window than Q0.4's 3-year §448(c) test — do not reuse Q0.4.",
+          "type": "money",
+          "maps_to": { "flag": "SINCE_1994_AVG_RECEIPTS" },
+          "show_if": [{ "question": "Q7.17", "equals": "afr_plus_3" }]
+        },
+        {
+          "id": "Q7.19",
+          "text": "Accounts-payable fold-in sub-election (lowers the WAIR denominator)?",
+          "help": "§1.263A-9(d)(1): available under the no-tracing election.",
+          "type": "bool",
+          "maps_to": { "flag": "AP_FOLD_IN_ELECTION" },
+          "show_if": [{ "question": "Q7.17", "equals": "no_tracing" }]
+        },
+        {
+          "id": "Q7.23",
+          "text": "(Partnerships) Guaranteed payments for the use of capital?",
+          "help": "§1.263A-9(c)(2)(iii); §707(c): treated as interest for the avoided-cost computation.",
+          "type": "money",
+          "maps_to": { "flag": "GUARANTEED_PAYMENTS_FOR_CAPITAL" },
+          "show_if": [
+            { "question": "Q7.0", "equals": true },
+            { "question": "Q0.1", "equals": "partnership" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gate8",
+      "title": "§174/§174A research & experimental",
+      "purpose": "R&E presence screen, the §174A(c) capitalization election, and the OBBBA 2022-2024 catch-up options (per-project detail lives in the R&E tab).",
+      "questions": [
+        {
+          "id": "Q8.0",
+          "text": "Any R&E-tagged costs (§174/§174A)?",
+          "help": "If yes, the R&E schedule is required; domestic vs foreign detail is entered per project on the R&E tab.",
+          "type": "bool",
+          "maps_to": { "flag": "HAS_RE_COSTS" },
+          "requires_schedule_if": [{ "equals": true, "schedule": "re" }]
+        },
+        {
+          "id": "Q8.2a",
+          "text": "(Domestic) Elect 60-month-or-longer capitalization instead of current expensing, per §174A(c)?",
+          "help": "§174A(c): an elective capitalization of domestic R&E that would otherwise be currently expensed.",
+          "type": "bool",
+          "maps_to": { "flag": "RE_CAPITALIZATION_ELECTION" },
+          "show_if": [{ "question": "Q8.0", "equals": true }]
+        },
+        {
+          "id": "Q8.2b",
+          "text": "Elected capitalization period in months (minimum 60)?",
+          "help": "§174A(c).",
+          "type": "number",
+          "maps_to": { "flag": "RE_CAPITALIZATION_PERIOD_MONTHS" },
+          "show_if": [
+            { "question": "Q8.0", "equals": true },
+            { "question": "Q8.2a", "equals": true }
+          ]
+        },
+        {
+          "id": "Q8.3a",
+          "text": "Is 2022-2024 domestic R&E still being amortized under the old 5-year schedule?",
+          "help": "OBBBA transition: unamortized 2022-2024 domestic R&E can be caught up.",
+          "type": "bool",
+          "maps_to": { "flag": "RE_LEGACY_AMORTIZATION" },
+          "show_if": [{ "question": "Q8.0", "equals": true }]
+        },
+        {
+          "id": "Q8.3b",
+          "text": "Catch-up method: 1-year (all in 2025) or 2-year (split 2025-2026)?",
+          "help": "OBBBA transition. Mutually exclusive with Q8.4's retroactive election.",
+          "type": "choice",
+          "choices": [
+            { "value": "one_year", "label": "One year (all in 2025)" },
+            { "value": "two_year", "label": "Two years (split 2025-2026)" }
+          ],
+          "maps_to": { "flag": "RE_CATCHUP_METHOD" },
+          "show_if": [
+            { "question": "Q8.0", "equals": true },
+            { "question": "Q8.3a", "equals": true }
+          ]
+        },
+        {
+          "id": "Q8.4",
+          "text": "(Small business at or under the §448(c) threshold) Elect the RETROACTIVE amendment instead of the catch-up?",
+          "help": "OBBBA small-business retroactive election — amended-return deadline July 6, 2026. Mutually exclusive with Q8.3b. Eligibility keys off Q0.4 (not re-asked).",
+          "type": "bool",
+          "maps_to": { "flag": "RE_SMALL_BUSINESS_RETROACTIVE_ELECTION" },
+          "show_if": [
+            { "question": "Q8.0", "equals": true },
+            { "question": "Q8.3a", "equals": true },
+            { "derived": "under_448c_threshold", "equals": true }
+          ]
+        },
+        {
+          "id": "Q8.5",
+          "text": "Are software development costs among these expenditures?",
+          "help": "§174/§174A software scope is an SME confirmation — a review-queue flag.",
+          "type": "bool",
+          "maps_to": { "flag": "RE_SOFTWARE_SCOPE_REVIEW" },
+          "show_if": [{ "question": "Q8.0", "equals": true }]
+        }
+      ]
+    },
+    {
+      "id": "gate9",
+      "title": "Transaction costs, intangibles, start-up, §1060",
+      "purpose": "Presence screens that route the intangibles/transaction-cost/start-up/PPA schedules (per-transaction and per-intangible detail lives in those tabs).",
+      "questions": [
+        {
+          "id": "Q9.0",
+          "text": "Any flagged transaction or intangible-tagged costs (§1.263(a)-4/-5)?",
+          "help": "If yes: transaction-cost, intangibles, and start-up schedules are required; covered-transaction, bright-line-date, 12-month-rule, and $5K-cliff detail is entered per item on those tabs.",
+          "type": "bool",
+          "maps_to": { "flag": "HAS_TRANSACTION_COSTS" },
+          "requires_schedule_if": [
+            { "equals": true, "schedule": "transaction_costs" },
+            { "equals": true, "schedule": "intangibles" },
+            { "equals": true, "schedule": "startup" }
+          ]
+        },
+        {
+          "id": "Q9.7a",
+          "text": "Is a start-up or organizational cost pool present?",
+          "help": "§195/§248/§709: $5,000 first-year allowance with a $50,000 phase-out, 180-month amortization from business commencement (totals and dates are entered on the start-up tab).",
+          "type": "bool",
+          "maps_to": { "flag": "HAS_STARTUP_ORG_COSTS" },
+          "requires_schedule_if": [{ "equals": true, "schedule": "startup" }]
+        },
+        {
+          "id": "Q9.8",
+          "text": "(Partnerships) Does any portion represent SYNDICATION costs under §709(b) (fees to promote or sell partnership interests)?",
+          "help": "§709(b): syndication costs are PERMANENTLY non-amortizable — not on the $5,000/180-month schedule.",
+          "type": "bool",
+          "maps_to": { "flag": "SYNDICATION_COSTS" },
+          "show_if": [
+            { "question": "Q9.7a", "equals": true },
+            { "question": "Q0.1", "equals": "partnership" }
+          ],
+          "warning_if": [
+            {
+              "equals": true,
+              "code": "SYNDICATION-PERMANENT-NONAMORTIZATION",
+              "text": "§709(b) syndication costs: PERMANENT non-amortization, not the $5,000/180-month schedule."
+            }
+          ]
+        },
+        {
+          "id": "Q9.9a",
+          "text": "Acquired a trade or business this year (asset acquisition or deemed asset acquisition under §338)?",
+          "help": "§1060; §338. If yes, the Form 8594 residual-method PPA schedule is required and SEEDS basis for the per-asset gates — complete it before Gate 3/6/7 detail for acquired assets.",
+          "type": "bool",
+          "maps_to": { "flag": "ACQUIRED_TRADE_OR_BUSINESS" },
+          "requires_schedule_if": [{ "equals": true, "schedule": "ppa" }]
+        }
+      ]
+    },
+    {
+      "id": "gate10",
+      "title": "§59(e) qualified expenditures",
+      "purpose": "AMT-exposure gating for the §59(e) election (per-expenditure elections are entered on the §59(e) tab).",
+      "questions": [
+        {
+          "id": "Q10.1",
+          "text": "Is the taxpayer an individual, or a pass-through entity whose owners may report AMT preference items (§55/§56/§57 individual AMT)?",
+          "help": "§59(e) only matters where individual AMT can apply — TCJA repealed corporate AMT and the IRA 2022 CAMT does not use §57 preferences. If no (pure C-corp, no AMT-exposed owners), the rest of Gate 10 is skipped.",
+          "type": "bool",
+          "maps_to": { "flag": "AMT_EXPOSURE" },
+          "requires_schedule_if": [{ "equals": true, "schedule": "qualified_expenditures" }]
+        }
+      ]
+    },
+    {
+      "id": "gateT",
+      "title": "Tangible-property engine elections (NEW — not from interview.py)",
+      "purpose": "The three annual tangible-property elections the NEW standalone tangible engine consumes as engine kwargs. Conditions reuse gate4's fact questions (Q4.1a/Q4.1b/Q4.2a) rather than re-asking them; gate4's Q4.1c/Q4.4a record the same facts as interview flags for the workpaper summary.",
+      "gate": "gateT",
+      "questions": [
+        {
+          "id": "QT.1",
+          "text": "Apply the de minimis safe harbor election in the tangible-property computation?",
+          "help": "§1.263(a)-1(f): deducts items at or under the ceiling — $5,000 per invoice/item with an AFS (Q4.1a), $2,500 without (Notice 2015-82). Requires written accounting procedures in place at the beginning of the year (Q4.1b); an annual, irrevocable-for-the-year statement election.",
+          "type": "bool",
+          "maps_to": { "election_kwarg": "de_minimis_election" },
+          "show_if": [{ "question": "Q4.1b", "equals": true }]
+        },
+        {
+          "id": "QT.2",
+          "text": "Apply the small-taxpayer building safe harbor election?",
+          "help": "§1.263(a)-3(h): a qualifying small taxpayer (≤$10M receipts under (h)(3)'s own test — Q4.2a) may deduct repairs/improvements on a building with unadjusted basis ≤$1M when the year's total is ≤ the lesser of 2% of basis or $10,000. Annual, per-building.",
+          "type": "bool",
+          "maps_to": { "election_kwarg": "small_taxpayer_building_election" },
+          "show_if": [{ "question": "Q4.2a", "equals": true }]
+        },
+        {
+          "id": "QT.3",
+          "text": "Apply the election to capitalize repairs following books?",
+          "help": "§1.263(a)-3(n): an annual election to capitalize for tax any repair amounts capitalized on the books — it ADDS capitalization, never reduces it.",
+          "type": "bool",
+          "maps_to": { "election_kwarg": "capitalize_repairs_following_books" }
+        }
+      ]
+    }
+  ],
+  "derived_checks": [
+    {
+      "code": "SRM-METHOD-CONFLICT",
+      "when": [
+        { "question": "Q2.2", "equals": "SRM" },
+        { "derived": "srm_available", "equals": false }
+      ],
+      "text": "Q2.2 = SRM but Gate 1's consequence matrix makes SRM unavailable (producer above de minimis, no incident-to-resale route, no private-label goods) — SPM/MSPM only (§1.263A-3(a)(4))."
+    },
+    {
+      "code": "SRM-AVAILABILITY-UNKNOWN",
+      "when": [
+        { "question": "Q2.2", "equals": "SRM" },
+        { "derived": "srm_available", "equals": null },
+        { "question": "Q1.1a", "equals": true }
+      ],
+      "text": "Q2.2 = SRM but the de minimis determination (Q1.2) was never established for this producer — the §1.263A-3(a)(4) availability gate cannot be evaluated. Resolve Gate 1 before relying on SRM figures."
+    },
+    {
+      "code": "SSCM-RATIO-RESELLER",
+      "when": [
+        { "question": "Q2.8b", "equals": "production_cost" },
+        { "question": "Q1.1b", "equals": true },
+        { "question": "Q1.1a", "equals": false }
+      ],
+      "text": "The production-cost allocation ratio is a producer-only formula (§1.263A-1(h)(3)(ii)) — a reseller electing it is a regulation violation; use the labor-based ratio."
+    },
+    {
+      "code": "PRIOR-METHOD-IMPERMISSIBLE",
+      "when": [
+        { "question": "Q0.5", "equals": false },
+        { "question": "Q0.6", "answered": true },
+        { "any": [
+          { "question": "Q0.6", "equals": "none_noncompliant" },
+          { "all": [
+            { "question": "Q0.6", "equals": "SRM" },
+            { "derived": "srm_available", "equals": false }
+          ] }
+        ] }
+      ],
+      "text": "The Q0.6 prior-year method was never legally available for this activity profile — a discovered impermissible method, an error-correction event under §446(e) (Form 3115 with a different DCN/§481(a) posture than an elective switch)."
+    },
+    {
+      "code": "METHOD-CHANGE-3115-481A-REQUIRED",
+      "when": [
+        { "question": "Q0.5", "equals": false },
+        { "question": "Q0.6", "answered": true },
+        { "question": "Q2.2", "answered": true },
+        { "differs": ["Q2.2", "Q0.6"] }
+      ],
+      "suppressed_by": "PRIOR-METHOD-IMPERMISSIBLE",
+      "text": "This year's §263A method (Q2.2) differs from the established prior-year method (Q0.6) — Form 3115, a §481(a) adjustment, and §1.263A-7 revalued beginning-inventory inputs are required."
+    },
+    {
+      "code": "EXEMPTION-UNDETERMINED",
+      "when": [{ "question": "Q0.4", "answered": false }],
+      "text": "Q0.4 (aggregated 3-yr average gross receipts) was not answered — the §448(c) exemption CANNOT be determined. The profile's receipts default to $0, which downstream reads as EXEMPT (all §263A off); supply Q0.4 before relying on any computation."
+    },
+    {
+      "code": "SRM-INPUTS-INCONSISTENT",
+      "when": [
+        { "question": "Q1.1a", "equals": false },
+        { "question": "Q1.2", "equals": "more_than_de_minimis" }
+      ],
+      "text": "produces=False but production_activity_level='more_than_de_minimis' — the SRM availability gate cannot be evaluated on contradictory inputs. Fix the activity profile. (Mirrors engines/inventory.py; unreachable through the wizard flow itself but fires on imported profiles.)"
+    }
+  ],
+  "completeness": [
+    {
+      "engine_warning_code": "MSPM-LIFO-INCREMENT-MISSING",
+      "when": [
+        { "profile_field": "method", "equals": "MSPM" },
+        { "profile_field": "inventory_method", "in": ["lifo_specific", "lifo_dollar_value"] },
+        { "profile_field": "producer_de_minimis_200k", "equals": false }
+      ],
+      "then_required": ["lifo_current_year_increment_471"],
+      "ask_question_id": "Q3.10a",
+      "question": "What is the current-year LIFO increment stated in §471 costs? Without it the MSPM result is the NON-LIFO computation, not the combined-ratio × increment answer (§1.263A-2(c)(3)(iv))."
+    },
+    {
+      "engine_warning_code": "HAR-RATIOS-MISSING",
+      "when": [
+        { "profile_field": "har_election", "equals": true },
+        { "profile_field": "inventory_method", "equals": "FIFO" }
+      ],
+      "then_required": ["har_preprod_ratio", "har_production_ratio"],
+      "ask_question_id": "Q2.6c",
+      "question": "The HAR election is set but the frozen pre-production and production historic absorption ratios are missing — without them ACTUAL ratios are used (§1.263A-2(c)(4)). Supply both frozen ratios."
+    },
+    {
+      "engine_warning_code": "HAR-RATIOS-MISSING",
+      "when": [
+        { "profile_field": "har_election", "equals": true },
+        { "profile_field": "inventory_method", "in": ["lifo_specific", "lifo_dollar_value"] }
+      ],
+      "then_required": ["har_combined_ratio"],
+      "ask_question_id": "Q2.6e",
+      "question": "The HAR election under LIFO needs the frozen COMBINED historic absorption ratio (§1.263A-2(c)(4)(iii)) — without it the actual combined ratio is used. Supply the frozen combined ratio."
+    },
+    {
+      "engine_warning_code": "MSPM-SPLIT-INPUT-MISSING",
+      "when": [
+        { "profile_field": "method", "equals": "MSPM" },
+        { "profile_field": "mspm_mixed_split_method", "equals": "labor" }
+      ],
+      "then_required": ["mspm_labor_split_proportion"],
+      "question": "What is the pre-production share of labor (pre-production labor ÷ total labor, both excluding mixed-service labor), as a fraction? Required by the §1.263A-2(c)(3)(iii)(B) labor split method — without it the engine silently falls back to the direct-material proportion. (No interview.py question exists for this field.)"
+    },
+    {
+      "engine_warning_code": "SRM-VARIATION-B-INPUT-MISSING",
+      "when": [
+        { "profile_field": "method", "equals": "SRM" },
+        { "profile_field": "srm_variation_b", "equals": true }
+      ],
+      "then_required": ["ending_inventory_471_total_lifo"],
+      "question": "Variation B needs TOTAL ending-inventory §471 costs at LIFO carrying value — the S&H ratio's multiplicand under §1.263A-3(d)(3)(iii)(B) (the purchasing ratio still multiplies the current-year increment). Without it the computation runs WITHOUT the variation. (No interview.py question exists for this field.)"
+    },
+    {
+      "engine_warning_code": "SRM-PRODUCTION-LEVEL-UNKNOWN",
+      "when": [
+        { "profile_field": "method", "equals": "SRM" },
+        { "profile_field": "produces", "equals": true },
+        { "profile_field": "private_label_goods", "equals": false }
+      ],
+      "then_required": ["production_activity_level"],
+      "ask_question_id": "Q1.2",
+      "question": "The taxpayer produces but the de minimis determination (Q1.2) was never established — the §1.263A-3(a)(4) SRM availability gate cannot be evaluated. Establish the production activity level before relying on SRM figures."
+    },
+    {
+      "engine_warning_code": "WAIR-UNAVAILABLE",
+      "when": [
+        { "profile_field": "has_designated_property", "equals": true }
+      ],
+      "then_required_kwargs": ["afr_highest"],
+      "question": "What is the highest applicable Federal rate (§1274(d)) in effect during the computation period (as a decimal fraction)? If no eligible nontraced debt is outstanding, §1.263A-9(c)(5)(iii)(D) substitutes this rate for the WAIR — without it, excess-expenditure amounts compute as ZERO. (Only consumed when the debt schedule leaves no nontraced debt; ask up front since the wizard cannot see the debt balances.)"
+    }
+  ]
+}

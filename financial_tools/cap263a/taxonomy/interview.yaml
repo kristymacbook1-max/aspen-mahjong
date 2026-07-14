@@ -1,0 +1,1239 @@
+# Phase E interview question graph — one node per numbered question in
+# BUILD_PLAN.md "Phase E — Interview layer" Gates 0-10.
+#
+# CONVENTIONS (documented per the build plan):
+#   * Multi-part plan questions are split into lettered sub-ids: e.g. the plan's
+#     Q1.1 ("Produces? Acquires for resale?") becomes Q1.1a (produces) and
+#     Q1.1b (acquires_for_resale); Q2.7 becomes Q2.7a/Q2.7b; Q3.18 becomes
+#     Q3.18a/Q3.18b; Q4.1 becomes Q4.1a/Q4.1b/Q4.1c; etc.
+#   * Gates whose plan text says "ask if <collection> exists" get a synthetic
+#     presence-screen node with suffix .0 (Q6.0, Q7.0, Q8.0, Q9.0). Gate 10's
+#     screen is the plan's own Q10.1.
+#   * ask_when expressions are python-ish boolean expressions over PRIOR
+#     answers. Question ids are exposed with dots mapped to underscores
+#     (Q0.1 -> Q0_1, Q1.1a -> Q1_1a). Unanswered/never-asked questions
+#     evaluate as None (falsy). Three DERIVED names are also available:
+#       small_business_exempt  - §448(c) exemption from Q0.2/Q0.3/Q0.4
+#       under_448c_threshold   - Q0.4 <= the §448(c) threshold for Q0.2's year
+#       srm_available          - Gate 1 consequence matrix (computed, not asked)
+#   * answer_type per_item marks a sub-tree asked once per item of its
+#     collection (per facility / per asset / per unit / per debt instrument /
+#     per project / per transaction); the runner receives a LIST of per-item
+#     answer dicts for such nodes.
+#   * maps_to targets: profile.<field> (validated against EntityProfile),
+#     schedule.<name>, flag.<NAME>, or none.
+#   * warning_if_true: warning code the runner emits when the node's answer is
+#     truthy (True, or a non-empty per_item list).
+#   * Cross-gate ordering note (plan's Gate 5 ORDERING NOTE): for an asset
+#     flagged in BOTH Gate 5 and Gate 7, the Gate 5 election is logically
+#     dependent on Gate 7's per-unit determination — treat as an ask_when
+#     dependency, not a strict linear walk; the linear document order here is
+#     the default presentation order only.
+
+version: 1
+
+questions:
+
+  # ---------------------------------------------------------------- Gate 0 --
+  - id: Q0.1
+    gate: 0
+    question: "Entity type?"
+    answer_type: enum
+    choices: [c_corp, s_corp, partnership, sole_prop]
+    maps_to: profile.entity_type
+    kind: FACT
+    authority: "Phase E Gate 0 Q0.1; §448; unlocks §707(c) questions (Q7.23) for partnerships"
+    ask_when: "True"
+    consequence: "Determines who signs elections; partnership unlocks guaranteed-payment questions in Gate 7."
+
+  - id: Q0.2
+    gate: 0
+    question: "Tax year?"
+    answer_type: int
+    maps_to: profile.tax_year
+    kind: FACT
+    authority: "Phase E Gate 0 Q0.2; §448(c) threshold lookup; T.D. 10034 pre/post-Oct-2025 regime"
+    ask_when: "True"
+
+  - id: Q0.3
+    gate: 0
+    question: "Is the taxpayer a tax shelter under §448(a)(3) (syndicate/loss-allocation tests)?"
+    answer_type: bool
+    maps_to: profile.is_tax_shelter
+    kind: FACT
+    authority: "Phase E Gate 0 Q0.3; §448(a)(3); §1.263A-1(b)(1)/(j)"
+    ask_when: "True"
+    consequence: "If yes: small-business exemption barred regardless of receipts."
+
+  - id: Q0.4
+    gate: 0
+    question: "Aggregated 3-yr average gross receipts under §448(c)(2)/§1.448-2 (single-employer aggregation)?"
+    answer_type: decimal
+    maps_to: profile.avg_gross_receipts
+    kind: FACT
+    authority: "Phase E Gate 0 Q0.4; §448(c)(2); §1.448-2"
+    ask_when: "True"
+    consequence: >-
+      If <= threshold and not Q0.3: small_business_exempt — skip Gates 1, 2, 3, 6, 7
+      entirely (all §263A off, including (f)); Gates 4, 5, 8, 9, 10 still run
+      (§263(a)/§266/§174/§1060/§59(e) are not §263A provisions).
+
+  - id: Q0.5
+    gate: 0
+    question: "First taxable year with production/resale activities?"
+    answer_type: bool
+    maps_to: profile.is_first_263a_year
+    kind: FACT
+    authority: "Phase E Gate 0 Q0.5; §1.263A-7(a)"
+    ask_when: "True"
+    consequence: "If yes: methods below are ADOPTED (no Form 3115); skip Q0.6/Q0.6a."
+
+  - id: Q0.6
+    gate: 0
+    question: "Established §263A method last year (and established sub-elections)?"
+    answer_type: enum
+    choices: [SPM, MSPM, SRM, facts_and_circumstances, none_noncompliant]
+    maps_to: profile.prior_year_method
+    kind: FACT
+    authority: "Phase E Gate 0 Q0.6; §446(e); §1.263A-7"
+    ask_when: "not Q0_5 and not small_business_exempt"
+    consequence: >-
+      Any divergence from this year's METHOD-OF-ACCOUNTING answers emits
+      METHOD-CHANGE-3115-481A-REQUIRED plus the §1.263A-7 revalued-beginning-inventory
+      input-contract notice.
+
+  - id: Q0.6a
+    gate: 0
+    question: "RECONCILIATION (computed by the runner, never asked): was the prior-year method legally available under Gate 1's consequence matrix?"
+    answer_type: bool
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 0 Q0.6a; §446(e); error-correction Rev. Proc. posture"
+    ask_when: "False"
+    consequence: >-
+      Runner-computed after Gate 1: if prior_year_method was never legally available
+      (e.g. SRM when srm_available is False) or was none_noncompliant, emit
+      PRIOR-METHOD-IMPERMISSIBLE (discovered impermissible method — 3115 with a
+      different DCN/§481(a) posture than an elective switch).
+
+  # ---------------------------------------------------------------- Gate 1 --
+  - id: Q1.1a
+    gate: 1
+    question: "Produces real or tangible personal property?"
+    answer_type: bool
+    maps_to: profile.produces
+    kind: FACT
+    authority: "Phase E Gate 1 Q1.1; §1.263A-2(a)"
+    ask_when: "True"
+
+  - id: Q1.1b
+    gate: 1
+    question: "Acquires property for resale?"
+    answer_type: bool
+    maps_to: profile.acquires_for_resale
+    kind: FACT
+    authority: "Phase E Gate 1 Q1.1; §1.263A-3(a)"
+    ask_when: "True"
+
+  - id: Q1.2
+    gate: 1
+    question: "Production gross receipts and production labor as shares of the trade or business — 10%/10% presumption; above either, facts-and-circumstances follow-up (SME judgment)?"
+    answer_type: enum
+    choices: [de_minimis, more_than_de_minimis]
+    maps_to: profile.production_activity_level
+    kind: FACT
+    authority: "Phase E Gate 1 Q1.2; §1.263A-3(a)(5)(ii)"
+    ask_when: "Q1_1a and Q1_1b"
+    consequence: "Above the presumption -> facts-and-circumstances follow-up is a review-queue SME call, not a formula."
+
+  - id: Q1.3
+    gate: 1
+    question: "Is the (de minimis) production incident to resale of §1221(a)(1) property?"
+    answer_type: bool
+    maps_to: profile.production_incident_to_resale
+    kind: FACT
+    authority: "Phase E Gate 1 Q1.3; §1.263A-3(a)(4)(ii)"
+    ask_when: "Q1_2 == 'de_minimis'"
+
+  - id: Q1.4
+    gate: 1
+    question: "Private-label production (produced under contract by an UNRELATED party, incident to resale, sold to customers)?"
+    answer_type: bool
+    maps_to: profile.private_label_goods
+    kind: FACT
+    authority: "Phase E Gate 1 Q1.4; §1.263A-3(a)(4)(iii)"
+    ask_when: "True"
+    consequence: >-
+      Asked ALWAYS (not gated on Q1.3): private-label is the carve-out that can
+      qualify a MORE-than-de-minimis producer for SRM. Consequence matrix (computed,
+      not asked): srm_available = pure reseller, or de-minimis-incident, or
+      private-label; otherwise SPM/MSPM only (SRM-METHOD-CONFLICT if SRM chosen).
+
+  # ---------------------------------------------------------------- Gate 2 --
+  - id: Q2.1
+    gate: 2
+    question: "Inventory method?"
+    answer_type: enum
+    choices: [FIFO, lifo_specific, lifo_dollar_value]
+    maps_to: profile.inventory_method
+    kind: FACT
+    authority: "Phase E Gate 2 Q2.1; §471/§472 (established method)"
+    ask_when: "True"
+
+  - id: Q2.1a
+    gate: 2
+    question: "LIFO layer detail (per layer: year, §471 cost, increment/decrement)?"
+    answer_type: per_item
+    maps_to: schedule.lifo_layers
+    kind: FACT
+    authority: "Phase E Gate 2 Q2.1 (layer detail); §1.263A-2(b)(3)(iii)/(c)(3)(iv)"
+    ask_when: "Q2_1 and Q2_1 != 'FIFO'"
+
+  - id: Q2.2
+    gate: 2
+    question: "§263A method this year?"
+    answer_type: enum
+    choices: [SPM, MSPM, SRM]
+    maps_to: profile.method
+    kind: METHOD-OF-ACCOUNTING
+    authority: "Phase E Gate 2 Q2.2; §1.263A-2 (SPM/MSPM); §1.263A-3 (SRM)"
+    ask_when: "True"
+    consequence: >-
+      Menu constrained by Gate 1's srm_available matrix — SRM chosen while
+      srm_available is False emits SRM-METHOD-CONFLICT. Differing from Q0.6 in a
+      non-first year emits METHOD-CHANGE-3115-481A-REQUIRED.
+
+  - id: Q2.3
+    gate: 2
+    question: "(SPM only) 3-yr average gross receipts over $50M?"
+    answer_type: bool
+    maps_to: flag.SPM_OVER_50M
+    kind: FACT
+    authority: "Phase E Gate 2 Q2.3; §1.263A-1(d)(3)(ii)(B)(1)"
+    ask_when: "Q2_2 == 'SPM'"
+    consequence: "If yes: negative §263A adjustments barred under SPM (skip Q2.4); else Q2.4."
+
+  - id: Q2.4
+    gate: 2
+    question: "Include negative §263A adjustments?"
+    answer_type: bool
+    maps_to: profile.include_negative_263a
+    kind: METHOD-OF-ACCOUNTING
+    authority: "Phase E Gate 2 Q2.4; §1.263A-1(d)(3)(ii)"
+    ask_when: "Q2_2 and not (Q2_2 == 'SPM' and Q2_3)"
+    warning_if_true: "NEGATIVE-263A-RESTRICTIONS (§1.263A-1(d)(3)(ii)(C)-(E)): no negatives for cash/trade discounts or §162(c)/(e)/(f)/(g) items; consistency required"
+    consequence: >-
+      Warn on the (d)(3)(ii)(C)-(E) restrictions: no negatives for cash/trade
+      discounts or §162(c)/(e)/(f)/(g) items; consistency required.
+
+  - id: Q2.5
+    gate: 2
+    question: "(Producers) Total indirect costs <= $200,000 (after excluding not-required-to-capitalize categories; related parties aggregated)?"
+    answer_type: bool
+    maps_to: profile.producer_de_minimis_200k
+    kind: FACT
+    authority: "Phase E Gate 2 Q2.5; §1.263A-2(b)(3)(iv)"
+    ask_when: "Q1_1a"
+    consequence: "If yes: de-minimis ZERO additional §263A — skip Q2.6-Q2.8 and Gate 3's ratio inputs."
+
+  - id: Q2.6a
+    gate: 2
+    question: "(MSPM) 3+ consecutive prior years on MSPM with actual ratios?"
+    answer_type: bool
+    maps_to: flag.MSPM_3YR_ACTUAL_RATIO_HISTORY
+    kind: FACT
+    authority: "Phase E Gate 2 Q2.6 (eligibility fact); §1.263A-2(c)(4)"
+    ask_when: "Q2_2 == 'MSPM' and not Q2_5"
+
+  - id: Q2.6b
+    gate: 2
+    question: "Historic Absorption Ratio (HAR) election?"
+    answer_type: bool
+    maps_to: profile.har_election
+    kind: METHOD-OF-ACCOUNTING
+    authority: "Phase E Gate 2 Q2.6; §1.263A-2(c)(4) (MSPM-only mechanic; cut-off basis)"
+    ask_when: "Q2_2 == 'MSPM' and Q2_6a and not Q2_5"
+    consequence: "If elected: ratio/qualifying-year inputs required; HAR is MSPM-only."
+
+  - id: Q2.6c
+    gate: 2
+    question: "HAR: frozen pre-production historic absorption ratio (fraction)?"
+    answer_type: decimal
+    maps_to: profile.har_preprod_ratio
+    kind: FACT
+    authority: "§1.263A-2(c)(4) (frozen for the 5-year qualifying period)"
+    ask_when: "Q2_6b and Q2_1 == 'FIFO'"
+
+  - id: Q2.6d
+    gate: 2
+    question: "HAR: frozen production historic absorption ratio (fraction)?"
+    answer_type: decimal
+    maps_to: profile.har_production_ratio
+    kind: FACT
+    authority: "§1.263A-2(c)(4)"
+    ask_when: "Q2_6b and Q2_1 == 'FIFO'"
+
+  - id: Q2.6e
+    gate: 2
+    question: "HAR (LIFO): frozen COMBINED historic absorption ratio (fraction)?"
+    answer_type: decimal
+    maps_to: profile.har_combined_ratio
+    kind: FACT
+    authority: "§1.263A-2(c)(4)(iii)"
+    ask_when: "Q2_6b and Q2_1 and Q2_1 != 'FIFO'"
+
+  - id: Q2.6f
+    gate: 2
+    question: "HAR: qualifying-year index (1-5 within the qualifying period; 6 = recomputation year)?"
+    answer_type: int
+    maps_to: profile.har_qualifying_year_index
+    kind: FACT
+    authority: "§1.263A-2(c)(4): recomputation-year ±0.5pp conjunctive test; pass extends 6 years; fail -> actuals now, mandatory resumption in the 3rd following year"
+    ask_when: "Q2_6b"
+
+  - id: Q2.7a
+    gate: 2
+    question: "(MSPM) SSCM-split method — direct-material or labor?"
+    answer_type: enum
+    choices: [direct_material, labor]
+    maps_to: profile.mspm_mixed_split_method
+    kind: METHOD-OF-ACCOUNTING
+    authority: "Phase E Gate 2 Q2.7; §1.263A-2(c)(3)(iii)(B)"
+    ask_when: "Q2_2 == 'MSPM' and not Q2_5"
+
+  - id: Q2.7b
+    gate: 2
+    question: "(MSPM) 90% one-bucket split election?"
+    answer_type: bool
+    maps_to: profile.mspm_90pct_split_election
+    kind: METHOD-OF-ACCOUNTING
+    authority: "Phase E Gate 2 Q2.7; §1.263A-2(c)(3)(iii)(C)"
+    ask_when: "Q2_2 == 'MSPM' and not Q2_5"
+
+  - id: Q2.8a
+    gate: 2
+    question: "SSCM (simplified service cost method) elected?"
+    answer_type: bool
+    maps_to: flag.SSCM_ELECTED
+    kind: METHOD-OF-ACCOUNTING
+    authority: "Phase E Gate 2 Q2.8; §1.263A-1(h)"
+    ask_when: "not Q2_5"
+
+  - id: Q2.8b
+    gate: 2
+    question: "SSCM ratio method (production-cost offered ONLY to producers per (h)(3)(ii))?"
+    answer_type: enum
+    choices: [labor, production_cost]
+    maps_to: profile.sscm_ratio_method
+    kind: METHOD-OF-ACCOUNTING
+    authority: "Phase E Gate 2 Q2.8; §1.263A-1(h)(3)(ii)"
+    ask_when: "Q2_8a and not Q2_5"
+    consequence: "production_cost is only available to producers ((h)(3)(ii))."
+
+  - id: Q2.8c
+    gate: 2
+    question: "SSCM exclude-self-constructed-assets election?"
+    answer_type: bool
+    maps_to: flag.SSCM_EXCLUDE_SELF_CONSTRUCTED
+    kind: METHOD-OF-ACCOUNTING
+    authority: "Phase E Gate 2 Q2.8; §1.263A-1(h)(2)(ii)"
+    ask_when: "Q2_8a and not Q2_5"
+    consequence: "Routes SCA mixed costs to the general (g)(4) method instead of SSCM."
+
+  - id: Q2.8d
+    gate: 2
+    question: "(g)(4)(ii) all-departments 90% mixed-service election?"
+    answer_type: bool
+    maps_to: profile.msc_90_10_election
+    kind: METHOD-OF-ACCOUNTING
+    authority: "Phase E Gate 2 Q2.8; §1.263A-1(g)(4)(ii)"
+    ask_when: "Q2_8a and not Q2_5"
+
+  - id: Q2.9
+    gate: 2
+    question: "Book-conformity check (§1.263A-1(d)(2)): does financial-statement capitalization match the classifier's §471/Additional tier split (incl. TD 9843 elective methods (d)(2)(iii)/(iv)/(v))?"
+    answer_type: bool
+    maps_to: flag.BOOK_CONFORMITY_REVIEW
+    kind: FACT
+    authority: "Phase E Gate 2 Q2.9; §1.263A-1(d)(2); TD 9843"
+    ask_when: "True"
+    consequence: "Review-queue flags, not fields (flag-don't-model per Phase B)."
+
+  # ---------------------------------------------------------------- Gate 3 --
+  # Menu strictly follows Q2.2 (SPM -> Q3.1 only; MSPM -> Q3.2-Q3.10;
+  # SRM -> Q3.11-Q3.22). Ratio inputs suppressed when Q2.5 deemed-zero applies.
+  - id: Q3.1
+    gate: 3
+    question: "(SPM) §471 costs remaining in ending inventory?"
+    answer_type: decimal
+    maps_to: profile.ending_inventory_471
+    kind: FACT
+    authority: "Phase E Gate 3 Q3.1; §1.263A-2(b)"
+    ask_when: "Q2_2 == 'SPM' and not Q2_5"
+
+  - id: Q3.2
+    gate: 3
+    question: "(MSPM) Pre-production §471 costs incurred during the year (direct material + resale)?"
+    answer_type: decimal
+    maps_to: profile.pre_production_471
+    kind: FACT
+    authority: "Phase E Gate 3 Q3.2; §1.263A-2(c)(3)"
+    ask_when: "Q2_2 == 'MSPM' and not Q2_5"
+
+  - id: Q3.3
+    gate: 3
+    question: "(MSPM) Production §471 costs incurred during the year?"
+    answer_type: decimal
+    maps_to: profile.production_471
+    kind: FACT
+    authority: "Phase E Gate 3 Q3.3; §1.263A-2(c)(3)"
+    ask_when: "Q2_2 == 'MSPM' and not Q2_5"
+
+  - id: Q3.4
+    gate: 3
+    question: "(MSPM) Pre-production additional §263A costs incurred?"
+    answer_type: decimal
+    maps_to: profile.pre_production_additional_263A
+    kind: FACT
+    authority: "Phase E Gate 3 Q3.4; §1.263A-2(c)(3)"
+    ask_when: "Q2_2 == 'MSPM' and not Q2_5"
+
+  - id: Q3.5
+    gate: 3
+    question: "(MSPM) Production additional §263A costs incurred?"
+    answer_type: decimal
+    maps_to: profile.production_additional_263A
+    kind: FACT
+    authority: "Phase E Gate 3 Q3.5; §1.263A-2(c)(3)"
+    ask_when: "Q2_2 == 'MSPM' and not Q2_5"
+
+  - id: Q3.6
+    gate: 3
+    question: "(MSPM) Pre-production §471 costs on hand at year end (current-year-incurred only)?"
+    answer_type: decimal
+    maps_to: profile.pre_production_471_on_hand
+    kind: FACT
+    authority: "Phase E Gate 3 Q3.6; §1.263A-2(c)(3)(ii)(C)/(E)"
+    ask_when: "Q2_2 == 'MSPM' and not Q2_5"
+
+  - id: Q3.7
+    gate: 3
+    question: "(MSPM) Production §471 costs on hand at year end (current-year-incurred only)?"
+    answer_type: decimal
+    maps_to: profile.production_471_on_hand
+    kind: FACT
+    authority: "Phase E Gate 3 Q3.7; §1.263A-2(c)(3)(ii)(C)/(E)"
+    ask_when: "Q2_2 == 'MSPM' and not Q2_5"
+
+  - id: Q3.8
+    gate: 3
+    question: "(MSPM) Beginning direct materials not yet in production?"
+    answer_type: decimal
+    maps_to: profile.beginning_DM_not_yet_in_production
+    kind: FACT
+    authority: "Phase E Gate 3 Q3.8; §1.263A-2(c)(3)"
+    ask_when: "Q2_2 == 'MSPM' and not Q2_5"
+
+  - id: Q3.9
+    gate: 3
+    question: "(MSPM) Ending direct materials not yet in production?"
+    answer_type: decimal
+    maps_to: profile.ending_DM_not_yet_in_production
+    kind: FACT
+    authority: "Phase E Gate 3 Q3.9; §1.263A-2(c)(3)"
+    ask_when: "Q2_2 == 'MSPM' and not Q2_5"
+
+  - id: Q3.10
+    gate: 3
+    question: "(MSPM) Direct materials purchased during the year?"
+    answer_type: decimal
+    maps_to: profile.DM_purchased_during_year
+    kind: FACT
+    authority: "Phase E Gate 3 Q3.10 (ADDED 2026-07-09); feeds direct_materials_adjustment"
+    ask_when: "Q2_2 == 'MSPM' and not Q2_5"
+
+  - id: Q3.10a
+    gate: 3
+    question: "(MSPM, LIFO) Current-year LIFO increment stated in §471 costs (the combined absorption ratio's multiplicand)?"
+    answer_type: decimal
+    maps_to: profile.lifo_current_year_increment_471
+    kind: FACT
+    authority: "§1.263A-2(c)(3)(iv) (the regulation's Example 3: 9.48% combined ratio x 1,500,000 increment)"
+    ask_when: "Q2_2 == 'MSPM' and not Q2_5 and Q2_1 and Q2_1 != 'FIFO'"
+
+  - id: Q3.11
+    gate: 3
+    question: "(SRM) Current year's purchases — §471 costs incurred on property acquired for resale during the year (purchasing-ratio DENOMINATOR)?"
+    answer_type: decimal
+    maps_to: profile.current_year_471_costs
+    kind: FACT
+    authority: "Phase E Gate 3 Q3.11; §1.263A-3(d)(3)"
+    ask_when: "Q2_2 == 'SRM' and not Q2_5"
+
+  - id: Q3.12
+    gate: 3
+    question: "(SRM) Purchasing-department cost pool (purchasing-ratio NUMERATOR)?"
+    answer_type: decimal
+    maps_to: profile.purchasing_costs
+    kind: FACT
+    authority: "Phase E Gate 3 Q3.12 (ADDED 2026-07-09); §1.263A-3(d)(3)"
+    ask_when: "Q2_2 == 'SRM' and not Q2_5"
+
+  - id: Q3.13
+    gate: 3
+    question: "(SRM) Storage & handling costs?"
+    answer_type: decimal
+    maps_to: profile.storage_handling_costs
+    kind: FACT
+    authority: "Phase E Gate 3 Q3.13; §1.263A-3(d)(3)"
+    ask_when: "Q2_2 == 'SRM' and not Q2_5"
+
+  - id: Q3.14
+    gate: 3
+    question: "(SRM) Beginning inventory §471 costs (LIFO carrying value if Q2.1 = LIFO)?"
+    answer_type: decimal
+    maps_to: profile.beginning_inventory_471
+    kind: FACT
+    authority: "Phase E Gate 3 Q3.14; §1.263A-3(d)(3)"
+    ask_when: "Q2_2 == 'SRM' and not Q2_5"
+
+  - id: Q3.15
+    gate: 3
+    question: "(SRM) §471 costs remaining on hand at year end (LIFO: current-year increment, unless Q3.18b Variation B elected)?"
+    answer_type: decimal
+    maps_to: profile.ending_inventory_471
+    kind: FACT
+    authority: "Phase E Gate 3 Q3.15 (ADDED 2026-07-09); §1.263A-3(d)(3)(i)(C)"
+    ask_when: "Q2_2 == 'SRM' and not Q2_5"
+
+  - id: Q3.16
+    gate: 3
+    question: "(SRM) 1/3-2/3 purchasing-labor election (all-or-nothing)?"
+    answer_type: bool
+    maps_to: flag.SRM_ONE_THIRD_TWO_THIRDS_ELECTION
+    kind: ELECTION
+    authority: "Phase E Gate 3 Q3.16; §1.263A-3(d)"
+    ask_when: "Q2_2 == 'SRM' and not Q2_5"
+
+  - id: Q3.17
+    gate: 3
+    question: "(SRM) Write-down carve-out scope — which write-downs are excluded from the S&H cost pool?"
+    answer_type: str
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 3 Q3.17; §1.263A-3(d)"
+    ask_when: "Q2_2 == 'SRM' and not Q2_5"
+
+  - id: Q3.18a
+    gate: 3
+    question: "(SRM) Permissible variation A — exclude beginning inventory from the S&H denominator?"
+    answer_type: bool
+    maps_to: profile.srm_variation_a
+    kind: METHOD-OF-ACCOUNTING
+    authority: "Phase E Gate 3 Q3.18; §1.263A-3(d)(3)(iii)(A)"
+    ask_when: "Q2_2 == 'SRM' and not Q2_5"
+
+  - id: Q3.18b
+    gate: 3
+    question: "(SRM, LIFO) Permissible variation B — multiply by total ending-inventory §471 costs instead of the increment?"
+    answer_type: bool
+    maps_to: profile.srm_variation_b
+    kind: METHOD-OF-ACCOUNTING
+    authority: "Phase E Gate 3 Q3.18; §1.263A-3(d)(3)(iii)(B)"
+    ask_when: "Q2_2 == 'SRM' and not Q2_5 and Q2_1 and Q2_1 != 'FIFO'"
+
+  # Per-facility sub-tree (SRM only; repeats per facility)
+  - id: Q3.19
+    gate: 3
+    question: "(Per facility) Attached to a retail facility? Integral part of it?"
+    answer_type: per_item
+    maps_to: schedule.srm_facilities
+    kind: FACT
+    authority: "Phase E Gate 3 Q3.19; §1.263A-3(c)"
+    ask_when: "Q2_2 == 'SRM' and not Q2_5"
+
+  - id: Q3.20
+    gate: 3
+    question: "(Per facility) Exclusively retail on-site sales? ((E)(2) four-part test if non-retail customers exist)"
+    answer_type: per_item
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 3 Q3.20; §1.263A-3(c)"
+    ask_when: "Q2_2 == 'SRM' and not Q2_5"
+
+  - id: Q3.21
+    gate: 3
+    question: "(Per facility, if dual-function) On-site sales $ and total gross sales $ INCLUDING inter-facility shipments (the (B) ratio; 90/10 deeming applies)?"
+    answer_type: per_item
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 3 Q3.21; §1.263A-3(c)"
+    ask_when: "Q2_2 == 'SRM' and not Q2_5"
+
+  - id: Q3.22
+    gate: 3
+    question: "(Per facility) Handling-cost exclusion facts: store-level handling, distribution, custom-order, pick-and-pack?"
+    answer_type: per_item
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 3 Q3.22; §1.263A-3(c)(4)"
+    ask_when: "Q2_2 == 'SRM' and not Q2_5"
+
+  # ---------------------------------------------------------------- Gate 4 --
+  - id: Q4.1a
+    gate: 4
+    question: "Applicable financial statement (AFS)? (sets the de minimis ceiling authority)"
+    answer_type: bool
+    maps_to: profile.has_afs
+    kind: FACT
+    authority: "Phase E Gate 4 Q4.1; §1.263(a)-1(f)(1)"
+    ask_when: "True"
+
+  - id: Q4.1b
+    gate: 4
+    question: "Written accounting procedures in place at the BEGINNING of the year?"
+    answer_type: bool
+    maps_to: flag.WRITTEN_CAP_PROCEDURES
+    kind: FACT
+    authority: "Phase E Gate 4 Q4.1; §1.263(a)-1(f)(1)(i)(B)/(ii)(B)"
+    ask_when: "True"
+
+  - id: Q4.1c
+    gate: 4
+    question: "Elect the de minimis safe harbor this year?"
+    answer_type: bool
+    maps_to: flag.DE_MINIMIS_SAFE_HARBOR_ELECTION
+    kind: ELECTION
+    authority: "Phase E Gate 4 Q4.1; §1.263(a)-1(f) (annual statement election, irrevocable for the year, NOT a method change — (f)(5))"
+    ask_when: "Q4_1b"
+
+  - id: Q4.2a
+    gate: 4
+    question: "Small-taxpayer building safe harbor: <= $10M receipts under (h)(3)'s OWN definition (not §448(c))?"
+    answer_type: bool
+    maps_to: flag.SMALL_TAXPAYER_UNDER_10M
+    kind: FACT
+    authority: "Phase E Gate 4 Q4.2; §1.263(a)-3(h)(3)"
+    ask_when: "True"
+
+  - id: Q4.2b
+    gate: 4
+    question: "(Per building) Unadjusted basis <= $1M? Repairs+improvements <= lesser of 2% basis or $10,000? Elect?"
+    answer_type: per_item
+    maps_to: schedule.building_safe_harbor
+    kind: ELECTION
+    authority: "Phase E Gate 4 Q4.2; §1.263(a)-3(h) (annual per-building election)"
+    ask_when: "Q4_2a"
+
+  - id: Q4.3
+    gate: 4
+    question: "(Per flagged line) Routine-maintenance safe harbor facts (twice-in-10-years / twice-in-class-life expectation)?"
+    answer_type: per_item
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 4 Q4.3; §1.263(a)-3(i)"
+    ask_when: "True"
+
+  - id: Q4.4a
+    gate: 4
+    question: "Election to capitalize repairs per books ((n))?"
+    answer_type: bool
+    maps_to: flag.CAPITALIZE_REPAIRS_PER_BOOKS
+    kind: ELECTION
+    authority: "Phase E Gate 4 Q4.4; §1.263(a)-3(n) (annual election)"
+    ask_when: "True"
+
+  - id: Q4.4b
+    gate: 4
+    question: "(Per flagged improvement line) BAR follow-ups (betterment/restoration/adaptation sub-questions)?"
+    answer_type: per_item
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 4 Q4.4; §1.263(a)-3(j)/(k)/(l)"
+    ask_when: "True"
+
+  # ---------------------------------------------------------------- Gate 5 --
+  - id: Q5.1
+    gate: 5
+    question: "Property unimproved AND unproductive this year — elect §266 capitalization of taxes/carrying charges?"
+    answer_type: bool
+    maps_to: flag.SEC266_UNIMPROVED_ELECTION
+    kind: ELECTION
+    authority: "Phase E Gate 5 Q5.1; §1.266-1(b)(1)(i) (annual, year-by-year)"
+    ask_when: "True"
+
+  - id: Q5.2
+    gate: 5
+    question: "Development/construction project — elect §266 capitalization?"
+    answer_type: bool
+    maps_to: flag.SEC266_DEVELOPMENT_ELECTION
+    kind: ELECTION
+    authority: "Phase E Gate 5 Q5.2; §1.266-1(b)(1)(ii) (sticks until the work completes)"
+    ask_when: "True"
+    consequence: >-
+      ORDERING NOTE: for an asset flagged in BOTH Gate 5 and Gate 7, §§1.263A-8..-15
+      apply FIRST (§1.266-1(a)(2)) — ask this only after Gate 7's per-unit/per-debt
+      determination for that asset is known (cross-gate ask_when dependency).
+
+  - id: Q5.3
+    gate: 5
+    question: "Election statement confirmed filed with the original return?"
+    answer_type: bool
+    maps_to: flag.SEC266_STATEMENT_FILED
+    kind: FACT
+    authority: "Phase E Gate 5 Q5.3; §1.266-1(c)(3)"
+    ask_when: "Q5_1 or Q5_2"
+
+  # ---------------------------------------------------------------- Gate 6 --
+  - id: Q6.0
+    gate: 6
+    question: "Any self-constructed assets (SCA) this year?"
+    answer_type: bool
+    maps_to: flag.HAS_SCA
+    kind: FACT
+    authority: "Phase E Gate 6 presence screen (synthetic; the plan gates Gate 6 on SCA existing)"
+    ask_when: "True"
+    consequence: "If yes: FixedAsset + CIP schedules required; per-asset sub-tree Q6.1-Q6.5 asked."
+
+  - id: Q6.1
+    gate: 6
+    question: "(Per asset) Cost-allocation method of accounting: specific identification / burden rate / standard cost?"
+    answer_type: per_item
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 6 Q6.1 (ADDED 2026-07-09); §1.263A-1(f)"
+    ask_when: "Q6_0"
+    consequence: "Tool implements Specific Identification only — burden-rate/standard-cost answers must be FLAGGED, not forced into a Specific-ID pool/driver structure."
+
+  - id: Q6.2
+    gate: 6
+    question: "(Per asset) SSCM eligibility route: (C) or (D) (three sub-facts each)?"
+    answer_type: per_item
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 6 Q6.2; §1.263A-1(h)(2)(i)(C)/(D)"
+    ask_when: "Q6_0"
+
+  - id: Q6.3
+    gate: 6
+    question: "(Per asset) Book-capitalized indirect costs already in CIP (double-count guard)?"
+    answer_type: per_item
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 6 Q6.3; Phase C double-count guard (routes to review queue)"
+    ask_when: "Q6_0"
+
+  - id: Q6.4
+    gate: 6
+    question: "(Per asset) Pool/driver assignments (validated against sca_drivers.yaml)?"
+    answer_type: per_item
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 6 Q6.4; taxonomy/sca_drivers.yaml"
+    ask_when: "Q6_0"
+
+  - id: Q6.5
+    gate: 6
+    question: "(Per asset) Individual materially involved in construction — officer, or general/managing partner or proprietor per Q0.1's entity type?"
+    answer_type: per_item
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 6 Q6.5 (ADDED 2026-07-09); §8c-adjacent officer/partner-comp limitation"
+    ask_when: "Q6_0"
+
+  # ---------------------------------------------------------------- Gate 7 --
+  - id: Q7.0
+    gate: 7
+    question: "Any §263A(f) designated-property candidates?"
+    answer_type: bool
+    maps_to: profile.has_designated_property
+    kind: FACT
+    authority: "Phase E Gate 7 presence screen (synthetic; the plan gates Gate 7 on candidates existing); §1.263A-8(b)"
+    ask_when: "True"
+    consequence: "If yes: CIP + Debt schedules required; per-unit and per-debt sub-trees asked."
+
+  - id: Q7.1
+    gate: 7
+    question: "(Per unit) Real property? (Category 1, automatic designation)"
+    answer_type: per_item
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 7 Q7.1; §1.263A-8(b)(1)(i)"
+    ask_when: "Q7_0"
+
+  - id: Q7.2
+    gate: 7
+    question: "(Per unit) Improvement to existing property + the (d)(3)(iii) gate?"
+    answer_type: per_item
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 7 Q7.2; §1.263A-8(d)(3)(iii)"
+    ask_when: "Q7_0"
+
+  - id: Q7.3
+    gate: 7
+    question: "(Per unit) Tangible personal property with class life >= 20 years + held-for-sale carve-out? (Category 2/3)"
+    answer_type: per_item
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 7 Q7.3; §1.263A-8(b)(1)(ii)/(iii)"
+    ask_when: "Q7_0"
+
+  - id: Q7.4
+    gate: 7
+    question: "(Per unit) Estimated production period and cost, with the contemporaneous-records question?"
+    answer_type: per_item
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 7 Q7.4; §1.263A-8(b)(2)(iii)"
+    ask_when: "Q7_0"
+
+  - id: Q7.5
+    gate: 7
+    question: "(Per unit) 90-day production period / $1M-per-day cost de minimis exclusion?"
+    answer_type: per_item
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 7 Q7.5; §1.263A-8(b)(4)"
+    ask_when: "Q7_0"
+
+  - id: Q7.6
+    gate: 7
+    question: "(Per unit) Otherwise-excluded property (per the exclusion list)?"
+    answer_type: per_item
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 7 Q7.6; §1.263A-8"
+    ask_when: "Q7_0"
+
+  - id: Q7.7
+    gate: 7
+    question: "(Per unit) Related-person ACTIVITIES (classification/production-period purposes)?"
+    answer_type: per_item
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 7 Q7.7; §1.263A-8(b)/-12"
+    ask_when: "Q7_0"
+
+  - id: Q7.8
+    gate: 7
+    question: "(Per unit) Related-person COSTS incurred by the taxpayer (excluded from the taxpayer's own APE)?"
+    answer_type: per_item
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 7 Q7.8 (ADDED 2026-07-09); §1.263A-11"
+    ask_when: "Q7_0"
+
+  - id: Q7.9
+    gate: 7
+    question: "(Per unit) Unit-of-property structure: common features, benefitted-unit map, per-property activity dates?"
+    answer_type: per_item
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 7 Q7.9; §1.263A-10"
+    ask_when: "Q7_0"
+
+  - id: Q7.10
+    gate: 7
+    question: "(Per unit) production_complete date (distinct from placed_in_service_date — capitalization runs until the LATER of the two)?"
+    answer_type: per_item
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 7 Q7.10 (ADDED 2026-07-09); §1.263A-12"
+    ask_when: "Q7_0"
+
+  - id: Q7.11
+    gate: 7
+    question: "(Per unit; industries with customary aging, e.g. tobacco/wine/whiskey) Aged-property production-period extension?"
+    answer_type: per_item
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 7 Q7.11 (ADDED 2026-07-09); §1.263A-12"
+    ask_when: "Q7_0"
+    consequence: "Only relevant where the industry indicates customary aging."
+
+  - id: Q7.12
+    gate: 7
+    question: "(Per unit) Producing assets/equipment used to produce this unit? If so, basis and usage-apportionment method?"
+    answer_type: per_item
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 7 Q7.12 (ADDED 2026-07-09); Phase D bulldozer example; §1.263A-11"
+    ask_when: "Q7_0"
+
+  - id: Q7.13
+    gate: 7
+    question: "(Per unit) Acquired mid-production? If so, purchase price?"
+    answer_type: per_item
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 7 Q7.13 (ADDED 2026-07-09); T.D. 10034, §1.263A-11(f)"
+    ask_when: "Q7_0"
+
+  - id: Q7.14
+    gate: 7
+    question: "(Per unit; pre-amendment years) Associated-property inputs: adjusted basis of the existing structure/common feature; 5% de minimis test?"
+    answer_type: per_item
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 7 Q7.14 (ADDED 2026-07-09); pre-T.D.-10034 §1.263A-11(e)"
+    ask_when: "Q7_0 and Q0_2 <= 2025"
+    consequence: "Only for tax years beginning on/before Oct 2, 2025 (approximated here by Q0.2 <= 2025)."
+
+  - id: Q7.15
+    gate: 7
+    question: "(Per unit) Produced under contract? Customer or contractor role, and payments-by-date?"
+    answer_type: per_item
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 7 Q7.15; §1.263A-12(f)"
+    ask_when: "Q7_0"
+
+  - id: Q7.16
+    gate: 7
+    question: "Computation period & measurement-date frequency?"
+    answer_type: str
+    maps_to: flag.INTEREST_COMPUTATION_PERIOD
+    kind: METHOD-OF-ACCOUNTING
+    authority: "Phase E Gate 7 Q7.16; §1.263A-9(f)"
+    ask_when: "Q7_0"
+
+  - id: Q7.17
+    gate: 7
+    question: "Tracing posture: trace / §1.263A-9(d) no-tracing election / AFR-plus-3?"
+    answer_type: enum
+    choices: [trace, no_tracing, afr_plus_3]
+    maps_to: flag.TRACING_POSTURE
+    kind: METHOD-OF-ACCOUNTING
+    authority: "Phase E Gate 7 Q7.17; §1.263A-8/-9 (AFR-plus-3 requires the $10M test OR small-business route; forecloses tracing)"
+    ask_when: "Q7_0"
+
+  - id: Q7.18
+    gate: 7
+    question: "Since-1994 average-receipts look-back for the AFR-plus-3 $10M eligibility test (longer window than Q0.4's 3-year §448(c) test — do NOT reuse Q0.4)?"
+    answer_type: decimal
+    maps_to: flag.SINCE_1994_AVG_RECEIPTS
+    kind: FACT
+    authority: "Phase E Gate 7 Q7.18 (ADDED 2026-07-09)"
+    ask_when: "Q7_17 == 'afr_plus_3'"
+
+  - id: Q7.19
+    gate: 7
+    question: "Accounts-payable fold-in sub-election (lowers the WAIR denominator)?"
+    answer_type: bool
+    maps_to: flag.AP_FOLD_IN_ELECTION
+    kind: METHOD-OF-ACCOUNTING
+    authority: "Phase E Gate 7 Q7.19 (ADDED 2026-07-09); §1.263A-9(d)(1)"
+    ask_when: "Q7_17 == 'no_tracing'"
+
+  - id: Q7.20
+    gate: 7
+    question: "(Per debt instrument) Eligible-debt exclusion screens ((a)(4)(i)-(ix))?"
+    answer_type: per_item
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 7 Q7.20; §1.263A-9(a)(4)"
+    ask_when: "Q7_0"
+
+  - id: Q7.21
+    gate: 7
+    question: "(Per debt instrument) Suspension election (120-day facts + inherent-cause carve-out)?"
+    answer_type: per_item
+    maps_to: none
+    kind: METHOD-OF-ACCOUNTING
+    authority: "Phase E Gate 7 Q7.21; §1.263A-9(g) (all-units consistency)"
+    ask_when: "Q7_0"
+
+  - id: Q7.22
+    gate: 7
+    question: "(Per debt instrument) 15-day repayment toggle (per-period, NOT a method)?"
+    answer_type: per_item
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 7 Q7.22; §1.263A-9(g)(7)"
+    ask_when: "Q7_0"
+
+  - id: Q7.23
+    gate: 7
+    question: "(Partnerships) Guaranteed payments for use of capital?"
+    answer_type: decimal
+    maps_to: flag.GUARANTEED_PAYMENTS_FOR_CAPITAL
+    kind: FACT
+    authority: "Phase E Gate 7 Q7.23; §1.263A-9(c)(2)(iii); §707(c)"
+    ask_when: "Q7_0 and Q0_1 == 'partnership'"
+
+  # ---------------------------------------------------------------- Gate 8 --
+  - id: Q8.0
+    gate: 8
+    question: "Any R&E-tagged costs (§174/§174A)?"
+    answer_type: bool
+    maps_to: flag.HAS_RE_COSTS
+    kind: FACT
+    authority: "Phase E Gate 8 presence screen (synthetic; the plan gates Gate 8 on R&E-tagged costs existing)"
+    ask_when: "True"
+    consequence: "If yes: R&E schedule required; per-project sub-tree asked."
+
+  - id: Q8.1
+    gate: 8
+    question: "(Per project/pool) Domestic or foreign research (or both)?"
+    answer_type: per_item
+    maps_to: schedule.re_projects
+    kind: FACT
+    authority: "Phase E Gate 8 Q8.1; §174/§174A"
+    ask_when: "Q8_0"
+
+  - id: Q8.2a
+    gate: 8
+    question: "(Domestic) Elect >= 60-month capitalization instead of current expensing, per §174A(c)?"
+    answer_type: bool
+    maps_to: flag.RE_CAPITALIZATION_ELECTION
+    kind: METHOD-OF-ACCOUNTING
+    authority: "Phase E Gate 8 Q8.2; §174A(c)"
+    ask_when: "Q8_0"
+
+  - id: Q8.2b
+    gate: 8
+    question: "Elected capitalization period in months (>= 60)?"
+    answer_type: int
+    maps_to: flag.RE_CAPITALIZATION_PERIOD_MONTHS
+    kind: METHOD-OF-ACCOUNTING
+    authority: "Phase E Gate 8 Q8.2; §174A(c)"
+    ask_when: "Q8_0 and Q8_2a"
+
+  - id: Q8.3a
+    gate: 8
+    question: "2022-2024 domestic R&E still being amortized under the old 5-year schedule?"
+    answer_type: bool
+    maps_to: flag.RE_LEGACY_AMORTIZATION
+    kind: FACT
+    authority: "Phase E Gate 8 Q8.3 (precondition fact); OBBBA transition"
+    ask_when: "Q8_0"
+
+  - id: Q8.3b
+    gate: 8
+    question: "Catch-up method: 1-year (all in 2025) or 2-year (split 2025-2026)?"
+    answer_type: enum
+    choices: [one_year, two_year]
+    maps_to: flag.RE_CATCHUP_METHOD
+    kind: METHOD-OF-ACCOUNTING
+    authority: "Phase E Gate 8 Q8.3; OBBBA transition"
+    ask_when: "Q8_0 and Q8_3a"
+    consequence: "Mutually exclusive with Q8.4's retroactive election."
+
+  - id: Q8.4
+    gate: 8
+    question: "(Small business, <= §448(c) threshold per Q0.4 — not re-asked) Elect the RETROACTIVE amendment instead of the catch-up? Amended-return deadline July 6, 2026."
+    answer_type: bool
+    maps_to: flag.RE_SMALL_BUSINESS_RETROACTIVE_ELECTION
+    kind: METHOD-OF-ACCOUNTING
+    authority: "Phase E Gate 8 Q8.4; OBBBA small-business retroactive election"
+    ask_when: "Q8_0 and Q8_3a and under_448c_threshold"
+    consequence: "Mutually exclusive with Q8.3b. Amended-return deadline July 6, 2026 — surface directly."
+
+  - id: Q8.5
+    gate: 8
+    question: "Software development costs among these expenditures?"
+    answer_type: bool
+    maps_to: flag.RE_SOFTWARE_SCOPE_REVIEW
+    kind: FACT
+    authority: "Phase E Gate 8 Q8.5; §174/§174A (SME scope confirmation, review-queue flag)"
+    ask_when: "Q8_0"
+
+  - id: Q8.6
+    gate: 8
+    question: "(Per disposal/retirement/abandonment event touching R&E-basis-bearing property) Was any capitalized R&E basis remaining?"
+    answer_type: per_item
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 8 Q8.6; §174(d)"
+    ask_when: "Q8_0"
+    warning_if_true: "§174D-DOMESTIC-ELECTIVE-UNVERIFIED"
+    consequence: >-
+      Triggers the §174D-DOMESTIC-ELECTIVE-UNVERIFIED flag for elected-capitalization
+      domestic R&E, or the confirmed-applicable rule for foreign R&E.
+
+  # ---------------------------------------------------------------- Gate 9 --
+  - id: Q9.0
+    gate: 9
+    question: "Any flagged transaction/intangible-tagged costs (§1.263(a)-4/-5)?"
+    answer_type: bool
+    maps_to: flag.HAS_TRANSACTION_COSTS
+    kind: FACT
+    authority: "Phase E Gate 9 presence screen (synthetic; the plan gates Gate 9 on flagged costs existing)"
+    ask_when: "True"
+    consequence: "If yes: transaction_costs/intangibles/startup schedules required."
+
+  - id: Q9.1
+    gate: 9
+    question: "(Per transaction) Covered transaction (acquisition of a trade/business, reorganization, capital transaction per §1.263(a)-5(e)(1))?"
+    answer_type: per_item
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 9 Q9.1; §1.263(a)-5(e)(1)"
+    ask_when: "Q9_0"
+
+  - id: Q9.2
+    gate: 9
+    question: "(Per covered transaction) Bright-line date established? Cost before/after it? Inherently facilitative (investment banking, appraisal, title/transfer, regulatory, financing)?"
+    answer_type: per_item
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 9 Q9.2; §1.263(a)-5(e)"
+    ask_when: "Q9_0 and Q9_1"
+
+  - id: Q9.3
+    gate: 9
+    question: "(Per success-based fee in a covered transaction) Elect the Rev. Proc. 2011-29 70/30 safe harbor instead of documenting the actual facilitative portion?"
+    answer_type: per_item
+    maps_to: none
+    kind: ELECTION
+    authority: "Phase E Gate 9 Q9.3; Rev. Proc. 2011-29 (irrevocable, per-transaction)"
+    ask_when: "Q9_0 and Q9_1"
+
+  - id: Q9.4
+    gate: 9
+    question: "(Per intangible) 12-month rule: does the right/benefit extend beyond the EARLIER OF 12 months from first realizing it or the end of the following tax year?"
+    answer_type: per_item
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 9 Q9.4; §1.263(a)-4(f)"
+    ask_when: "Q9_0"
+    consequence: "If no (within the window): not required to capitalize."
+
+  - id: Q9.5a
+    gate: 9
+    question: "(Per intangible not exempted by Q9.4) Facilitative-cost aggregate for this transaction <= $5,000 ((e)(4) — separate from Gate 4's tangible de minimis, do NOT reuse)?"
+    answer_type: per_item
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 9 Q9.5; §1.263(a)-4(e)(4) (cliff test, not a partial exclusion)"
+    ask_when: "Q9_0"
+
+  - id: Q9.5b
+    gate: 9
+    question: "(Per intangible) Elect to treat compensation/overhead/de-minimis-eligible costs as facilitative anyway?"
+    answer_type: per_item
+    maps_to: none
+    kind: ELECTION
+    authority: "Phase E Gate 9 Q9.5; §1.263(a)-4(e)(4)(iii)"
+    ask_when: "Q9_0"
+
+  - id: Q9.6
+    gate: 9
+    question: "(Per intangible requiring capitalization) Category (financial interest / contract right / membership or privilege / governmental right / real-property-transfer benefit / residual) and acquired-with-a-trade-or-business flag (§197 if yes)?"
+    answer_type: per_item
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 9 Q9.6; §1.263(a)-4(c)/(d); §197"
+    ask_when: "Q9_0"
+
+  - id: Q9.7a
+    gate: 9
+    question: "Start-up or organizational cost pool present?"
+    answer_type: bool
+    maps_to: flag.HAS_STARTUP_ORG_COSTS
+    kind: FACT
+    authority: "Phase E Gate 9 Q9.7; §195/§248/§709"
+    ask_when: "True"
+
+  - id: Q9.7b
+    gate: 9
+    question: "Total start-up/organizational costs (for the $5,000/$50,000 phase-out test)?"
+    answer_type: decimal
+    maps_to: schedule.startup_org_total
+    kind: FACT
+    authority: "Phase E Gate 9 Q9.7; §195(b)/§248(a)/§709(b)"
+    ask_when: "Q9_7a"
+
+  - id: Q9.7c
+    gate: 9
+    question: "Date the active trade or business began (amortization start)?"
+    answer_type: str
+    maps_to: schedule.business_commencement_date
+    kind: FACT
+    authority: "Phase E Gate 9 Q9.7; §195(c)(2)"
+    ask_when: "Q9_7a"
+
+  - id: Q9.8
+    gate: 9
+    question: "(Partnerships) Any portion representing SYNDICATION costs under §709(b) (fees to promote/sell partnership interests)?"
+    answer_type: bool
+    maps_to: flag.SYNDICATION_COSTS
+    kind: FACT
+    authority: "Phase E Gate 9 Q9.8; §709(b)"
+    ask_when: "Q9_7a and Q0_1 == 'partnership'"
+    warning_if_true: "SYNDICATION-PERMANENT-NONAMORTIZATION"
+    consequence: "If yes: PERMANENT non-amortization, not the $5,000/180-month schedule."
+
+  - id: Q9.9a
+    gate: 9
+    question: "Acquired a trade or business this year (asset acquisition or deemed asset acquisition under §338)?"
+    answer_type: bool
+    maps_to: flag.ACQUIRED_TRADE_OR_BUSINESS
+    kind: FACT
+    authority: "Phase E Gate 9 Q9.9 (ADDED 2026-07-09); §1060; §338"
+    ask_when: "True"
+    consequence: >-
+      If yes: §1060 PPA sub-tree (Q9.9b); SEEDS basis for Phases B/C/F/G/H — ask
+      before the per-asset Gates (3/6/7) for any asset acquired in this transaction.
+
+  - id: Q9.9b
+    gate: 9
+    question: "(Per acquisition) §1060 PPA: aggregate consideration; per-class (I-VII) FMV estimates; Form 8594 consistency confirmation with the counterparty?"
+    answer_type: per_item
+    maps_to: schedule.ppa
+    kind: FACT
+    authority: "Phase E Gate 9 Q9.9; §1060; Form 8594"
+    ask_when: "Q9_9a"
+
+  - id: Q9.10
+    gate: 9
+    question: "(Per structure demolished this year) Demolition triggered by casualty (Notice 90-21 carve-out) or a voluntary redevelopment decision?"
+    answer_type: per_item
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 9 Q9.10 (ADDED 2026-07-09); §280B; Notice 90-21"
+    ask_when: "True"
+    consequence: >-
+      If voluntary: demolition cost + remaining undepreciated basis routes to the
+      LAND AmortizableItem (non-depreciable), never to a deductible loss.
+
+  # --------------------------------------------------------------- Gate 10 --
+  - id: Q10.1
+    gate: 10
+    question: "GATING: Is the taxpayer an individual, or a pass-through entity whose owners may report AMT preference items (§55/§56/§57 individual AMT)?"
+    answer_type: bool
+    maps_to: flag.AMT_EXPOSURE
+    kind: FACT
+    authority: "Phase E Gate 10 Q10.1; §59(e); TCJA corporate-AMT repeal; IRA 2022 CAMT (§55/§56A) does not use §57 preferences"
+    ask_when: "True"
+    consequence: "If no (pure C-corp, no individual-AMT-exposed owners): SKIP the rest of Gate 10."
+
+  - id: Q10.2
+    gate: 10
+    question: "(Per qualified expenditure) Category (circulation §173 / domestic R&E §174A(a) / IDC §263(c) / mining exploration §617(a) / mining development §616(a)), amount, and elect §59(e) amortization (item-by-item, any portion, irrevocable except by IRS consent)?"
+    answer_type: per_item
+    maps_to: schedule.qualified_expenditures
+    kind: METHOD-OF-ACCOUNTING
+    authority: "Phase E Gate 10 Q10.2; §59(e)"
+    ask_when: "Q10_1"
+
+  - id: Q10.3
+    gate: 10
+    question: "Was the §59(e) election made on domestic R&E dollars ALSO covered by Gate 8's Q8.2 §174A(c) capitalization election?"
+    answer_type: bool
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 10 Q10.3; §59(e) vs §174A(c) period conflict (unresolved — SME review)"
+    ask_when: "Q10_1 and Q8_2a"
+    warning_if_true: "§59E-174A-ELECTION-CONFLICT"
+
+  - id: Q10.4
+    gate: 10
+    question: "Is any elected category mining exploration or development?"
+    answer_type: bool
+    maps_to: none
+    kind: FACT
+    authority: "Phase E Gate 10 Q10.4; §616/§617; §57(a) subparagraph cite unverified"
+    ask_when: "Q10_1"
+    warning_if_true: "§57-MINING-CITE-UNVERIFIED"

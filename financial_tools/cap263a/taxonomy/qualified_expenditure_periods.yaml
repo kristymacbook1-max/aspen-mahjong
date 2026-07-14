@@ -1,0 +1,24 @@
+# §59(e) qualified-expenditure elective amortization periods (BUILD_PLAN.md
+# Phase H). Data, not hard-coded constants — mirrors sca_drivers.yaml.
+# Periods: §59(e)(1) 10-year default; §59(e)(4) shortens circulation to
+# 3 years and IDC to 60 months. The R&E prong's underlying cite was
+# RE-POINTED by OBBBA (P.L. 119-21 §70302): §59(e)(2)(B) now references new
+# §174A(a) (domestic R&E), NOT old §174(a).
+# The mining categories' §57(a) AMT-preference subparagraph is UNVERIFIED
+# against primary text (§57-MINING-CITE-UNVERIFIED — engine emits the flag).
+periods:
+  circulation:
+    months: 36
+    authority: "§59(e)(2)(A) — §173 circulation expenditures; 3-taxable-year period per §59(e)(4)(A)"
+  re_domestic:
+    months: 120
+    authority: "§59(e)(2)(B) — domestic research & experimental expenditures under §174A(a) (cite re-pointed from old §174(a) by OBBBA/P.L. 119-21 §70302); 10-year period per §59(e)(1)"
+  idc:
+    months: 60
+    authority: "§59(e)(2)(C) — intangible drilling and development costs under §263(c); 60-month period per §59(e)(4) (§57(a)(2) preference)"
+  mining_exploration:
+    months: 120
+    authority: "§59(e)(2)(E) — mining exploration expenditures under §617(a); 10-year period per §59(e)(1) (§57(a) subparagraph UNVERIFIED — §57-MINING-CITE-UNVERIFIED)"
+  mining_development:
+    months: 120
+    authority: "§59(e)(2)(D) — mining development expenditures under §616(a); 10-year period per §59(e)(1) (§57(a) subparagraph UNVERIFIED — §57-MINING-CITE-UNVERIFIED)"

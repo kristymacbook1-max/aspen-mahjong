@@ -1,0 +1,23 @@
+# SCA driver reasonableness guardrails (BUILD_PLAN.md Phase C, "Reasonableness
+# guardrails" bullet): pool-category keyword match -> preferred/blocked drivers.
+# Hard-block = nonsensical pairing (HR by machine-hours; property tax by
+# headcount) -> HARD-BLOCKED-DRIVER, pool NOT allocated; a driver outside
+# `preferred` but not `blocked` = soft warning only, still allocated.
+# Every driver named anywhere in this file must be a member of `drivers`
+# below — the loader errors on any unknown name (dead-entry guard, same
+# cross-reference-validation principle as taxonomy.py).
+drivers: [headcount, square_footage, direct_labor, machine_hours, book_cost, direct_material]
+
+categories:
+  - match_keywords: [hr, human resources, personnel, payroll]
+    preferred: [headcount, direct_labor]
+    blocked: [machine_hours, square_footage]
+  - match_keywords: [property tax, building, rent, depreciation - building, facilities]
+    preferred: [square_footage, book_cost]
+    blocked: [headcount]
+  - match_keywords: [it, information technology]
+    preferred: [headcount]
+    blocked: [machine_hours]
+
+default:
+  allowed: [headcount, square_footage, direct_labor, machine_hours, book_cost, direct_material]
