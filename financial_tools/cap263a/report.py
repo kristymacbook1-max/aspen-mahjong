@@ -75,6 +75,8 @@ class CapitalizationReport:
         # original five tabs, which existing tests pin by name.
         if result.get("tax_basis_tb"):
             self._create_tax_basis_tab()
+        if result.get("tangible_263a"):
+            self._create_tangible_tab()
         if result.get("basis_amortization") or result.get("interest_263af") \
                 or result.get("sca"):
             self._create_basis_amortization_tab()
@@ -621,6 +623,65 @@ class CapitalizationReport:
             row += 1
         ws.column_dimensions["A"].width = 44
         ws.column_dimensions["B"].width = 18
+
+    def _create_tangible_tab(self):
+        tang = self._r["tangible_263a"]
+        ws = self._scaffold(
+            "Tangible §263(a)",
+            "Repair-regs capitalize-vs-deduct (Reg. §1.263(a)-1/-2/-3, §1.162-3). "
+            "Items with missing BAR facts are capitalized CONSERVATIVELY pending "
+            "the open questions below — never silently deducted.")
+        row = 5
+        apply_section_header(ws, row, 1, 7, "Expenditure items")
+        row += 1
+        headers = ["Item", "Description", "Amount", "Treatment",
+                   "Deductible", "Capitalized", "Flags"]
+        for i, h in enumerate(headers):
+            ws.cell(row, 1 + i, h)
+        apply_header_row(ws, row, 1, len(headers))
+        row += 1
+        for it in tang["items"]:
+            self._label(ws, row, 1, it["item_id"])
+            self._label(ws, row, 2, it["description"])
+            self._money(ws, row, 3, float(it["amount"]))
+            self._label(ws, row, 4, it["treatment"])
+            self._money(ws, row, 5, float(it["deductible"]))
+            self._money(ws, row, 6, float(it["capitalized"]))
+            self._label(ws, row, 7, ", ".join(it["flags"]))
+            row += 1
+        for lbl, key, fill in [
+                ("Total deductible", "deductible_total", None),
+                ("Total capitalized (mandatory + conservative-pending)",
+                 "capitalized_total", FILL_HIGHLIGHT_GREEN),
+                ("Total elective capitalized (§1.263(a)-3(n) per books)",
+                 "elective_capitalized_total", FILL_HIGHLIGHT_GREEN)]:
+            self._label(ws, row, 1, lbl, bold=True)
+            self._money(ws, row, 5 if key == "deductible_total" else 6,
+                        float(tang[key]), bold=True, fill=fill)
+            row += 1
+        row += 1
+        if tang["open_questions"]:
+            apply_section_header(ws, row, 1, 7,
+                                 "Open questions — answer before signing")
+            row += 1
+            for q in tang["open_questions"]:
+                cell = self._label(ws, row, 1, "? " + str(q["question"]))
+                cell.fill = FILL_HIGHLIGHT_ORANGE
+                ws.merge_cells(start_row=row, start_column=1,
+                               end_row=row, end_column=7)
+                row += 1
+            row += 1
+        if tang["warnings"]:
+            apply_section_header(ws, row, 1, 7, "Warnings")
+            row += 1
+            for w in tang["warnings"]:
+                self._label(ws, row, 1, "⚠ " + str(w))
+                ws.merge_cells(start_row=row, start_column=1,
+                               end_row=row, end_column=7)
+                row += 1
+        for col, width in (("A", 14), ("B", 40), ("C", 14), ("D", 30),
+                           ("E", 14), ("F", 14), ("G", 30)):
+            ws.column_dimensions[col].width = width
 
     def _create_basis_amortization_tab(self):
         ws = self._scaffold(

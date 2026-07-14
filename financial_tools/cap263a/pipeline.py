@@ -55,6 +55,7 @@ class CapitalizationPipeline:
                        guaranteed_payments: Decimal = Decimal("0"),
                        below_afr_interest: Decimal = Decimal("0"),
                        re_options: dict = None,
+                       tangible_elections: dict = None,
                        success_fee_elections=frozenset(),
                        individual_amt_exposure: bool = False,
                        force: bool = False,
@@ -128,6 +129,24 @@ class CapitalizationPipeline:
                         f"{derived[k]!r} — confirm this is intentional (the "
                         f"interview answer reflects an election).")
             re_options = {**derived, **explicit}
+            # §263(a) tangible elections travel the same seam: interview
+            # flags derive the repair-regs engine kwargs, explicit caller
+            # tangible_elections keys win, an override draws a warning.
+            t_derived = {}
+            if iflags.get("DE_MINIMIS_SAFE_HARBOR_ELECTION"):
+                t_derived["de_minimis_election"] = True
+            if iflags.get("CAPITALIZE_REPAIRS_PER_BOOKS"):
+                t_derived["capitalize_repairs_following_books"] = True
+            t_explicit = tangible_elections or {}
+            for k in set(t_derived) & set(t_explicit):
+                if t_explicit[k] != t_derived[k]:
+                    interview_result.warnings.append(
+                        f"TANGIBLE-ELECTION-OVERRIDE: caller "
+                        f"tangible_elections[{k!r}]={t_explicit[k]!r} "
+                        f"overrides the interview-derived {t_derived[k]!r} — "
+                        f"confirm this is intentional (the interview answer "
+                        f"reflects an election).")
+            tangible_elections = {**t_derived, **t_explicit}
             if not individual_amt_exposure and iflags.get("AMT_EXPOSURE"):
                 individual_amt_exposure = True
         profile = profile or EntityProfile()
@@ -216,6 +235,19 @@ class CapitalizationPipeline:
             basis_items += result["intangibles_263a45"]["amortizable_items"]
             all_warnings += result["intangibles_263a45"]["warnings"]
 
+        # Gate 4 — §263(a) tangible property / repair regs (NOT a §263A
+        # provision — no small-business-exemption gate). Open questions are
+        # the engine's core output: they must reach the workpaper's warning
+        # channel, prefixed so a reviewer can route them.
+        if data.tangible_items:
+            from .engines.tangible_263a import compute_tangible_263a
+            result["tangible_263a"] = compute_tangible_263a(
+                data.tangible_items, profile, **(tangible_elections or {}))
+            all_warnings += result["tangible_263a"]["warnings"]
+            all_warnings += [
+                f"OPEN QUESTION [tangible]: {q['question']}"
+                for q in result["tangible_263a"]["open_questions"]]
+
         # Phase H — §59(e), gated on entity type / individual AMT exposure
         if data.qualified_expenditures:
             result["qualified_59e"] = compute_59e(
@@ -265,6 +297,17 @@ class CapitalizationPipeline:
                 f"cost/intangibles engine posted "
                 f"${result['intangibles_263a45']['capitalized_total']:,.2f} — confirm "
                 f"the schedule and the TB lines are not the same dollars twice.")
+        if "tangible_263a" in result and (buckets["§263(a) Mandatory"]
+                                          or buckets["§263(a) Elective"]):
+            tang = result["tangible_263a"]
+            all_warnings.append(
+                f"DOUBLE-COUNT-RECONCILE [§263(a) tangible]: "
+                f"${buckets['§263(a) Mandatory'] + buckets['§263(a) Elective']:,.0f} "
+                f"of TB lines sit in the §263(a) Mandatory/Elective buckets AND the "
+                f"tangible-property engine capitalized "
+                f"${tang['capitalized_total'] + tang['elective_capitalized_total']:,.2f} "
+                f"— confirm the repair-regs schedule and the TB lines are not the "
+                f"same dollars twice.")
 
         # prepend blocking errors BEFORE publishing the list — the previous
         # order depended on list aliasing (a refactor to list(all_warnings)

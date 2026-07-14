@@ -8,8 +8,8 @@ Formats (BUILD_PLAN.md Phase A + Runtime Pipeline Step 1):
   - .json  one engagement object: {"trial_balance": [...], "btd": [...],
            "fixed_assets": [...], "cip": [...], "debt": [...], "re": [...],
            "transaction_costs": [...], "intangibles": [...], "startup": [...],
-           "qualified_expenditures": [...], "ppa": [...]} — field names may be
-           dataclass field names or any header alias.
+           "qualified_expenditures": [...], "tangible": [...], "ppa": [...]} —
+           field names may be dataclass field names or any header alias.
 
 Missing schedules degrade gracefully (empty lists); structural issues
 accumulate in EngagementData.validation (ERRORs block, WARNs don't).
@@ -416,7 +416,7 @@ def _merge_engagements(dst: EngagementData, src: EngagementData):
     for attr in ("tb_lines", "btds", "fixed_assets", "cip_projects", "debts",
                  "re_expenditures", "transaction_costs", "intangibles",
                  "startup_pools", "qualified_expenditures",
-                 "purchase_price_allocations"):
+                 "purchase_price_allocations", "tangible_items"):
         getattr(dst, attr).extend(getattr(src, attr))
     dst.validation.errors.extend(src.validation.errors)
     dst.validation.warnings.extend(src.validation.warnings)
@@ -472,7 +472,8 @@ def read_engagement(path=None, *, tb_sheet=None, **schedule_paths) -> Engagement
     Individual schedules may also be passed explicitly as keyword paths
     (tb_path=..., btd_path=..., assets_path=..., cip_path=..., debt_path=...,
     re_path=..., txncost_path=..., intangibles_path=..., startup_path=...,
-    qualified_path=..., ppa_path=...) — explicit paths win over routing.
+    qualified_path=..., ppa_path=..., tangible_path=...) — explicit paths win
+    over routing.
     """
     data = EngagementData()
     rep = data.validation
@@ -481,7 +482,8 @@ def read_engagement(path=None, *, tb_sheet=None, **schedule_paths) -> Engagement
                   "cip_path": "cip", "debt_path": "debt", "re_path": "re",
                   "txncost_path": "transaction_costs",
                   "intangibles_path": "intangibles", "startup_path": "startup",
-                  "qualified_path": "qualified_expenditures", "ppa_path": "ppa"}
+                  "qualified_path": "qualified_expenditures", "ppa_path": "ppa",
+                  "tangible_path": "tangible"}
 
     def ingest_rows(kind, rows, source):
         if not isinstance(rows, list) or any(not isinstance(r, dict) for r in rows):
