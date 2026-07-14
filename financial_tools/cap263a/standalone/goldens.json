@@ -6012,6 +6012,216 @@
   }
  },
  {
+  "name": "threshold_2023_receipts_30m_not_exempt",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "30000000",
+    "tax_year": 2023,
+    "ending_inventory_471": "100000"
+   },
+   "rows": [
+    {
+     "amount": "500000",
+     "tier1": "§471 Cost",
+     "is_labor": true
+    },
+    {
+     "amount": "100000",
+     "tier1": "Additional §263A"
+    }
+   ]
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "500000",
+    "§263A Additional": "100000",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "0",
+    "Deductible": "0",
+    "Non-Operating": "0"
+   },
+   "is_total": "600000",
+   "capitalized_total": "600000",
+   "mixed_total": "0",
+   "deductible_total": "0",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "SPM",
+    "warnings": [],
+    "mixed_alloc_ratio": "1.000000",
+    "production_labor": "500000",
+    "total_labor": "500000",
+    "mixed_capitalized": "0.00",
+    "mixed_deductible": "0.00",
+    "sec471_pool": "500000",
+    "additional_263a_pool": "100000.00",
+    "absorption_ratio": "0.20",
+    "ending_inventory_471": "100000",
+    "additional_capitalized_to_inventory": "20000.00",
+    "adjusted_deductible_post": "0.00"
+   }
+  }
+ },
+ {
+  "name": "threshold_2022_boundary_exempt",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "27000000",
+    "tax_year": 2022
+   },
+   "rows": [
+    {
+     "amount": "500000",
+     "tier1": "§471 Cost",
+     "is_labor": true
+    }
+   ]
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "0",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "0",
+    "Deductible": "500000",
+    "Non-Operating": "0"
+   },
+   "is_total": "500000",
+   "capitalized_total": "0",
+   "mixed_total": "0",
+   "deductible_total": "500000",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": true,
+    "note": "§263A(i)/§448(c) small-business exception — UNICAP off.",
+    "warnings": [],
+    "mixed_capitalized": "0",
+    "mixed_deductible": "0",
+    "absorption_ratio": "0",
+    "additional_capitalized_to_inventory": "0"
+   }
+  }
+ },
+ {
+  "name": "threshold_pre_tcja_exempt_warns",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "5000000",
+    "tax_year": 2017
+   },
+   "rows": [
+    {
+     "amount": "500000",
+     "tier1": "§471 Cost",
+     "is_labor": true
+    }
+   ]
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "0",
+    "§263A Additional": "0",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "0",
+    "Deductible": "500000",
+    "Non-Operating": "0"
+   },
+   "is_total": "500000",
+   "capitalized_total": "0",
+   "mixed_total": "0",
+   "deductible_total": "500000",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": true,
+    "note": "§263A(i)/§448(c) small-business exception — UNICAP off.",
+    "warnings": [
+     "PRE-TCJA-YEAR: TY 2017 begins before 2018 — the §263A(i)/§448(c) small-business exemption DID NOT EXIST for that year (old law: former §263A(b)(2)(B) $10M reseller exception only; producers had no exemption). This exempt determination is NOT valid for TY 2017; apply pre-TCJA law.",
+     "§448(c) threshold for TY 2017 is not on file — the 2026 figure ($32,000,000) was used to determine the exemption. VERIFY: a higher indexed threshold cannot change this result, but relying on it should be documented."
+    ],
+    "mixed_capitalized": "0",
+    "mixed_deductible": "0",
+    "absorption_ratio": "0",
+    "additional_capitalized_to_inventory": "0"
+   }
+  }
+ },
+ {
+  "name": "threshold_pre_tcja_nonexempt_warns",
+  "engine": "unicap",
+  "input": {
+   "profile": {
+    "avg_gross_receipts": "50000000",
+    "tax_year": 2017,
+    "ending_inventory_471": "100000"
+   },
+   "rows": [
+    {
+     "amount": "500000",
+     "tier1": "§471 Cost",
+     "is_labor": true
+    },
+    {
+     "amount": "100000",
+     "tier1": "Additional §263A"
+    }
+   ]
+  },
+  "expected": {
+   "bucket_totals": {
+    "Inventory §471": "500000",
+    "§263A Additional": "100000",
+    "§263(a) Mandatory": "0",
+    "§263(a) Elective": "0",
+    "§263A(f) Interest": "0",
+    "§266 Carrying": "0",
+    "Mixed (allocable)": "0",
+    "Deductible": "0",
+    "Non-Operating": "0"
+   },
+   "is_total": "600000",
+   "capitalized_total": "600000",
+   "mixed_total": "0",
+   "deductible_total": "0",
+   "tie_check": "0",
+   "bucket_warnings": [],
+   "unicap": {
+    "exempt": false,
+    "method": "SPM",
+    "warnings": [
+     "PRE-TCJA-YEAR: TY 2017 begins before 2018 — §448(c)/§263A(i) do not apply to that year; the small-business gate ran on post-TCJA law. Apply former §263A(b)(2)(B) instead.",
+     "§448(c) threshold for TY 2017 is not on file — the 2026 figure ($32,000,000) was used. The threshold is inflation-indexed; VERIFY before relying on the small-business exemption determination."
+    ],
+    "mixed_alloc_ratio": "1.000000",
+    "production_labor": "500000",
+    "total_labor": "500000",
+    "mixed_capitalized": "0.00",
+    "mixed_deductible": "0.00",
+    "sec471_pool": "500000",
+    "additional_263a_pool": "100000.00",
+    "absorption_ratio": "0.20",
+    "ending_inventory_471": "100000",
+    "additional_capitalized_to_inventory": "20000.00",
+    "adjusted_deductible_post": "0.00"
+   }
+  }
+ },
+ {
   "name": "tangible_de_minimis_afs_ceiling",
   "engine": "tangible",
   "input": {

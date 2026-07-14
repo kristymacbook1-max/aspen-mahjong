@@ -184,7 +184,9 @@ function q2(x) { return D.from(x).q(CENT, "HE"); }
 
 /* ============================= EntityProfile ============================= */
 
-const THRESHOLDS = { 2024: "30000000", 2025: "31000000", 2026: "32000000" };
+const THRESHOLDS = { 2018: "25000000", 2019: "26000000", 2020: "26000000",
+  2021: "26000000", 2022: "27000000", 2023: "29000000",
+  2024: "30000000", 2025: "31000000", 2026: "32000000" };
 const LARGE_PRODUCER_THRESHOLD = D.from("50000000");
 
 const PROFILE_DECIMAL_FIELDS = [
@@ -245,6 +247,7 @@ function sec448Threshold(p) {
   return D.from(THRESHOLDS[p.tax_year] || "32000000");
 }
 function thresholdIsEstimate(p) { return !(p.tax_year in THRESHOLDS); }
+function sec448PreTcja(p) { return p.tax_year < 2018; }
 function smallBusinessExempt(p) {
   if (p.is_tax_shelter) return false;
   return p.avg_gross_receipts.le(sec448Threshold(p));
@@ -433,6 +436,13 @@ function computeSSCM(result, profile) {
 function computeUnicap(result, profile) {
   if (smallBusinessExempt(profile)) {
     const w = [];
+    if (sec448PreTcja(profile)) {
+      w.push("PRE-TCJA-YEAR: TY " + profile.tax_year + " begins before 2018 — the " +
+        "§263A(i)/§448(c) small-business exemption DID NOT EXIST for that " +
+        "year (old law: former §263A(b)(2)(B) $10M reseller exception only; " +
+        "producers had no exemption). This exempt determination is NOT " +
+        "valid for TY " + profile.tax_year + "; apply pre-TCJA law.");
+    }
     if (thresholdIsEstimate(profile)) {
       w.push("§448(c) threshold for TY " + profile.tax_year + " is not on file — the " +
         "2026 figure (" + money0(sec448Threshold(profile)) + ") was used to determine " +
@@ -512,6 +522,11 @@ function computeSPM(result, profile) {
     warnings.push("§471 POOL IS " + (sec471Pool.isZero() ? "ZERO" : "NEGATIVE") +
       " while the additional §263A pool is nonzero — the absorption ratio is not " +
       "meaningful; check classification of §471 lines.");
+  }
+  if (sec448PreTcja(profile)) {
+    warnings.push("PRE-TCJA-YEAR: TY " + profile.tax_year + " begins before 2018 — §448(c)/" +
+      "§263A(i) do not apply to that year; the small-business gate ran on " +
+      "post-TCJA law. Apply former §263A(b)(2)(B) instead.");
   }
   if (thresholdIsEstimate(profile)) {
     warnings.push("§448(c) threshold for TY " + profile.tax_year + " is not on file — the 2026 " +
@@ -2565,7 +2580,7 @@ function computeTangible263a(items, profile, opts) {
 const CAP263A = {
   D, dec, fmt, money, q2,
   THRESHOLDS, LARGE_PRODUCER_THRESHOLD,
-  makeProfile, sec448Threshold, thresholdIsEstimate, smallBusinessExempt,
+  makeProfile, sec448Threshold, thresholdIsEstimate, sec448PreTcja, smallBusinessExempt,
   deMinimisCeiling,
   BUCKETS, CAPITALIZED_BUCKETS, TIER1_CHOICES, bucketOf, analyzeAssigned,
   computeSSCM, computeUnicap, computeSPM, computeMSPM, computeSRM,

@@ -957,6 +957,30 @@ SCENARIOS = [
 ]
 
 
+SCENARIOS += [
+    # 2023's real threshold is $29M: $30M receipts must NOT be exempt (the
+    # old 2026-figure fallback wrongly exempted this taxpayer — regression).
+    {"name": "threshold_2023_receipts_30m_not_exempt", "engine": "unicap",
+     "input": {"profile": {"avg_gross_receipts": "30000000", "tax_year": 2023,
+                           "ending_inventory_471": "100000"},
+               "rows": [L("500000", "§471 Cost", is_labor=True),
+                        L("100000", "Additional §263A")]}},
+    {"name": "threshold_2022_boundary_exempt", "engine": "unicap",
+     "input": {"profile": {"avg_gross_receipts": "27000000", "tax_year": 2022},
+               "rows": [L("500000", "§471 Cost", is_labor=True)]}},
+    # Pre-TCJA year: the §448(c) framework did not exist — hard warning both
+    # in the exempt path and the computed path.
+    {"name": "threshold_pre_tcja_exempt_warns", "engine": "unicap",
+     "input": {"profile": {"avg_gross_receipts": "5000000", "tax_year": 2017},
+               "rows": [L("500000", "§471 Cost", is_labor=True)]}},
+    {"name": "threshold_pre_tcja_nonexempt_warns", "engine": "unicap",
+     "input": {"profile": {"avg_gross_receipts": "50000000", "tax_year": 2017,
+                           "ending_inventory_471": "100000"},
+               "rows": [L("500000", "§471 Cost", is_labor=True),
+                        L("100000", "Additional §263A")]}},
+]
+
+
 def T(item_id, amount, **kw):
     d = dict(item_id=item_id, description=item_id, amount=amount)
     d.update(kw)

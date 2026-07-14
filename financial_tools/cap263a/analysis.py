@@ -106,7 +106,13 @@ class EntityProfile:
     # prior-year layers (red-team §16, confirmed by counterexample).
     ending_inventory_471_total_lifo: Decimal = Decimal("0")
 
-    THRESHOLDS = {2024: Decimal("30000000"), 2025: Decimal("31000000"),
+    # §448(c) inflation-adjusted thresholds by year (Rev. Procs. 2018-57
+    # through 2024-40). Pre-2018 years predate the TCJA §448(c) gross-
+    # receipts framework entirely — see sec448_pre_tcja.
+    THRESHOLDS = {2018: Decimal("25000000"), 2019: Decimal("26000000"),
+                  2020: Decimal("26000000"), 2021: Decimal("26000000"),
+                  2022: Decimal("27000000"), 2023: Decimal("29000000"),
+                  2024: Decimal("30000000"), 2025: Decimal("31000000"),
                   2026: Decimal("32000000")}
     # Reg §1.263A-1(d)(3)(ii)(B)(1) — VERIFIED 2026-07-08 against primary-source
     # regulation text (26 CFR 1.263A-1, via Cornell LII). Corrected from two
@@ -170,8 +176,21 @@ class EntityProfile:
         """True when tax_year has no published figure in THRESHOLDS — the 2026
         amount is used as a stand-in and must be verified (the threshold is
         inflation-indexed; a stale figure can flip the small-business
-        exemption, which turns UNICAP entirely on or off)."""
+        exemption, which turns UNICAP entirely on or off). With 2018-2026 on
+        file, only FUTURE years hit the estimate — and indexing only rises,
+        so an exempt-at-$32M answer cannot flip for a later year. (A PRIOR
+        year hitting the old stand-in could wrongly exempt — e.g. 2023's real
+        threshold was $29M — which is why the table now reaches back to 2018.)"""
         return self.tax_year not in self.THRESHOLDS
+
+    @property
+    def sec448_pre_tcja(self) -> bool:
+        """tax_year predates the TCJA §448(c)/§263A(i) framework (first
+        effective for tax years beginning after 12/31/2017) — the small-
+        business exemption computed here DOES NOT EXIST for that year (old
+        law: the $10M reseller exception of former §263A(b)(2)(B); NO
+        producer exemption)."""
+        return self.tax_year < 2018
 
     @property
     def small_business_exempt(self) -> bool:
@@ -325,6 +344,12 @@ def compute_unicap(result: dict, profile: EntityProfile) -> dict:
     then SPM (here) / MSPM / SRM (engines.inventory) on `profile.method`."""
     if profile.small_business_exempt:
         w = []
+        if profile.sec448_pre_tcja:
+            w.append(f"PRE-TCJA-YEAR: TY {profile.tax_year} begins before 2018 — the "
+                     f"§263A(i)/§448(c) small-business exemption DID NOT EXIST for that "
+                     f"year (old law: former §263A(b)(2)(B) $10M reseller exception only; "
+                     f"producers had no exemption). This exempt determination is NOT "
+                     f"valid for TY {profile.tax_year}; apply pre-TCJA law.")
         if profile.sec448_threshold_is_estimate:
             w.append(f"§448(c) threshold for TY {profile.tax_year} is not on file — the "
                      f"2026 figure (${profile.sec448_threshold:,.0f}) was used to determine "
@@ -521,6 +546,11 @@ def compute_spm(result: dict, profile: EntityProfile) -> dict:
             f"§471 POOL IS {'ZERO' if sec471_pool == 0 else 'NEGATIVE'} while the "
             f"additional §263A pool is nonzero — the absorption ratio is not "
             f"meaningful; check classification of §471 lines.")
+    if profile.sec448_pre_tcja:
+        warnings_.append(
+            f"PRE-TCJA-YEAR: TY {profile.tax_year} begins before 2018 — §448(c)/"
+            f"§263A(i) do not apply to that year; the small-business gate ran on "
+            f"post-TCJA law. Apply former §263A(b)(2)(B) instead.")
     if profile.sec448_threshold_is_estimate:
         warnings_.append(
             f"§448(c) threshold for TY {profile.tax_year} is not on file — the 2026 "

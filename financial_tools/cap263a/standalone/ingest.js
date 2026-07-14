@@ -156,6 +156,8 @@
       benefit_end: ["benefit end", "end date", "rights end"],
       payment_year: ["payment year", "year paid", "year"],
       facilitative_costs: ["facilitative costs", "facilitative"],
+      facilitative_commissions: ["facilitative commissions", "commissions",
+        "commission"],
       prior_capitalized_basis: ["prior capitalized basis", "prior basis"],
     },
     startup: {

@@ -357,6 +357,43 @@
     return best;
   }
 
+  /* Field-aware import coercions: money columns run through the SAME
+   * cleanAmount the TB reader uses ("(500)" -> "-500", "$1,234.56" ->
+   * "1234.56" — raw accounting formats previously crashed at compute time);
+   * date columns normalize Excel serials and m/d/yyyy to ISO (XLSX date
+   * cells arrive as raw serials; the engines' parseDate is ISO-only, so
+   * un-normalized dates silently vanished into "missing-fact" flags). */
+  const MONEY_FIELDS = new Set(["amount", "adjustment", "principal",
+    "interest_incurred", "book_capitalized_amount", "facilitative_costs",
+    "facilitative_commissions", "prior_capitalized_basis", "total",
+    "layer_471", "layer_additional_263a", "book_cost", "cumulative_ape",
+    "building_unadjusted_basis", "invoice_or_item_cost",
+    "book_capitalized_interest", "cost", "total_estimated_cost",
+    "mid_production_purchase_price"]);
+  const DATE_FIELDS = new Set(["incurred_date", "bright_line_date",
+    "benefit_start", "benefit_end", "business_commencement",
+    "measurement_date", "placed_in_service", "production_start",
+    "production_complete"]);
+
+  function toISODate(v) {
+    const s = String(v == null ? "" : v).trim();
+    if (s === "") return "";
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+    let m = s.match(/^(\d{4})[\/](\d{1,2})[\/](\d{1,2})$/);
+    if (m) return m[1] + "-" + m[2].padStart(2, "0") + "-" + m[3].padStart(2, "0");
+    m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+    if (m) return m[3] + "-" + m[1].padStart(2, "0") + "-" + m[2].padStart(2, "0");
+    // Excel 1900-system serial (typical modern range; serial 60 returns null)
+    if (/^\d{1,6}(\.\d+)?$/.test(s)) {
+      const n = Number(s);
+      if (n >= 1 && n < 200000) {
+        const iso = I.excelSerialToISO(n);
+        if (iso) return iso;
+      }
+    }
+    return s;  // unrecognized — engines will flag it as a missing date
+  }
+
   function genericRowsToObjects(rows, headerIndex, mapping) {
     const out = [];
     for (let r = headerIndex + 1; r < rows.length; r++) {
@@ -366,7 +403,14 @@
       const obj = {};
       for (const [ci, field] of Object.entries(mapping)) {
         const raw = row[Number(ci)];
-        obj[field] = raw === null || raw === undefined ? "" : String(raw).trim();
+        let v = raw === null || raw === undefined ? "" : String(raw).trim();
+        if (MONEY_FIELDS.has(field)) {
+          const cleaned = I.cleanAmount(raw);
+          v = cleaned === null ? "" : cleaned;
+        } else if (DATE_FIELDS.has(field)) {
+          v = toISODate(raw);
+        }
+        obj[field] = v;
       }
       if (Object.values(obj).every(v => v === "")) continue;
       out.push(obj);
@@ -417,7 +461,18 @@
       get: () => state.tb_lines,
       map: o => ({ acct_num: o.acct_num || "", acct_desc: o.acct_desc || "",
         cc_num: o.cc_num || "", cc_desc: o.cc_desc || "", amount: o.amount || "0",
-        tier1: "Excluded", cap_vs_deduct: "", is_labor: false }) },
+        tier1: "Excluded", cap_vs_deduct: "", is_labor: false }),
+      // "Assets"/"Expenses" section-header rows and rows with neither an
+      // amount nor a description must not import as $0 TB lines.
+      postFilter: o => {
+        const desc = (o.acct_desc || "").toLowerCase();
+        if (o.amount === "" && I.SECTION_HEADERS.has(desc) && !o.acct_num) return false;
+        if (o.amount === "" && !o.acct_desc) return false;
+        return true;
+      },
+      importNotes: () => ["Imported lines default to tier 'Excluded' " +
+        "(currently deductible) — assign each line's tier on the Trial " +
+        "Balance tab before relying on the UNICAP computation."] },
     { key: "btd", label: "Book-Tax Differences", aliases: I.SCHEDULE_ALIASES.btd,
       get: () => state.btds,
       map: o => ({ btd_id: o.btd_id || "", acct_num: o.acct_num || "",
@@ -427,7 +482,11 @@
       get: () => state.s174.expenditures,
       map: o => ({ re_id: o.re_id || "", description: o.description || "",
         amount: o.amount || "0", domestic: toBoolStr(o.domestic, true),
-        tax_year: o.tax_year || "", book_capitalized_amount: o.book_capitalized_amount || "0" }) },
+        tax_year: o.tax_year || "", book_capitalized_amount: o.book_capitalized_amount || "0" }),
+      importNotes: mapping => Object.values(mapping).includes("domestic") ? []
+        : ["No Domestic/Foreign column detected — ALL rows import as " +
+           "domestic. §174 FOREIGN research must be capitalized over 180 " +
+           "months; review before computing."] },
     { key: "transaction_costs", label: "§1.263(a)-5 Transaction Costs",
       aliases: I.SCHEDULE_ALIASES.transaction_costs,
       get: () => state.intang.transaction_costs,
@@ -447,6 +506,7 @@
         benefit_start: o.benefit_start || "", benefit_end: o.benefit_end || "",
         payment_year: o.payment_year || "",
         facilitative_costs: o.facilitative_costs || "0",
+        facilitative_commissions: o.facilitative_commissions || "0",
         prior_capitalized_basis: o.prior_capitalized_basis || "0" }) },
     { key: "startup", label: "§195/§248/§709 Start-up Pools",
       aliases: I.SCHEDULE_ALIASES.startup,
@@ -456,9 +516,15 @@
     { key: "qualified_expenditures", label: "§59(e) Elections",
       aliases: I.SCHEDULE_ALIASES.qualified_expenditures,
       get: () => state.s59e.elections,
+      // elected defaults FALSE: a schedule without an "elected" column must
+      // not presume an IRREVOCABLE §59(e) election on every row (was true).
       map: o => ({ item_id: o.item_id || "", category: o.category || "idc",
-        amount: o.amount || "0", elected: toBoolStr(o.elected, true),
-        election_year: o.election_year || "" }) },
+        amount: o.amount || "0", elected: toBoolStr(o.elected, false),
+        election_year: o.election_year || "" }),
+      importNotes: mapping => Object.values(mapping).includes("elected") ? []
+        : ["No 'elected' column detected — every row imports as NOT elected " +
+           "(the §59(e) election is item-by-item and irrevocable; mark " +
+           "elections on the tab)."] },
     { key: "debt", label: "§263A(f) Debt Schedule", aliases: I.SCHEDULE_ALIASES.debt,
       get: () => state.interest.debts,
       map: o => {
@@ -559,7 +625,11 @@
               "Detected header row " + (headerIndex + 1) + "; matched " +
               mappedCount + " of " + fieldNames.length + " target fields (" +
               fieldNames.join(", ") + ")."));
-            const objs = genericRowsToObjects(sheet.rows, headerIndex, mapping);
+            let objs = genericRowsToObjects(sheet.rows, headerIndex, mapping);
+            if (target.postFilter) objs = objs.filter(target.postFilter);
+            for (const note of (target.importNotes ? target.importNotes(mapping) : [])) {
+              sheetBox.appendChild(el("div", { class: "warn" }, "⚠ " + note));
+            }
             const prev = el("table", { class: "io" });
             const headerRow = sheet.rows[headerIndex] || [];
             prev.appendChild(el("tr", {}, headerRow.map((h, ci) =>
@@ -684,18 +754,68 @@
       body.appendChild(checkOut);
     }
 
+    /* Flag/election answers with a concrete destination in this app.
+     * Anything not listed is recorded to state.interview_flags so the
+     * answer is never silently discarded (it shows in the exported JSON). */
+    const FLAG_ROUTES = {
+      DE_MINIMIS_SAFE_HARBOR_ELECTION: v => { state.tangible.opts.de_minimis_election = !!v; },
+      CAPITALIZE_REPAIRS_PER_BOOKS: v => { state.tangible.opts.capitalize_repairs_following_books = !!v; },
+      RE_CAPITALIZATION_ELECTION: v => { state.s174.opts.domestic_capitalization_election = !!v; },
+      RE_CAPITALIZATION_PERIOD_MONTHS: v => { state.s174.opts.elected_period_months = String(v); },
+      RE_CATCHUP_METHOD: v => { state.s174.opts.catchup_method = String(v); },
+      RE_SMALL_BUSINESS_RETROACTIVE_ELECTION: v => { state.s174.opts.small_business_retroactive = !!v; },
+      AMT_EXPOSURE: v => { state.s59e.opts.individual_amt_exposure = !!v; },
+      GUARANTEED_PAYMENTS_FOR_CAPITAL: v => { state.interest.opts.guaranteed_payments = String(v); },
+    };
+    const ELECTION_KWARG_ROUTES = {
+      de_minimis_election: v => { state.tangible.opts.de_minimis_election = !!v; },
+      small_taxpayer_building_election: v => { state.tangible.opts.small_taxpayer_building_election = !!v; },
+      capitalize_repairs_following_books: v => { state.tangible.opts.capitalize_repairs_following_books = !!v; },
+    };
+
     function applyToProfile() {
-      let applied = 0;
+      let applied = 0, routed = 0;
+      const recorded = [];
+      state.interview_flags = state.interview_flags || {};
       for (const g of INTERVIEW_SPEC.gates) {
         for (const q of g.questions) {
           const val = state.interview_answers[q.id];
           if (val === undefined || val === "") continue;
           const mt = q.maps_to || {};
           if (mt.profile_field) { state.profile[mt.profile_field] = val; applied++; }
+          else if (mt.election_kwarg && ELECTION_KWARG_ROUTES[mt.election_kwarg]) {
+            ELECTION_KWARG_ROUTES[mt.election_kwarg](val); routed++;
+          } else if (mt.flag && FLAG_ROUTES[mt.flag]) {
+            FLAG_ROUTES[mt.flag](val); routed++;
+          } else if (mt.flag) {
+            state.interview_flags[mt.flag] = val;
+            recorded.push(mt.flag);
+          }
         }
       }
       save();
-      alert("Applied " + applied + " answer(s) to the Entity Profile.");
+      alert("Applied " + applied + " answer(s) to the Entity Profile and " +
+        routed + " election/flag answer(s) to their tabs (§263(a) tangible, " +
+        "§174, §59(e), §263A(f))." +
+        (recorded.length ? "\n\nRecorded as engagement flags (no computation " +
+          "destination — kept for the workpaper record): " + recorded.join(", ")
+          : ""));
+    }
+
+    /* Non-profile inputs the completeness rules can require (the spec's
+     * then_required_kwargs entries name run_engagement kwargs; in this app
+     * they live in per-tab state). */
+    const KWARG_GETTERS = {
+      afr_highest: () => state.interest.opts.afr_highest,
+    };
+
+    function completenessCondMatches(cond, profile) {
+      // one condition: {profile_field, equals} or {profile_field, in: [...]}
+      if (!("profile_field" in cond)) return true;  // unknown shape: don't gate
+      let v = profile[cond.profile_field];
+      if (v instanceof D) v = v.toString();
+      if ("in" in cond) return cond.in.map(String).includes(String(v));
+      return String(v) === String(cond.equals);
     }
 
     function runCompletenessCheck() {
@@ -709,16 +829,26 @@
       }
       const fires = [];
       for (const c of INTERVIEW_SPEC.completeness || []) {
-        const w = c.when || {};
-        let matches = true;
-        if ("profile_field" in w) matches = String(profile[w.profile_field]) === String(w.equals);
-        if (!matches) continue;
+        // `when` is a LIST of conditions (all must hold); tolerate a single
+        // object too. The previous reader treated the list as an object,
+        // which made every rule fire unconditionally.
+        const conds = Array.isArray(c.when) ? c.when : (c.when ? [c.when] : []);
+        if (!conds.every(cond => completenessCondMatches(cond, profile))) continue;
         const missing = (c.then_required || []).filter(f => {
           const v = profile[f];
           return v === null || v === undefined || v === "" ||
             (v instanceof D && v.isZero());
         });
-        if (missing.length) fires.push(c.question || ("Missing: " + missing.join(", ")));
+        const missingKwargs = (c.then_required_kwargs || []).filter(k => {
+          const getter = KWARG_GETTERS[k];
+          if (!getter) return false;   // not representable in this app
+          const v = getter();
+          return v === null || v === undefined || String(v).trim() === "";
+        });
+        if (missing.length || missingKwargs.length) {
+          fires.push(c.question ||
+            ("Missing: " + missing.concat(missingKwargs).join(", ")));
+        }
       }
       if (!fires.length) {
         box.appendChild(el("p", { class: "note ok" },
